@@ -432,35 +432,76 @@ function HatchingEgg({ dragon, size, crackStage }) {
 // PROPORTIONAL MATURITY — baby ≠ small adult
 // Baby: big head, huge eyes, round body, stubby legs, tiny wings, short snout
 // Adult: small head ratio, narrow eyes, long neck, angular jaw, massive wings, muscular legs
+// Physiology modifiers — adjust base proportions per dragon type
+function getPhysiologyMods(phys) {
+  if (!phys) return {};
+  const mods = {};
+  // Body shape multipliers
+  switch (phys.bodyShape) {
+    case 'bulky':     mods.bodyW = 1.25; mods.bodyH = 1.1; mods.neckMul = 0.8; break;
+    case 'serpentine': mods.bodyW = 0.8; mods.bodyH = 1.15; mods.neckMul = 1.3; break;
+    case 'sleek':     mods.bodyW = 0.9; mods.bodyH = 0.95; mods.neckMul = 1.1; break;
+    case 'graceful':  mods.bodyW = 0.85; mods.bodyH = 0.9; mods.neckMul = 1.15; break;
+    case 'athletic':  mods.bodyW = 1.05; mods.bodyH = 1.0; mods.neckMul = 1.0; break;
+    default:          mods.bodyW = 1.0; mods.bodyH = 1.0; mods.neckMul = 1.0;
+  }
+  // Leg thickness multiplier
+  switch (phys.legStyle) {
+    case 'thick': mods.legMul = 1.4; break;
+    case 'slim':  mods.legMul = 0.75; break;
+    default:      mods.legMul = 1.0;
+  }
+  // Wing size multiplier
+  switch (phys.wingStyle) {
+    case 'stubby':    mods.wingMul = 0.55; break;
+    case 'broad':     mods.wingMul = 1.15; break;
+    case 'feathered': mods.wingMul = 1.1; break;
+    case 'bat':       mods.wingMul = 1.2; break;
+    case 'jagged':    mods.wingMul = 1.05; break;
+    default:          mods.wingMul = 1.0;
+  }
+  // Tail length multiplier
+  switch (phys.tailStyle) {
+    case 'club':    mods.tailMul = 0.8; break;
+    case 'long':    mods.tailMul = 1.3; break;
+    case 'flowing': mods.tailMul = 1.2; break;
+    case 'forked':  mods.tailMul = 1.1; break;
+    default:        mods.tailMul = 1.0;
+  }
+  return mods;
+}
+
 function GrowingDragon({ dragon, t, size, chomping }) {
   const { primary, secondary, accent, glow } = dragon.colors;
+  const phys = dragon.physiology || {};
+  const mods = getPhysiologyMods(phys);
 
   // === PROPORTIONAL GROWTH CURVES ===
   // Each part grows at its own rate to create real maturity
-  const headRatio = 1.3 - t * 0.3;       // Baby: huge head (1.3x), Adult: still large (1.0x)
-  const eyeRatio = 1.5 - t * 0.7;        // Baby: giant cute eyes, Adult: narrow fierce
-  const bodyRound = 1.2 - t * 0.35;      // Baby: round belly, Adult: lean muscular
-  const neckLen = 0.5 + t * 0.35;        // Baby: short stubby, Adult: medium (not giraffe)
-  const legLen = 0.4 + t * 0.6;          // Baby: stubby, Adult: tall powerful
-  const legThick = 0.7 + t * 0.5;        // Baby: chubby, Adult: muscular
-  const wingSpan = 0.15 + t * 0.85;      // Baby: tiny buds, Adult: massive
-  const tailLen = 0.3 + t * 0.7;         // Baby: short, Adult: long whip
-  const snoutLen = 0.4 + t * 0.6;        // Baby: button nose, Adult: long snout
-  const hornLen = 0.1 + t * 0.9;         // Baby: tiny nubs, Adult: huge
-  const jawAngularity = t;                // Baby: round, Adult: angular
+  const headRatio = 1.3 - t * 0.3;
+  const eyeRatio = 1.5 - t * 0.7;
+  const bodyRound = 1.2 - t * 0.35;
+  const neckLen = (0.5 + t * 0.35) * (mods.neckMul || 1);
+  const legLen = 0.4 + t * 0.6;
+  const legThick = (0.7 + t * 0.5) * (mods.legMul || 1);
+  const wingSpan = (0.15 + t * 0.85) * (mods.wingMul || 1);
+  const tailLen = (0.3 + t * 0.7) * (mods.tailMul || 1);
+  const snoutLen = 0.4 + t * 0.6;
+  const hornLen = 0.1 + t * 0.9;
+  const jawAngularity = t;
   const spineCount = Math.floor(2 + t * 6);
   const bellyPlates = Math.floor(2 + t * 5);
   const breathIntensity = Math.max(0, (t - 0.35) / 0.65);
   const clawSize = 0.25 + t * 0.75;
-  const browRidge = t * 0.8;             // Adult gets stern brow
-  const scaleDetail = t;                 // More visible scales when older
-  const overallSize = 0.55 + t * 0.45;   // Still grows, but less dramatic
+  const browRidge = t * 0.8;
+  const scaleDetail = t;
+  const overallSize = 0.55 + t * 0.45;
 
-  // Body anchor points (shift based on proportions)
+  // Body anchor points (shift based on proportions + physiology)
   const bodyCx = 245;
   const bodyCy = 310;
-  const bodyRx = 48 * bodyRound * (0.85 + t * 0.15);
-  const bodyRy = 58 * bodyRound * (0.85 + t * 0.15);
+  const bodyRx = 48 * bodyRound * (0.85 + t * 0.15) * (mods.bodyW || 1);
+  const bodyRy = 58 * bodyRound * (0.85 + t * 0.15) * (mods.bodyH || 1);
 
   // Neck endpoint (head position moves up and forward as neck lengthens)
   const neckTopX = bodyCx - 75 - neckLen * 25;
@@ -519,22 +560,49 @@ function GrowingDragon({ dragon, t, size, chomping }) {
 
         <g filter={`url(#gl-${dragon.id})`}>
 
-          {/* === TAIL === */}
+          {/* === TAIL (thick base tapering to tip) === */}
+          {/* Tail underside highlight */}
+          <motion.path
+            d={tailPath(tailLen)}
+            stroke={accent}
+            strokeWidth={7 + tailLen * 11}
+            fill="none"
+            strokeLinecap="round"
+            opacity="0.08"
+            animate={{ d: [tailPath(tailLen), tailPath2(tailLen), tailPath(tailLen)] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* Main tail */}
           <motion.path
             d={tailPath(tailLen)}
             stroke={primary}
-            strokeWidth={5 + tailLen * 9}
+            strokeWidth={6 + tailLen * 10}
             fill="none"
             strokeLinecap="round"
             animate={{ d: [tailPath(tailLen), tailPath2(tailLen), tailPath(tailLen)] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <TailSpade tailLen={tailLen} accent={accent} t={t} />
+          {/* Tail ridges (segmentation marks) */}
+          {t > 0.25 && Array.from({ length: Math.floor(2 + t * 4) }, (_, i) => {
+            const frac = 0.2 + i * (0.6 / Math.floor(2 + t * 4));
+            const rx = 290 + frac * (tailLen * 132 + 60);
+            const ry = 315 + frac * (tailLen * -72 - 70) + Math.sin(frac * Math.PI) * 30;
+            return (
+              <circle key={`tr${i}`} cx={rx} cy={ry} r={1.2 + (1 - frac) * t * 2}
+                fill={accent} opacity={0.12 + t * 0.1} />
+            );
+          })}
+          <TailSpade tailLen={tailLen} accent={accent} t={t} dragon={dragon} />
 
           {/* === BACK LEGS (far side) === */}
           <Leg x={bodyCx + 25} y={bodyCy + 35} hipDx={12} hipDy={legLen * 55}
             legLen={legLen} legThick={legThick} claw={clawSize}
             color={secondary} accent={accent} t={t} side="far" />
+
+          {/* === FAR ARM (behind body) === */}
+          <Arm x={bodyCx - 28} y={bodyCy - 14}
+            legThick={legThick * 0.85} clawSize={clawSize * 0.85} t={t}
+            color={secondary} accent={accent} side="far" />
 
           {/* === WINGS === */}
           <AnimatedWings dragon={dragon} ws={wingSpan} t={t}
@@ -543,6 +611,25 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           {/* === BODY === */}
           <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
             fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.25" />
+
+          {/* Shoulder muscle contour (grows with maturity) */}
+          {t > 0.2 && (
+            <path d={`M ${bodyCx - bodyRx * 0.6} ${bodyCy - bodyRy * 0.5}
+                       Q ${bodyCx - bodyRx * 0.9} ${bodyCy - bodyRy * 0.1} ${bodyCx - bodyRx * 0.7} ${bodyCy + bodyRy * 0.3}`}
+              stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.1 + t * 0.15} />
+          )}
+          {/* Hip muscle contour */}
+          {t > 0.2 && (
+            <path d={`M ${bodyCx + bodyRx * 0.5} ${bodyCy - bodyRy * 0.4}
+                       Q ${bodyCx + bodyRx * 0.85} ${bodyCy} ${bodyCx + bodyRx * 0.6} ${bodyCy + bodyRy * 0.5}`}
+              stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.1 + t * 0.15} />
+          )}
+          {/* Chest ridge (adult only) */}
+          {t > 0.4 && (
+            <path d={`M ${bodyCx - bodyRx * 0.3} ${bodyCy - bodyRy * 0.8}
+                       Q ${bodyCx - bodyRx * 0.15} ${bodyCy - bodyRy * 0.5} ${bodyCx - bodyRx * 0.25} ${bodyCy}`}
+              stroke={accent} strokeWidth={0.8 + t * 0.8} fill="none" opacity={0.08 + t * 0.1} />
+          )}
 
           {/* Body scale texture (increases with age) */}
           <g opacity={0.08 + scaleDetail * 0.2}>
@@ -586,35 +673,13 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             legLen={legLen} legThick={legThick * 1.1} claw={clawSize * 1.1}
             color={primary} accent={accent} t={t} side="near" />
 
-          {/* === ARMS === */}
-          <path d={`M ${bodyCx - 35} ${bodyCy - 10}
-                     Q ${bodyCx - 52} ${bodyCy + 5} ${bodyCx - 56} ${bodyCy + 20 + t * 8}
-                     L ${bodyCx - 62} ${bodyCy + 28 + t * 10}`}
-            stroke={primary} strokeWidth={4 + legThick * 4} fill="none" strokeLinecap="round" />
-          {[0,1,2].map(c => (
-            <line key={`lac${c}`}
-              x1={bodyCx - 62 - c * 4} y1={bodyCy + 28 + t * 10}
-              x2={bodyCx - 66 - c * 4} y2={bodyCy + 34 + t * 10 + clawSize * 3}
-              stroke={accent} strokeWidth={1 + clawSize * 0.6} strokeLinecap="round" />
-          ))}
+          {/* === NEAR ARM (in front of legs) === */}
+          <Arm x={bodyCx - 35} y={bodyCy - 10}
+            legThick={legThick} clawSize={clawSize} t={t}
+            color={primary} accent={accent} side="near" />
 
-          {/* === SPINES (curved organic ridges) === */}
-          <g opacity={0.4 + t * 0.6}>
-            {Array.from({ length: spineCount }, (_, i) => {
-              const frac = i / Math.max(1, spineCount - 1);
-              const sx = bodyCx - 50 + frac * 90;
-              const sy = bodyCy - 55 + Math.sin(frac * Math.PI * 0.8) * 15 + frac * 10;
-              const h = (4 + t * 18) * (0.6 + (1 - Math.abs(frac - 0.4)) * 0.6);
-              const lean = (frac - 0.4) * 6; // lean backward slightly
-              const w = 2.5 + t * 1.5;
-              return (
-                <path key={`sp${i}`}
-                  d={`M ${sx - w} ${sy} Q ${sx - w * 0.3 + lean} ${sy - h * 0.6} ${sx + lean * 0.8} ${sy - h}
-                      Q ${sx + w * 0.3 + lean} ${sy - h * 0.6} ${sx + w} ${sy}`}
-                  fill={accent} stroke={primary} strokeWidth="0.5" />
-              );
-            })}
-          </g>
+          {/* === SPINES (style varies by dragon type) === */}
+          <Spines dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy} spineCount={spineCount} />
 
           {/* === NECK (lengthens dramatically with maturity) === */}
           <path d={`M ${bodyCx - 25} ${bodyCy - 35}
@@ -636,6 +701,10 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             jawAngularity={jawAngularity} browRidge={browRidge}
             breathIntensity={breathIntensity} />
         </g>
+
+        {/* === TYPE-SPECIFIC FEATURES === */}
+        <DragonExtras dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy}
+          bodyRx={bodyRx} bodyRy={bodyRy} />
 
         {/* Ground shadow */}
         <ellipse cx={bodyCx} cy={bodyCy + bodyRy + legLen * 56 + 22}
@@ -816,6 +885,251 @@ function Leg({ x, y, hipDx, hipDy, legLen, legThick, claw, color, accent, t, sid
   );
 }
 
+function Arm({ x, y, legThick, clawSize, t, color, accent, side }) {
+  const w = side === 'near' ? (4 + legThick * 5) : (3.5 + legThick * 4);
+  // Upper arm curves down and forward
+  const elbowX = x - 18 - t * 6;
+  const elbowY = y + 20 + t * 10;
+  // Forearm reaches down to hand
+  const handX = elbowX - 8 - t * 4;
+  const handY = elbowY + 14 + t * 6;
+
+  return (
+    <g>
+      {/* Upper arm — muscular bulge */}
+      <path d={`M ${x} ${y} Q ${x - 8 + legThick * 3} ${elbowY - 8} ${elbowX} ${elbowY}`}
+        stroke={color} strokeWidth={w} fill="none" strokeLinecap="round" />
+      {/* Elbow joint */}
+      <circle cx={elbowX} cy={elbowY} r={w * 0.32} fill={color} opacity="0.55" />
+      {/* Forearm — tapers */}
+      <path d={`M ${elbowX} ${elbowY} Q ${handX + 3} ${handY - 5} ${handX} ${handY}`}
+        stroke={color} strokeWidth={w * 0.65} fill="none" strokeLinecap="round" />
+      {/* Hand pad */}
+      <ellipse cx={handX} cy={handY + 1} rx={4 + clawSize * 4} ry={2.5 + clawSize * 1.5} fill={color} />
+      {/* Claws — curved like legs */}
+      {[0,1,2].map(c => (
+        <path key={`ac${c}`}
+          d={`M ${handX - 4 - clawSize * 1.5 + c * (3.5 + clawSize * 2)} ${handY + 1}
+              Q ${handX - 5 - clawSize * 1.5 + c * (3 + clawSize * 1.8)} ${handY + 3 + clawSize * 2}
+                ${handX - 6 - clawSize * 1.5 + c * (2.5 + clawSize * 1.5)} ${handY + 4 + clawSize * 4.5}`}
+          stroke={accent} strokeWidth={1.2 + clawSize * 0.5} fill="none" strokeLinecap="round" />
+      ))}
+    </g>
+  );
+}
+
+// Spines vary by dragon type
+function Spines({ dragon, t, bodyCx, bodyCy, spineCount }) {
+  const { primary, accent } = dragon.colors;
+  const style = dragon.physiology?.spineStyle || 'flame';
+
+  return (
+    <g opacity={0.4 + t * 0.6}>
+      {Array.from({ length: spineCount }, (_, i) => {
+        const frac = i / Math.max(1, spineCount - 1);
+        const sx = bodyCx - 50 + frac * 90;
+        const sy = bodyCy - 55 + Math.sin(frac * Math.PI * 0.8) * 15 + frac * 10;
+        const baseH = (4 + t * 18) * (0.6 + (1 - Math.abs(frac - 0.4)) * 0.6);
+        const lean = (frac - 0.4) * 6;
+        const w = 2.5 + t * 1.5;
+
+        switch (style) {
+          case 'crystal': {
+            // Angular ice shards
+            const h = baseH * 1.1;
+            return (
+              <g key={`sp${i}`}>
+                <path d={`M ${sx} ${sy} L ${sx - w * 0.5 + lean} ${sy - h * 0.7} L ${sx + lean} ${sy - h} L ${sx + w * 0.5 + lean} ${sy - h * 0.6} Z`}
+                  fill={accent} stroke={primary} strokeWidth="0.5" opacity="0.7" />
+                <line x1={sx + lean * 0.5} y1={sy - h * 0.3} x2={sx + lean} y2={sy - h * 0.9}
+                  stroke="#fff" strokeWidth="0.5" opacity="0.3" />
+              </g>
+            );
+          }
+          case 'rocky': {
+            // Jagged rock plates
+            const h = baseH * 0.8;
+            return (
+              <path key={`sp${i}`}
+                d={`M ${sx - w * 1.2} ${sy} L ${sx - w * 0.6} ${sy - h * 0.5} L ${sx} ${sy - h}
+                    L ${sx + w * 0.4} ${sy - h * 0.6} L ${sx + w * 1.2} ${sy}`}
+                fill={accent} stroke={primary} strokeWidth="0.8" />
+            );
+          }
+          case 'wispy': {
+            // Smoke-like wisps
+            const h = baseH * 1.2;
+            return (
+              <path key={`sp${i}`}
+                d={`M ${sx} ${sy} Q ${sx + lean * 1.5} ${sy - h * 0.5} ${sx + lean * 2} ${sy - h}`}
+                stroke={accent} strokeWidth={1.5 + t} fill="none" strokeLinecap="round" opacity={0.3 + t * 0.3} />
+            );
+          }
+          case 'feathered': {
+            // Soft feather crests
+            const h = baseH * 0.9;
+            return (
+              <g key={`sp${i}`}>
+                <path d={`M ${sx} ${sy} Q ${sx + lean - w * 0.3} ${sy - h * 0.6} ${sx + lean * 1.5} ${sy - h}`}
+                  stroke={accent} strokeWidth={2 + t} fill="none" strokeLinecap="round" opacity="0.6" />
+                <path d={`M ${sx} ${sy} Q ${sx + lean + w * 0.3} ${sy - h * 0.5} ${sx + lean * 1.2} ${sy - h * 0.85}`}
+                  stroke={primary} strokeWidth={1.5 + t * 0.5} fill="none" strokeLinecap="round" opacity="0.3" />
+              </g>
+            );
+          }
+          case 'bolt': {
+            // Lightning bolt spines
+            const h = baseH * 1.0;
+            return (
+              <path key={`sp${i}`}
+                d={`M ${sx} ${sy} L ${sx - w * 0.6 + lean} ${sy - h * 0.35}
+                    L ${sx + w * 0.4 + lean} ${sy - h * 0.5}
+                    L ${sx + lean * 0.8} ${sy - h}`}
+                stroke={accent} strokeWidth={1.5 + t} fill="none" strokeLinecap="round" />
+            );
+          }
+          default: {
+            // Flame ridges (ember default)
+            const h = baseH;
+            return (
+              <path key={`sp${i}`}
+                d={`M ${sx - w} ${sy} Q ${sx - w * 0.3 + lean} ${sy - h * 0.6} ${sx + lean * 0.8} ${sy - h}
+                    Q ${sx + w * 0.3 + lean} ${sy - h * 0.6} ${sx + w} ${sy}`}
+                fill={accent} stroke={primary} strokeWidth="0.5" />
+            );
+          }
+        }
+      })}
+    </g>
+  );
+}
+
+// Type-specific extra visual features (particles, textures, unique elements)
+function DragonExtras({ dragon, t, bodyCx, bodyCy, bodyRx, bodyRy }) {
+  const { primary, accent, glow } = dragon.colors;
+  const extra = dragon.physiology?.extraFeature;
+  if (!extra || t < 0.15) return null;
+
+  const intensity = Math.min(1, (t - 0.15) / 0.6);
+
+  switch (extra) {
+    case 'embers':
+      // Floating ember particles around body
+      return (
+        <g>
+          {Array.from({ length: Math.floor(3 + intensity * 5) }, (_, i) => {
+            const angle = (i / 8) * Math.PI * 2;
+            const dist = bodyRx * 1.2 + i * 5;
+            const px = bodyCx + Math.cos(angle + t * 2) * dist;
+            const py = bodyCy - 20 + Math.sin(angle) * bodyRy * 0.6;
+            return (
+              <motion.circle key={`em${i}`} cx={px} cy={py} r={1.5 + intensity * 1.5}
+                fill={accent}
+                animate={{ cy: [py, py - 15 - i * 3, py - 30], opacity: [0.6, 0.8, 0] }}
+                transition={{ duration: 1.5 + i * 0.3, repeat: Infinity, delay: i * 0.4 }} />
+            );
+          })}
+        </g>
+      );
+
+    case 'frost':
+      // Frost mist around feet/body
+      return (
+        <g>
+          <motion.ellipse cx={bodyCx} cy={bodyCy + bodyRy * 0.8} rx={bodyRx * 1.5} ry={8 + intensity * 6}
+            fill={accent} opacity={0.06 + intensity * 0.06}
+            animate={{ rx: [bodyRx * 1.3, bodyRx * 1.6, bodyRx * 1.3], opacity: [0.04, 0.1, 0.04] }}
+            transition={{ duration: 3, repeat: Infinity }} />
+          {intensity > 0.3 && Array.from({ length: 4 }, (_, i) => (
+            <motion.circle key={`fr${i}`}
+              cx={bodyCx - bodyRx + i * bodyRx * 0.7} cy={bodyCy + bodyRy * 0.5 + i * 3}
+              r={2 + intensity * 2} fill="#e1f5fe"
+              animate={{ opacity: [0, 0.3, 0], scale: [0.5, 1, 0.5] }}
+              transition={{ duration: 2 + i * 0.5, repeat: Infinity, delay: i * 0.6 }} />
+          ))}
+        </g>
+      );
+
+    case 'moss':
+      // Moss/vine patches on body
+      return (
+        <g opacity={0.3 + intensity * 0.4}>
+          <ellipse cx={bodyCx - bodyRx * 0.3} cy={bodyCy - bodyRy * 0.2} rx={6 + intensity * 4} ry={4 + intensity * 3}
+            fill="#4caf50" opacity="0.4" />
+          <ellipse cx={bodyCx + bodyRx * 0.2} cy={bodyCy + bodyRy * 0.1} rx={5 + intensity * 3} ry={3 + intensity * 2}
+            fill="#66bb6a" opacity="0.35" />
+          {intensity > 0.4 && (
+            <path d={`M ${bodyCx - bodyRx * 0.5} ${bodyCy}
+                       Q ${bodyCx - bodyRx * 0.6} ${bodyCy - 12} ${bodyCx - bodyRx * 0.4} ${bodyCy - 18}`}
+              stroke="#4caf50" strokeWidth={1.5} fill="none" strokeLinecap="round" opacity="0.4" />
+          )}
+        </g>
+      );
+
+    case 'smoke':
+      // Shadow smoke wisps at edges
+      return (
+        <g>
+          {Array.from({ length: Math.floor(2 + intensity * 4) }, (_, i) => {
+            const side = i % 2 === 0 ? -1 : 1;
+            const px = bodyCx + side * (bodyRx * 0.8 + i * 4);
+            const py = bodyCy + bodyRy * 0.3 - i * 8;
+            return (
+              <motion.ellipse key={`sm${i}`} cx={px} cy={py}
+                rx={4 + intensity * 6} ry={3 + intensity * 4}
+                fill={primary} opacity={0.08 + intensity * 0.06}
+                animate={{ cx: [px, px + side * 10], cy: [py, py - 12], opacity: [0.08, 0] }}
+                transition={{ duration: 2 + i * 0.4, repeat: Infinity, delay: i * 0.5 }} />
+            );
+          })}
+        </g>
+      );
+
+    case 'sparkle':
+      // Glitter/sparkle particles
+      return (
+        <g>
+          {Array.from({ length: Math.floor(4 + intensity * 6) }, (_, i) => {
+            const angle = (i / 10) * Math.PI * 2 + i;
+            const dist = bodyRx * 0.6 + (i % 3) * 12;
+            const px = bodyCx + Math.cos(angle) * dist;
+            const py = bodyCy - bodyRy * 0.3 + Math.sin(angle) * dist * 0.5;
+            return (
+              <motion.g key={`sp${i}`} transform={`translate(${px},${py})`}
+                animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.2, 0.5] }}
+                transition={{ duration: 1.2 + (i % 3) * 0.4, repeat: Infinity, delay: i * 0.3 }}>
+                <line x1="-3" y1="0" x2="3" y2="0" stroke="#fff" strokeWidth="1.2" />
+                <line x1="0" y1="-3" x2="0" y2="3" stroke="#fff" strokeWidth="1.2" />
+              </motion.g>
+            );
+          })}
+        </g>
+      );
+
+    case 'sparks':
+      // Electric sparks crackling around body
+      return (
+        <g>
+          {Array.from({ length: Math.floor(2 + intensity * 4) }, (_, i) => {
+            const px1 = bodyCx - bodyRx * 0.5 + i * bodyRx * 0.4;
+            const py1 = bodyCy - bodyRy * 0.3 - i * 5;
+            const px2 = px1 + (i % 2 === 0 ? 8 : -8) + intensity * 4;
+            const py2 = py1 - 6 - intensity * 4;
+            return (
+              <motion.line key={`zap${i}`} x1={px1} y1={py1} x2={px2} y2={py2}
+                stroke={accent} strokeWidth={1 + intensity}
+                animate={{ opacity: [0, 0.8, 0], x2: [px2, px2 + 3, px2] }}
+                transition={{ duration: 0.3 + (i % 3) * 0.15, repeat: Infinity, delay: i * 0.25 }} />
+            );
+          })}
+        </g>
+      );
+
+    default:
+      return null;
+  }
+}
+
 function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
   const { primary, secondary, accent } = dragon.colors;
   const ax = anchorX;
@@ -901,20 +1215,89 @@ function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
   );
 }
 
-function TailSpade({ tailLen, accent, t }) {
+function TailSpade({ tailLen, accent, t, dragon }) {
   const tx = 350 + tailLen * 70;
   const ty = 245 - tailLen * 40;
+  const s = 1 + t * 0.6;
+  const style = dragon?.physiology?.tailStyle || 'flame';
+  const primary = dragon?.colors?.primary || accent;
+
+  let tipContent;
+  switch (style) {
+    case 'club':
+      // Boulder club tip
+      tipContent = (
+        <>
+          <ellipse cx={tx} cy={ty - 6 * s} rx={10 * s} ry={8 * s} fill={accent} opacity={0.8 + t * 0.2} />
+          <ellipse cx={tx - 3 * s} cy={ty - 8 * s} rx={4 * s} ry={3 * s} fill={primary} opacity="0.3" />
+        </>
+      );
+      break;
+    case 'whip':
+      // Ice shard tip
+      tipContent = (
+        <>
+          <path d={`M ${tx} ${ty} L ${tx + 6 * s} ${ty - 18 * s} L ${tx} ${ty - 10 * s} L ${tx - 6 * s} ${ty - 18 * s} Z`}
+            fill={accent} opacity={0.7 + t * 0.3} />
+          <line x1={tx} y1={ty} x2={tx} y2={ty - 14 * s} stroke="#fff" strokeWidth="0.5" opacity="0.3" />
+        </>
+      );
+      break;
+    case 'long':
+      // Thin wispy tip
+      tipContent = (
+        <path d={`M ${tx - 3 * s} ${ty} Q ${tx} ${ty - 14 * s} ${tx + 5 * s} ${ty - 20 * s}`}
+          stroke={accent} strokeWidth={2 * s} fill="none" strokeLinecap="round" opacity={0.6 + t * 0.3} />
+      );
+      break;
+    case 'flowing':
+      // Feathered plume
+      tipContent = (
+        <>
+          {[-1, 0, 1].map(d => (
+            <path key={`pl${d}`}
+              d={`M ${tx} ${ty} Q ${tx + d * 8 * s} ${ty - 12 * s} ${tx + d * 12 * s} ${ty - 22 * s}`}
+              stroke={accent} strokeWidth={1.5 + t} fill="none" strokeLinecap="round" opacity={0.5 + t * 0.2} />
+          ))}
+        </>
+      );
+      break;
+    case 'forked':
+      // Lightning fork tip
+      tipContent = (
+        <>
+          <path d={`M ${tx} ${ty} L ${tx + 8 * s} ${ty - 16 * s}`}
+            stroke={accent} strokeWidth={2 * s} strokeLinecap="round" />
+          <path d={`M ${tx} ${ty} L ${tx - 6 * s} ${ty - 18 * s}`}
+            stroke={accent} strokeWidth={2 * s} strokeLinecap="round" />
+          <circle cx={tx} cy={ty - 2 * s} r={2 * s} fill={accent} opacity="0.5" />
+        </>
+      );
+      break;
+    default:
+      // Flame spade (ember default)
+      tipContent = (
+        <>
+          <path d={`M ${tx} ${ty + 4 * s}
+              Q ${tx + 12 * s} ${ty - 4 * s} ${tx + 18 * s} ${ty - 22 * s}
+              Q ${tx + 6 * s} ${ty - 16 * s} ${tx} ${ty - 8 * s}
+              Q ${tx - 6 * s} ${ty - 16 * s} ${tx - 18 * s} ${ty - 22 * s}
+              Q ${tx - 12 * s} ${ty - 4 * s} ${tx} ${ty + 4 * s} Z`}
+            fill={accent} opacity={0.8 + t * 0.2} />
+          <line x1={tx} y1={ty + 2 * s} x2={tx} y2={ty - 16 * s}
+            stroke={accent} strokeWidth={1 + t * 0.5} opacity="0.3" />
+        </>
+      );
+  }
+
   return (
-    <motion.path
-      d={`M ${tx - 5} ${ty}
-          L ${tx + 15} ${ty - 20 - t * 5}
-          L ${tx} ${ty - 5}
-          L ${tx - 15} ${ty - 18 - t * 5} Z`}
-      fill={accent}
+    <motion.g
       animate={{ rotate: [0, 4, -4, 0] }}
       transition={{ duration: 3.5, repeat: Infinity }}
       style={{ transformOrigin: `${tx}px ${ty}px` }}
-    />
+    >
+      {tipContent}
+    </motion.g>
   );
 }
 

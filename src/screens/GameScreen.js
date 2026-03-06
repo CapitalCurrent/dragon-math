@@ -115,7 +115,6 @@ export default function GameScreen() {
   const { dragon, progress, showMerge } = useGame();
 
   if (!dragon) return null;
-
   const stageIndex = Math.min(4, Math.floor(progress * 5));
 
   return (
@@ -128,8 +127,8 @@ export default function GameScreen() {
       {/* Main game area — side by side on wide screens */}
       <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-4 lg:gap-12 w-full max-w-5xl mt-4">
 
-        {/* Dragon display */}
-        <div className="flex flex-col items-center">
+        {/* Dragon display — fixed width prevents layout shift during chomp */}
+        <div className="flex flex-col items-center" style={{ width: 540 }}>
           <div className="flex-shrink-0">
             <DragonCave dragon={dragon} progress={progress}>
               <DragonSVG
@@ -163,7 +162,7 @@ export default function GameScreen() {
         </div>
 
         {/* Question + input area — fixed width prevents layout shift */}
-        <div className="flex flex-col items-center justify-center lg:pt-12" style={{ minWidth: 420 }}>
+        <div className="flex flex-col items-center justify-center lg:pt-12" style={{ width: 420 }}>
           <FloatingNumbers />
           <AnswerInput />
         </div>

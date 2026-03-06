@@ -4,6 +4,18 @@ export const DRAGONS = {
     id: 'ember',
     name: 'Ember Drake',
     colors: { primary: '#ff6b35', secondary: '#ff9800', accent: '#ffeb3b', glow: '#ff4400' },
+    physiology: {
+      bodyShape: 'lean',       // lean angular body
+      headStyle: 'angular',    // sharp angular jaw
+      spineStyle: 'flame',     // flame-shaped ridges
+      wingStyle: 'pointed',    // pointed bat wings
+      tailStyle: 'flame',      // fiery tail tip
+      legStyle: 'standard',    // normal muscular
+      texture: 'cracked',      // cracked lava texture
+      earStyle: 'swept',       // swept-back frills
+      hornStyle: 'curved',     // curved ram-like
+      extraFeature: 'embers',  // floating ember particles
+    },
     stages: [
       { name: 'Ember Egg', size: 0.4, description: 'A warm, glowing egg' },
       { name: 'Spark Hatchling', size: 0.55, description: 'Tiny with flickering sparks' },
@@ -23,6 +35,18 @@ export const DRAGONS = {
     id: 'frost',
     name: 'Frost Wing',
     colors: { primary: '#4fc3f7', secondary: '#81d4fa', accent: '#e1f5fe', glow: '#0288d1' },
+    physiology: {
+      bodyShape: 'sleek',      // streamlined aerodynamic
+      headStyle: 'narrow',     // narrow elegant snout
+      spineStyle: 'crystal',   // ice crystal spines
+      wingStyle: 'broad',      // broad translucent wings
+      tailStyle: 'whip',       // thin whip tail with ice shard tip
+      legStyle: 'slim',        // slim agile legs
+      texture: 'smooth',       // smooth icy surface
+      earStyle: 'fin',         // fin-like ear frills
+      hornStyle: 'antler',     // branching ice antlers
+      extraFeature: 'frost',   // frost mist particles
+    },
     stages: [
       { name: 'Ice Crystal Egg', size: 0.4, description: 'Frozen and shimmering' },
       { name: 'Snow Hatchling', size: 0.55, description: 'Cold mist surrounds it' },
@@ -42,6 +66,18 @@ export const DRAGONS = {
     id: 'stone',
     name: 'Stone Tail',
     colors: { primary: '#8bc34a', secondary: '#a5d6a7', accent: '#795548', glow: '#33691e' },
+    physiology: {
+      bodyShape: 'bulky',      // wide stocky body
+      headStyle: 'blunt',      // blunt flat head
+      spineStyle: 'rocky',     // jagged rock plates
+      wingStyle: 'stubby',     // small stubby wings
+      tailStyle: 'club',       // thick club tail with boulder tip
+      legStyle: 'thick',       // thick trunk-like legs
+      texture: 'rocky',        // rough stone texture with moss
+      earStyle: 'none',        // no ear frills — rocky head
+      hornStyle: 'blunt',      // short blunt horns
+      extraFeature: 'moss',    // moss/vine patches
+    },
     stages: [
       { name: 'Mossy Egg', size: 0.4, description: 'Covered in soft green moss' },
       { name: 'Sprout Hatchling', size: 0.55, description: 'Plants grow on its back' },
@@ -61,6 +97,18 @@ export const DRAGONS = {
     id: 'shadow',
     name: 'Shadow Fang',
     colors: { primary: '#9c27b0', secondary: '#7b1fa2', accent: '#e1bee7', glow: '#6a1b9a' },
+    physiology: {
+      bodyShape: 'serpentine',  // long sinuous body
+      headStyle: 'narrow',     // narrow with long fangs
+      spineStyle: 'wispy',     // smoke-like wispy spines
+      wingStyle: 'bat',        // tall narrow bat wings
+      tailStyle: 'long',       // extra-long whip tail
+      legStyle: 'slim',        // slim stealthy legs
+      texture: 'smoky',        // edges dissolve into smoke
+      earStyle: 'pointed',     // tall pointed ears
+      hornStyle: 'sharp',      // thin sharp straight horns
+      extraFeature: 'smoke',   // shadow smoke wisps
+    },
     stages: [
       { name: 'Dark Egg', size: 0.4, description: 'Almost invisible in the dark' },
       { name: 'Shade Hatchling', size: 0.55, description: 'Flickers in and out of shadows' },
@@ -80,6 +128,18 @@ export const DRAGONS = {
     id: 'glimmer',
     name: 'Glimmer Wing',
     colors: { primary: '#ffd54f', secondary: '#fff176', accent: '#ffffff', glow: '#f9a825' },
+    physiology: {
+      bodyShape: 'graceful',   // slim elegant body
+      headStyle: 'elegant',    // refined narrow head
+      spineStyle: 'feathered', // feather-like crest
+      wingStyle: 'feathered',  // feathered angel wings
+      tailStyle: 'flowing',    // long flowing tail with plume
+      legStyle: 'slim',        // slim graceful legs
+      texture: 'smooth',       // luminous smooth scales
+      earStyle: 'flowing',     // long flowing ear frills
+      hornStyle: 'spiral',     // elegant spiral horns
+      extraFeature: 'sparkle', // sparkle/glitter particles
+    },
     stages: [
       { name: 'Golden Egg', size: 0.4, description: 'Glows with warm light' },
       { name: 'Sparkle Hatchling', size: 0.55, description: 'Shimmers like sunshine' },
@@ -99,6 +159,18 @@ export const DRAGONS = {
     id: 'storm',
     name: 'Storm Rider',
     colors: { primary: '#29b6f6', secondary: '#4dd0e1', accent: '#ffee58', glow: '#0277bd' },
+    physiology: {
+      bodyShape: 'athletic',   // muscular athletic build
+      headStyle: 'angular',    // sharp angular jaw
+      spineStyle: 'bolt',      // lightning bolt spines
+      wingStyle: 'jagged',     // jagged storm wings
+      tailStyle: 'forked',     // forked lightning tail
+      legStyle: 'standard',    // powerful legs
+      texture: 'crackling',    // electric crackling texture
+      earStyle: 'swept',       // aerodynamic swept frills
+      hornStyle: 'zigzag',     // zigzag lightning horns
+      extraFeature: 'sparks',  // electric spark particles
+    },
     stages: [
       { name: 'Thunder Egg', size: 0.4, description: 'Crackles with static' },
       { name: 'Breeze Hatchling', size: 0.55, description: 'Wind swirls around it' },

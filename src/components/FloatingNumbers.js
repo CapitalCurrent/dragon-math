@@ -4,51 +4,56 @@ import { useGame } from '../context/GameContext';
 
 const DEFAULT_COLORS = { primary: '#fff', secondary: '#ccc', accent: '#ff0', glow: '#fff' };
 
-// Skill effect configs — what happens to the numbers before the dragon eats them
+// Skill effect configs — what happens to the answer after numbers join
 const SKILL_EFFECTS = {
-  ember: { emoji: '🔥', label: 'Fire!', bg: '#ff6b35', anim: 'burn' },
-  frost: { emoji: '❄️', label: 'Freeze!', bg: '#4fc3f7', anim: 'freeze' },
-  stone: { emoji: '🪨', label: 'Smash!', bg: '#8bc34a', anim: 'smash' },
-  shadow: { emoji: '⚡', label: 'Zap!', bg: '#9c27b0', anim: 'zap' },
-  glimmer: { emoji: '✨', label: 'Shine!', bg: '#ffd54f', anim: 'shine' },
-  storm: { emoji: '🌩️', label: 'Thunder!', bg: '#29b6f6', anim: 'storm' },
+  ember: { emoji: '🔥', label: 'Fire!', bg: '#ff6b35' },
+  frost: { emoji: '❄️', label: 'Freeze!', bg: '#4fc3f7' },
+  stone: { emoji: '🪨', label: 'Smash!', bg: '#8bc34a' },
+  shadow: { emoji: '⚡', label: 'Zap!', bg: '#9c27b0' },
+  glimmer: { emoji: '✨', label: 'Shine!', bg: '#ffd54f' },
+  storm: { emoji: '🌩️', label: 'Thunder!', bg: '#29b6f6' },
 };
 
-// Floating number bubbles → skill effect → merge → fly to dragon
+// Phases: question → joining → skill → eat
 export default function FloatingNumbers() {
   const { currentQuestion, showMerge, dragon, unlockedSkills } = useGame();
   const [particles, setParticles] = useState([]);
-  const [phase, setPhase] = useState('question'); // question → skill → merge → eat
+  const [phase, setPhase] = useState('question');
   const [skillEffect, setSkillEffect] = useState(null);
 
   const colors = useMemo(() => dragon?.colors || DEFAULT_COLORS, [dragon]);
   const hasSkill = unlockedSkills && unlockedSkills.length > 0;
   const latestSkill = dragon?.skills?.filter(s => unlockedSkills?.includes(s.name)).pop();
 
-  // Handle the answer sequence: skill → merge → eat
+  // Sequence: numbers join → skill attack → eat
   useEffect(() => {
     if (showMerge) {
-      if (hasSkill && dragon) {
-        // Phase 1: Skill attack on numbers
-        setPhase('skill');
-        setSkillEffect(SKILL_EFFECTS[dragon.id]);
-        setTimeout(() => {
-          // Phase 2: Numbers merge into answer
-          setPhase('merge');
-          setSkillEffect(null);
-          // Spawn particles
-          spawnParticles();
-          setTimeout(() => {
-            // Phase 3: Answer flies up toward dragon
+      // Phase 1: Numbers slide together and merge
+      setPhase('joining');
+      spawnParticles();
+
+      const joinDuration = 800;
+      const t1 = setTimeout(() => {
+        if (hasSkill && dragon) {
+          // Phase 2: Dragon skill attacks the answer
+          setPhase('skill');
+          setSkillEffect(SKILL_EFFECTS[dragon.id]);
+          const t2 = setTimeout(() => {
+            setPhase('eat');
+            setSkillEffect(null);
+          }, 900);
+          return () => clearTimeout(t2);
+        } else {
+          // No skills yet — dragon chomps the answer
+          setPhase('chomp');
+          const t2 = setTimeout(() => {
             setPhase('eat');
           }, 600);
-        }, 800);
-      } else {
-        // No skills yet — just merge and eat
-        setPhase('merge');
-        spawnParticles();
-        setTimeout(() => setPhase('eat'), 600);
-      }
+          return () => clearTimeout(t2);
+        }
+      }, joinDuration);
+
+      return () => clearTimeout(t1);
     } else {
       setPhase('question');
       setSkillEffect(null);
@@ -71,7 +76,7 @@ export default function FloatingNumbers() {
   if (!currentQuestion) return null;
 
   return (
-    <div className="relative flex flex-col items-center justify-center my-4" style={{ height: 180 }}>
+    <div className="relative flex flex-col items-center justify-center my-4" style={{ height: 180, width: 420 }}>
       <AnimatePresence mode="wait">
         {/* === QUESTION PHASE: floating number bubbles === */}
         {phase === 'question' && (
@@ -80,8 +85,8 @@ export default function FloatingNumbers() {
             className="flex items-center gap-3 md:gap-5"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.4 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <NumberBubble value={currentQuestion.a} color={colors.primary} glow={colors.glow} delay={0} />
             <motion.span className="text-4xl md:text-5xl font-bold" style={{ color: colors.accent }}
@@ -101,67 +106,130 @@ export default function FloatingNumbers() {
           </motion.div>
         )}
 
-        {/* === SKILL PHASE: dragon's power attacks the numbers === */}
+        {/* === JOINING PHASE: numbers slide together and merge into answer === */}
+        {phase === 'joining' && (
+          <motion.div
+            key="joining"
+            className="relative flex items-center justify-center"
+            style={{ width: 300, height: 120 }}
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Left number slides right */}
+            <motion.div
+              className="absolute w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-xl"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${colors.primary}88, ${colors.primary})`,
+                boxShadow: `0 0 15px ${colors.glow}60`,
+              }}
+              initial={{ x: -80, scale: 1, opacity: 1 }}
+              animate={{ x: 0, scale: 0, opacity: 0 }}
+              transition={{ duration: 0.6, ease: 'easeIn' }}
+            >
+              {currentQuestion.a}
+            </motion.div>
+
+            {/* Operator fades */}
+            <motion.span
+              className="absolute text-3xl font-bold"
+              style={{ color: colors.accent }}
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentQuestion.op}
+            </motion.span>
+
+            {/* Right number slides left */}
+            <motion.div
+              className="absolute w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-xl"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${colors.secondary}88, ${colors.secondary})`,
+                boxShadow: `0 0 15px ${colors.glow}60`,
+              }}
+              initial={{ x: 80, scale: 1, opacity: 1 }}
+              animate={{ x: 0, scale: 0, opacity: 0 }}
+              transition={{ duration: 0.6, ease: 'easeIn' }}
+            >
+              {currentQuestion.b}
+            </motion.div>
+
+            {/* Answer forms in the center after numbers merge */}
+            <motion.div
+              className="absolute w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+                color: '#fff',
+                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 1.3, 1], opacity: [0, 1, 1] }}
+              transition={{ delay: 0.35, duration: 0.45, ease: 'easeOut' }}
+            >
+              {currentQuestion.answer}
+            </motion.div>
+
+            {/* Flash burst when they merge */}
+            <motion.div
+              className="absolute w-32 h-32 rounded-full"
+              style={{
+                background: `radial-gradient(circle, ${colors.glow}80, ${colors.accent}40, transparent 70%)`,
+                pointerEvents: 'none',
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 2, 2.5], opacity: [0, 0.8, 0] }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            />
+          </motion.div>
+        )}
+
+        {/* === SKILL PHASE: dragon's power hits the answer === */}
         {phase === 'skill' && skillEffect && (
           <motion.div
             key="skill"
             className="flex flex-col items-center gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
           >
-            {/* Numbers being affected by skill */}
-            <div className="flex items-center gap-3">
-              <motion.div
-                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-black text-white"
-                style={{ background: colors.primary, boxShadow: `0 0 20px ${skillEffect.bg}` }}
-                animate={{
-                  scale: [1, 0.8, 1.1, 0.9],
-                  rotate: skillEffect.anim === 'zap' ? [0, -15, 15, 0] : [0, 5, -5, 0],
-                  filter: [
-                    'brightness(1)',
-                    `brightness(2) drop-shadow(0 0 10px ${skillEffect.bg})`,
-                    'brightness(1.5)',
-                  ],
-                }}
-                transition={{ duration: 0.6 }}
-              >
-                {currentQuestion.a}
-              </motion.div>
+            {/* Answer bubble being hit by skill */}
+            <motion.div
+              className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+                color: '#fff',
+                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                boxShadow: `0 0 30px ${skillEffect.bg}`,
+              }}
+              animate={{
+                scale: [1, 0.85, 1.15, 0.95, 1],
+                rotate: [0, -8, 8, -4, 0],
+                filter: [
+                  'brightness(1)',
+                  `brightness(2) drop-shadow(0 0 15px ${skillEffect.bg})`,
+                  'brightness(1.5)',
+                  `brightness(1.8) drop-shadow(0 0 10px ${skillEffect.bg})`,
+                  'brightness(1)',
+                ],
+              }}
+              transition={{ duration: 0.7 }}
+            >
+              {currentQuestion.answer}
+            </motion.div>
 
-              <motion.span className="text-3xl" style={{ color: colors.accent }}>
-                {currentQuestion.op}
-              </motion.span>
-
-              <motion.div
-                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-black text-white"
-                style={{ background: colors.secondary, boxShadow: `0 0 20px ${skillEffect.bg}` }}
-                animate={{
-                  scale: [1, 0.8, 1.1, 0.9],
-                  rotate: skillEffect.anim === 'zap' ? [0, 15, -15, 0] : [0, -5, 5, 0],
-                  filter: [
-                    'brightness(1)',
-                    `brightness(2) drop-shadow(0 0 10px ${skillEffect.bg})`,
-                    'brightness(1.5)',
-                  ],
-                }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                {currentQuestion.b}
-              </motion.div>
-            </div>
-
-            {/* Skill effect overlay */}
+            {/* Skill emoji burst */}
             <motion.div
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 1, 0.8], scale: [0.5, 1.3, 1] }}
-              transition={{ duration: 0.6 }}
+              animate={{ opacity: [0, 1, 0.8, 0], scale: [0.5, 1.5, 1.2, 0.8] }}
+              transition={{ duration: 0.8 }}
             >
               <span className="text-6xl">{skillEffect.emoji}</span>
             </motion.div>
 
-            {/* Skill name flash */}
+            {/* Skill name */}
             <motion.div
               className="text-lg font-black tracking-wider"
               style={{ color: skillEffect.bg, textShadow: `0 0 15px ${skillEffect.bg}` }}
@@ -173,15 +241,13 @@ export default function FloatingNumbers() {
           </motion.div>
         )}
 
-        {/* === MERGE PHASE: numbers combine into answer === */}
-        {phase === 'merge' && (
+        {/* === CHOMP PHASE: no skills yet — dragon bites the answer === */}
+        {phase === 'chomp' && (
           <motion.div
-            key="merge"
+            key="chomp"
             className="flex items-center justify-center"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.5, y: -80, opacity: 0 }}
-            transition={{ exit: { duration: 0.5, ease: 'easeIn' } }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <motion.div
               className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
@@ -189,11 +255,13 @@ export default function FloatingNumbers() {
                 background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
                 color: '#fff',
                 textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
+                boxShadow: `0 0 30px ${colors.glow}`,
               }}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+              animate={{
+                scale: [1, 1.15, 0.85, 1.05, 1],
+                rotate: [0, -5, 5, -3, 0],
+              }}
+              transition={{ duration: 0.5 }}
             >
               {currentQuestion.answer}
             </motion.div>

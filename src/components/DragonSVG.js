@@ -7,33 +7,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function DragonSVG({ dragon, progress, size = 400, chomping = false }) {
   if (!dragon) return null;
 
-  const { primary, secondary, accent, glow } = dragon.colors;
+  // Fixed-size wrapper — prevents ANY layout shift between phases
+  let content;
 
-  // Egg phase: progress 0 to ~0.05 (first correct answer triggers hatch)
   if (progress <= 0) {
-    return <Egg dragon={dragon} size={size} wobble={false} />;
+    content = <Egg dragon={dragon} size={size} wobble={false} />;
+  } else if (progress <= 0.15) {
+    const crackStage = Math.min(3, Math.ceil(progress / 0.05));
+    content = <HatchingEgg dragon={dragon} size={size} crackStage={crackStage} />;
+  } else {
+    const growthT = (progress - 0.15) / 0.85;
+    content = <GrowingDragon dragon={dragon} t={growthT} size={size} chomping={chomping} />;
   }
 
-  if (progress <= 0.05) {
-    return <HatchingEgg dragon={dragon} size={size} />;
-  }
-
-  // Dragon growth phase: 0.05 → 1.0
-  const growthT = (progress - 0.05) / 0.95; // normalize to 0-1
   return (
-    <GrowingDragon
-      dragon={dragon}
-      t={growthT}
-      size={size}
-      chomping={chomping}
-    />
+    <div style={{ width: size, height: size, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+      {content}
+    </div>
   );
 }
 
 // === EGG (pre-game, wobbles gently) ===
 function Egg({ dragon, size, wobble = true }) {
   const { primary, secondary, accent, glow } = dragon.colors;
-  const s = Math.min(size * 0.6, 250);
+  const s = Math.min(size * 0.55, 250);
 
   return (
     <motion.div
@@ -41,7 +38,7 @@ function Egg({ dragon, size, wobble = true }) {
       animate={wobble ? { rotate: [0, 2, -2, 0] } : {}}
       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <svg width="100%" height="100%" viewBox="0 0 200 260">
+      <svg width="100%" height="100%" viewBox="0 0 200 220">
         <defs>
           <radialGradient id={`egg-g-${dragon.id}`} cx="38%" cy="32%">
             <stop offset="0%" stopColor={accent} stopOpacity="0.8" />
@@ -58,13 +55,9 @@ function Egg({ dragon, size, wobble = true }) {
           </filter>
         </defs>
 
-        {/* Nest / ground */}
-        <ellipse cx="100" cy="230" rx="70" ry="12" fill="#3d2b1f" opacity="0.4" />
-        <ellipse cx="100" cy="228" rx="65" ry="10" fill="#5d4037" opacity="0.3" />
-
-        {/* Main egg */}
+        {/* Main egg — centered, bottom at ~185 */}
         <ellipse
-          cx="100" cy="145" rx="55" ry="75"
+          cx="100" cy="110" rx="55" ry="75"
           fill={`url(#egg-g-${dragon.id})`}
           filter={`url(#egg-glow-${dragon.id})`}
         />
@@ -73,13 +66,13 @@ function Egg({ dragon, size, wobble = true }) {
         <EggMarkings dragon={dragon} />
 
         {/* Shine highlight */}
-        <ellipse cx="80" cy="115" rx="20" ry="30"
+        <ellipse cx="80" cy="80" rx="20" ry="30"
           fill={`url(#egg-shine-${dragon.id})`}
         />
 
         {/* Subtle pulse glow */}
         <motion.ellipse
-          cx="100" cy="145" rx="58" ry="78"
+          cx="100" cy="110" rx="58" ry="78"
           fill="none"
           stroke={glow}
           strokeWidth="2"
@@ -93,7 +86,7 @@ function Egg({ dragon, size, wobble = true }) {
 }
 
 function EggMarkings({ dragon }) {
-  const { primary, accent, glow } = dragon.colors;
+  const { accent } = dragon.colors;
   const markings = {
     ember: (
       <g opacity="0.4">
@@ -144,27 +137,36 @@ function EggMarkings({ dragon }) {
 }
 
 // === HATCHING ANIMATION ===
-function HatchingEgg({ dragon, size }) {
+// crackStage 1: first cracks + wobble (answer 1)
+// crackStage 2: heavy cracks + glow shining through (answer 2)
+// crackStage 3: burst open → baby emerges (answer 3)
+function HatchingEgg({ dragon, size, crackStage }) {
   const { primary, secondary, accent, glow } = dragon.colors;
-  const [phase, setPhase] = useState(0); // 0=cracking, 1=breaking, 2=baby emerges
-  const s = Math.min(size * 0.7, 300);
+  const [hatched, setHatched] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
+  const eggSize = Math.min(size * 0.55, 250); // same as Egg component
+  const s = Math.min(size * 0.85, 400);      // baby dragon container (larger)
 
+  // Stage 3: burst sequence — flash, shake hard, then hatch
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 600);
-    const t2 = setTimeout(() => setPhase(2), 1400);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+    if (crackStage >= 3 && !hatched) {
+      // Brief intense shaking, then flash, then hatch
+      const t1 = setTimeout(() => setShowFlash(true), 400);
+      const t2 = setTimeout(() => setHatched(true), 900);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [crackStage, hatched]);
 
   return (
     <div style={{ width: s, height: s, position: 'relative' }}>
       <AnimatePresence>
-        {phase < 2 && (
+        {!hatched && (
           <motion.svg
             key="egg"
-            width="100%" height="100%" viewBox="0 0 200 260"
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.4 }}
-            style={{ position: 'absolute', inset: 0 }}
+            width={eggSize} height={eggSize} viewBox="0 0 200 220"
+            exit={{ opacity: 0, scale: 1.3 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)' }}
           >
             <defs>
               <radialGradient id={`hatch-g-${dragon.id}`} cx="38%" cy="32%">
@@ -172,58 +174,143 @@ function HatchingEgg({ dragon, size }) {
                 <stop offset="45%" stopColor={primary} />
                 <stop offset="100%" stopColor={secondary} />
               </radialGradient>
+              <radialGradient id={`hatch-glow-${dragon.id}`} cx="50%" cy="45%">
+                <stop offset="0%" stopColor={glow} />
+                <stop offset="60%" stopColor={accent} stopOpacity="0.5" />
+                <stop offset="100%" stopColor={primary} stopOpacity="0" />
+              </radialGradient>
             </defs>
 
-            {/* Egg with cracks */}
+            {/* Egg with shake intensity based on crack stage */}
             <motion.g
-              animate={phase >= 1 ? { x: [0, -3, 3, -2, 2, 0] } : { rotate: [0, 3, -3, 0] }}
-              transition={phase >= 1
-                ? { duration: 0.3, repeat: 3 }
-                : { duration: 0.8, repeat: Infinity }
+              animate={
+                crackStage === 1
+                  ? { rotate: [0, 5, -5, 4, -4, 0] }
+                  : crackStage === 2
+                  ? { x: [0, -4, 4, -3, 3, -2, 2, 0] }
+                  : { x: [0, -7, 7, -6, 6, -5, 5, 0], y: [0, -3, 3, -2, 2, 0] }
+              }
+              transition={
+                crackStage === 1
+                  ? { duration: 0.5, repeat: Infinity, repeatDelay: 0.6 }
+                  : crackStage === 2
+                  ? { duration: 0.3, repeat: Infinity, repeatDelay: 0.2 }
+                  : { duration: 0.2, repeat: Infinity }
               }
             >
-              <ellipse cx="100" cy="145" rx="55" ry="75" fill={`url(#hatch-g-${dragon.id})`} />
+              <ellipse cx="100" cy="110" rx="55" ry="75" fill={`url(#hatch-g-${dragon.id})`} />
+              <EggMarkings dragon={dragon} />
 
-              {/* Crack lines */}
+              {/* === Stage 1+: First crack — single zigzag line === */}
               <motion.path
-                d="M 85 130 L 95 115 L 88 100 L 100 90"
-                stroke={accent}
-                strokeWidth="2.5"
-                fill="none"
-                strokeLinecap="round"
+                d="M 85 135 L 90 115 L 82 95 L 95 80 L 88 65 L 100 50"
+                stroke={accent} strokeWidth="3" fill="none" strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
               />
-              {phase >= 1 && (
+
+              {/* === Stage 2+: Branching cracks + glowing light through gaps === */}
+              {crackStage >= 2 && (
                 <>
                   <motion.path
-                    d="M 95 115 L 115 120 L 125 105"
-                    stroke={accent}
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
+                    d="M 90 115 L 110 113 L 125 100 L 138 105"
+                    stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                     transition={{ duration: 0.4 }}
                   />
                   <motion.path
-                    d="M 88 100 L 75 90 L 70 100"
-                    stroke={accent}
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
+                    d="M 82 95 L 65 90 L 55 100"
+                    stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.35, delay: 0.1 }}
+                  />
+                  <motion.path
+                    d="M 95 80 L 115 73 L 130 80"
+                    stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.35, delay: 0.15 }}
+                  />
+                  <motion.path
+                    d="M 100 50 L 112 37 M 100 50 L 88 35"
+                    stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  />
+                  <motion.path
+                    d="M 85 135 L 95 153 L 82 165 L 100 177"
+                    stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
                   />
-                  {/* Light shining through cracks */}
-                  <motion.circle
-                    cx="95" cy="110" r="15"
+
+                  {/* Glow through cracks */}
+                  <motion.ellipse cx="95" cy="95" rx="20" ry="25"
+                    fill={`url(#hatch-glow-${dragon.id})`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.5, 0.25, 0.7, 0.4] }}
+                    transition={{ duration: 0.6, repeat: Infinity }}
+                  />
+                  <motion.circle cx="112" cy="113" r="8"
+                    fill={glow} initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.35, 0.15, 0.45] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.15 }}
+                  />
+                  <motion.circle cx="68" cy="93" r="6"
+                    fill={glow} initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.3, 0.1, 0.35] }}
+                    transition={{ duration: 0.55, repeat: Infinity, delay: 0.25 }}
+                  />
+                  <motion.circle cx="100" cy="43" r="10"
+                    fill={glow} initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.45, 0.2, 0.55] }}
+                    transition={{ duration: 0.45, repeat: Infinity, delay: 0.1 }}
+                  />
+
+                  {/* Egg separating at equator */}
+                  <motion.path
+                    d="M 52 110 Q 50 103 53 97"
+                    stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round"
+                    initial={{ opacity: 0 }} animate={{ opacity: 0.6 }}
+                    transition={{ delay: 0.3 }}
+                  />
+                  <motion.path
+                    d="M 148 110 Q 150 103 147 97"
+                    stroke={accent} strokeWidth="2" fill="none" strokeLinecap="round"
+                    initial={{ opacity: 0 }} animate={{ opacity: 0.6 }}
+                    transition={{ delay: 0.3 }}
+                  />
+                </>
+              )}
+
+              {/* === Stage 3: Even more cracks + top separating === */}
+              {crackStage >= 3 && (
+                <>
+                  <motion.path
+                    d="M 125 100 L 140 85 L 148 90"
+                    stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  <motion.path
+                    d="M 55 100 L 48 85 L 52 73"
+                    stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.3, delay: 0.05 }}
+                  />
+                  {/* Full equator crack */}
+                  <motion.path
+                    d="M 48 110 Q 100 120 152 110"
+                    stroke={accent} strokeWidth="3" fill="none" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.35, delay: 0.1 }}
+                  />
+                  {/* Intense glow burst from center */}
+                  <motion.ellipse cx="100" cy="100" rx="35" ry="40"
                     fill={glow}
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.4, 0.2, 0.5] }}
-                    transition={{ duration: 0.6, repeat: Infinity }}
+                    animate={{ opacity: [0, 0.7, 0.4, 0.9] }}
+                    transition={{ duration: 0.3, repeat: Infinity }}
                   />
                 </>
               )}
@@ -232,50 +319,109 @@ function HatchingEgg({ dragon, size }) {
         )}
       </AnimatePresence>
 
-      {/* Shell pieces flying out */}
-      {phase >= 2 && (
+      {/* Flash burst on stage 3 */}
+      {showFlash && !hatched && (
+        <motion.div
+          style={{
+            position: 'absolute', inset: '-20%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0.8, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <div style={{
+            width: '100%', height: '100%',
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${glow}, ${accent}80, transparent 70%)`,
+          }} />
+        </motion.div>
+      )}
+
+      {/* Shell pieces + sparkles */}
+      {hatched && (
         <div style={{ position: 'absolute', inset: 0 }}>
-          {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i / 8) * Math.PI * 2;
-            const dist = 60 + Math.random() * 40;
+          {Array.from({ length: 14 }, (_, i) => {
+            const angle = (i / 14) * Math.PI * 2 + (i % 2 ? 0.15 : -0.15);
+            const dist = 70 + (i % 3) * 25;
+            const w = 10 + (i % 4) * 4;
+            const h = 8 + (i % 3) * 4;
             return (
               <motion.div
                 key={`shell${i}`}
                 style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  width: 12 + Math.random() * 10,
-                  height: 10 + Math.random() * 8,
-                  borderRadius: '30%',
-                  background: primary,
-                  border: `1px solid ${accent}`,
+                  position: 'absolute', left: '50%', top: '45%',
+                  width: w, height: h,
+                  borderRadius: `${20 + (i % 3) * 15}%`,
+                  background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                  border: `1px solid ${accent}60`,
+                  boxShadow: `inset 0 -2px 4px ${secondary}, 0 0 6px ${glow}40`,
                 }}
                 initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
                 animate={{
                   x: Math.cos(angle) * dist,
-                  y: Math.sin(angle) * dist + 30,
-                  opacity: 0,
-                  scale: 0.3,
-                  rotate: Math.random() * 360,
+                  y: Math.sin(angle) * dist * 0.8 + 20,
+                  opacity: 0, scale: 0.2,
+                  rotate: (i % 2 ? 1 : -1) * 270,
                 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                transition={{ duration: 0.7 + (i % 3) * 0.15, ease: 'easeOut' }}
+              />
+            );
+          })}
+          {Array.from({ length: 10 }, (_, i) => {
+            const angle = (i / 10) * Math.PI * 2;
+            const dist = 40 + (i % 3) * 20;
+            return (
+              <motion.div
+                key={`spark${i}`}
+                style={{
+                  position: 'absolute', left: '50%', top: '45%',
+                  width: 4, height: 4, borderRadius: '50%',
+                  background: glow, boxShadow: `0 0 6px ${glow}`,
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{
+                  x: Math.cos(angle) * dist * 1.3,
+                  y: Math.sin(angle) * dist - 10,
+                  opacity: 0, scale: 0,
+                }}
+                transition={{ duration: 0.5 + (i % 3) * 0.1, ease: 'easeOut' }}
               />
             );
           })}
         </div>
       )}
 
-      {/* Baby dragon emerging */}
-      {phase >= 2 && (
-        <motion.div
-          style={{ position: 'absolute', inset: 0 }}
-          initial={{ scale: 0.3, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.2 }}
-        >
-          <GrowingDragon dragon={dragon} t={0} size={s} chomping={false} />
-        </motion.div>
+      {/* Baby dragon — gentle rise with glow */}
+      {hatched && (
+        <>
+          {/* Glow aura behind baby */}
+          <motion.div
+            style={{
+              position: 'absolute', left: '50%', top: '45%',
+              width: s * 0.6, height: s * 0.6,
+              marginLeft: -s * 0.3, marginTop: -s * 0.3,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${glow}60, ${accent}30, transparent 70%)`,
+              pointerEvents: 'none',
+            }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 1.8, 1.2], opacity: [0, 0.8, 0] }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+          />
+          <motion.div
+            style={{ position: 'absolute', inset: 0 }}
+            initial={{ scale: 0.2, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{
+              type: 'spring', stiffness: 120, damping: 14,
+              opacity: { duration: 0.4 },
+            }}
+          >
+            <GrowingDragon dragon={dragon} t={0} size={s} chomping={false} />
+          </motion.div>
+        </>
       )}
     </div>
   );
@@ -291,10 +437,10 @@ function GrowingDragon({ dragon, t, size, chomping }) {
 
   // === PROPORTIONAL GROWTH CURVES ===
   // Each part grows at its own rate to create real maturity
-  const headRatio = 1.3 - t * 0.45;      // Baby: huge head (1.3x), Adult: proportional (0.85x)
+  const headRatio = 1.3 - t * 0.3;       // Baby: huge head (1.3x), Adult: still large (1.0x)
   const eyeRatio = 1.5 - t * 0.7;        // Baby: giant cute eyes, Adult: narrow fierce
   const bodyRound = 1.2 - t * 0.35;      // Baby: round belly, Adult: lean muscular
-  const neckLen = 0.5 + t * 0.5;         // Baby: short stubby, Adult: long elegant
+  const neckLen = 0.5 + t * 0.35;        // Baby: short stubby, Adult: medium (not giraffe)
   const legLen = 0.4 + t * 0.6;          // Baby: stubby, Adult: tall powerful
   const legThick = 0.7 + t * 0.5;        // Baby: chubby, Adult: muscular
   const wingSpan = 0.15 + t * 0.85;      // Baby: tiny buds, Adult: massive
@@ -329,8 +475,9 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   const displaySize = size * overallSize;
 
   return (
+    <div style={{ width: displaySize, height: displaySize, transform: 'scaleX(-1)' }}>
     <motion.div
-      style={{ width: displaySize, height: displaySize }}
+      style={{ width: '100%', height: '100%' }}
       animate={chomping
         ? { scale: [1, 1.18, 0.9, 1.08, 1] }
         : { y: [0, -5, 0] }
@@ -451,17 +598,19 @@ function GrowingDragon({ dragon, t, size, chomping }) {
               stroke={accent} strokeWidth={1 + clawSize * 0.6} strokeLinecap="round" />
           ))}
 
-          {/* === SPINES (grow taller + more numerous) === */}
+          {/* === SPINES (curved organic ridges) === */}
           <g opacity={0.4 + t * 0.6}>
             {Array.from({ length: spineCount }, (_, i) => {
               const frac = i / Math.max(1, spineCount - 1);
-              // Spines follow the curve from neck to tail
               const sx = bodyCx - 50 + frac * 90;
               const sy = bodyCy - 55 + Math.sin(frac * Math.PI * 0.8) * 15 + frac * 10;
               const h = (4 + t * 18) * (0.6 + (1 - Math.abs(frac - 0.4)) * 0.6);
+              const lean = (frac - 0.4) * 6; // lean backward slightly
+              const w = 2.5 + t * 1.5;
               return (
-                <polygon key={`sp${i}`}
-                  points={`${sx - 2.5 - t},${sy} ${sx},${sy - h} ${sx + 2.5 + t},${sy}`}
+                <path key={`sp${i}`}
+                  d={`M ${sx - w} ${sy} Q ${sx - w * 0.3 + lean} ${sy - h * 0.6} ${sx + lean * 0.8} ${sy - h}
+                      Q ${sx + w * 0.3 + lean} ${sy - h * 0.6} ${sx + w} ${sy}`}
                   fill={accent} stroke={primary} strokeWidth="0.5" />
               );
             })}
@@ -471,13 +620,13 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           <path d={`M ${bodyCx - 25} ${bodyCy - 35}
                      Q ${bodyCx - 50 - neckLen * 15} ${bodyCy - 60 - neckLen * 30}
                        ${neckTopX} ${neckTopY}`}
-            stroke={primary} strokeWidth={12 + (1 - t) * 6 + t * 4}
+            stroke={primary} strokeWidth={14 + (1 - t) * 6 + t * 8}
             fill="none" strokeLinecap="round" />
-          {/* Neck underside */}
+          {/* Neck underside highlight */}
           <path d={`M ${bodyCx - 22} ${bodyCy - 30}
                      Q ${bodyCx - 46 - neckLen * 12} ${bodyCy - 55 - neckLen * 28}
                        ${neckTopX + 3} ${neckTopY + 4}`}
-            stroke={accent} strokeWidth={4 + (1 - t) * 3}
+            stroke={accent} strokeWidth={5 + (1 - t) * 3 + t * 2}
             fill="none" strokeLinecap="round" opacity="0.12" />
 
           {/* === HEAD (proportions change with maturity) === */}
@@ -494,6 +643,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           fill="black" opacity={0.12 + t * 0.15} />
       </svg>
     </motion.div>
+    </div>
   );
 }
 
@@ -636,7 +786,7 @@ function Head({ dragon, t, headCx, headCy, headRx, headRy, snoutLen, hornLen, ey
 }
 
 function Leg({ x, y, hipDx, hipDy, legLen, legThick, claw, color, accent, t, side }) {
-  const w = side === 'near' ? (5 + legThick * 7) : (4 + legThick * 5);
+  const w = side === 'near' ? (6 + legThick * 8) : (5 + legThick * 6);
   const kneeX = x + hipDx * 0.4;
   const kneeY = y + hipDy * 0.55;
   const footX = x + hipDx * 0.8;
@@ -644,20 +794,23 @@ function Leg({ x, y, hipDx, hipDy, legLen, legThick, claw, color, accent, t, sid
 
   return (
     <g>
-      {/* Thigh (gets more muscular with age) */}
-      <path d={`M ${x} ${y} Q ${kneeX + legThick * 3} ${kneeY - 5} ${kneeX} ${kneeY}`}
+      {/* Thigh — muscular curve */}
+      <path d={`M ${x} ${y} Q ${kneeX + legThick * 5} ${kneeY - 8} ${kneeX} ${kneeY}`}
         stroke={color} strokeWidth={w} fill="none" strokeLinecap="round" />
-      {/* Shin (longer with age) */}
-      <path d={`M ${kneeX} ${kneeY} Q ${footX - 1} ${footY - hipDy * 0.2} ${footX} ${footY}`}
-        stroke={color} strokeWidth={w * 0.78} fill="none" strokeLinecap="round" />
-      {/* Foot */}
-      <ellipse cx={footX} cy={footY + 2} rx={8 + claw * 6} ry={3 + claw * 2} fill={color} />
-      {/* Claws (longer with maturity) */}
+      {/* Knee joint */}
+      <circle cx={kneeX} cy={kneeY} r={w * 0.35} fill={color} opacity="0.6" />
+      {/* Shin — tapers toward foot */}
+      <path d={`M ${kneeX} ${kneeY} Q ${footX - 2} ${footY - hipDy * 0.18} ${footX} ${footY}`}
+        stroke={color} strokeWidth={w * 0.7} fill="none" strokeLinecap="round" />
+      {/* Foot pad */}
+      <ellipse cx={footX} cy={footY + 2} rx={8 + claw * 7} ry={3.5 + claw * 2.5} fill={color} />
+      {/* Claws */}
       {[0,1,2].map(c => (
-        <line key={`c${c}`}
-          x1={footX - 6 - claw * 2 + c * (5 + claw * 3)} y1={footY + 2}
-          x2={footX - 8 - claw * 2 + c * (4 + claw * 2.5)} y2={footY + 5 + claw * 5}
-          stroke={accent} strokeWidth={1.2 + claw * 0.8} strokeLinecap="round" />
+        <path key={`c${c}`}
+          d={`M ${footX - 6 - claw * 2 + c * (5 + claw * 3)} ${footY + 2}
+              Q ${footX - 7 - claw * 2 + c * (4.5 + claw * 2.8)} ${footY + 4 + claw * 3}
+                ${footX - 9 - claw * 2 + c * (4 + claw * 2.5)} ${footY + 5 + claw * 6}`}
+          stroke={accent} strokeWidth={1.4 + claw * 0.8} fill="none" strokeLinecap="round" />
       ))}
     </g>
   );
@@ -668,47 +821,82 @@ function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
   const ax = anchorX;
   const ay = anchorY;
 
+  // Wing tip and elbow positions scale with wingspan
+  const lTipX = ax - 110 - ws * 85;
+  const lTipY = ay - 65 - ws * 55;
+  const lElbowX = ax - 70 - ws * 50;
+  const lElbowY = ay - 50 - ws * 40;
+  const lBottomX = ax - 120 - ws * 65;
+  const lBottomY = ay - 5 - ws * 12;
+
+  const rTipX = ax + 120 + ws * 85;
+  const rTipY = ay - 65 - ws * 55;
+  const rElbowX = ax + 80 + ws * 50;
+  const rElbowY = ay - 50 - ws * 40;
+  const rBottomX = ax + 130 + ws * 65;
+  const rBottomY = ay - 5 - ws * 12;
+
   return (
     <motion.g
       animate={{ rotate: [0, 2, -2, 0] }}
       transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
       style={{ transformOrigin: `${ax}px ${ay}px` }}
     >
-      {/* Left wing */}
+      {/* Left wing — membrane */}
       <path d={`M ${ax - 20} ${ay}
-          Q ${ax - 70 - ws * 65} ${ay - 45 - ws * 55} ${ax - 110 - ws * 85} ${ay - 65 - ws * 55}
-          Q ${ax - 130 - ws * 75} ${ay - 35 - ws * 35} ${ax - 120 - ws * 65} ${ay - 5 - ws * 12}
+          Q ${lElbowX} ${lElbowY} ${lTipX} ${lTipY}
+          Q ${lTipX - 18 - ws * 10} ${lTipY + 25 + ws * 15} ${lBottomX} ${lBottomY}
           Q ${ax - 90 - ws * 42} ${ay + 15} ${ax - 30} ${ay + 15}`}
-        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="2" strokeOpacity="0.5" />
-      <path d={`M ${ax - 20} ${ay} Q ${ax - 60 - ws * 45} ${ay - 30 - ws * 35} ${ax - 110 - ws * 85} ${ay - 65 - ws * 55}`}
-        stroke={secondary} strokeWidth={2.5 + ws * 2.5} fill="none" strokeLinecap="round" opacity="0.45" />
-      <path d={`M ${ax - 30} ${ay + 5} Q ${ax - 70 - ws * 32} ${ay - 10 - ws * 18} ${ax - 120 - ws * 65} ${ay - 5 - ws * 12}`}
+        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.4" />
+      {/* Leading edge bone (thick) */}
+      <path d={`M ${ax - 20} ${ay} Q ${lElbowX + 5} ${lElbowY + 5} ${lTipX} ${lTipY}`}
+        stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
+      {/* Elbow joint */}
+      <circle cx={lElbowX} cy={lElbowY} r={2 + ws * 2} fill={secondary} opacity="0.4" />
+      {/* Trailing edge bone */}
+      <path d={`M ${ax - 30} ${ay + 8} Q ${ax - 75 - ws * 35} ${ay + 5 - ws * 8} ${lBottomX} ${lBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
-      {ws > 0.45 && <circle cx={ax - 112 - ws * 85} cy={ay - 67 - ws * 55} r={2 + ws * 2} fill={accent} opacity="0.6" />}
-      {t > 0.25 && [0.25, 0.5, 0.75].map((f, i) => (
-        <line key={`lv${i}`}
-          x1={ax - 20 - f * (95 + ws * 65)} y1={ay - f * (35 + ws * 25)}
-          x2={ax - 30 - f * (75 + ws * 42)} y2={ay + 15 - f * 6}
-          stroke={accent} strokeWidth="0.8" opacity={0.1 + t * 0.12} />
-      ))}
+      {/* Wing finger bones (veins across membrane) */}
+      {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
+        const bx1 = ax - 20 - f * (ax - 20 - lElbowX) - f * (lElbowX - lTipX) * 0.3;
+        const by1 = ay - f * (ay - lElbowY) - f * (lElbowY - lTipY) * 0.3;
+        const bx2 = ax - 30 - f * (ax - 30 - lBottomX);
+        const by2 = ay + 8 - f * (ay + 8 - lBottomY);
+        return (
+          <line key={`lv${i}`} x1={bx1} y1={by1} x2={bx2} y2={by2}
+            stroke={accent} strokeWidth={0.6 + t * 0.6} opacity={0.08 + t * 0.12} />
+        );
+      })}
+      {/* Wing tip claw */}
+      {ws > 0.45 && <circle cx={lTipX} cy={lTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />}
 
-      {/* Right wing */}
+      {/* Right wing — membrane */}
       <path d={`M ${ax + 30} ${ay}
-          Q ${ax + 80 + ws * 65} ${ay - 45 - ws * 55} ${ax + 120 + ws * 85} ${ay - 65 - ws * 55}
-          Q ${ax + 140 + ws * 75} ${ay - 35 - ws * 35} ${ax + 130 + ws * 65} ${ay - 5 - ws * 12}
+          Q ${rElbowX} ${rElbowY} ${rTipX} ${rTipY}
+          Q ${rTipX + 18 + ws * 10} ${rTipY + 25 + ws * 15} ${rBottomX} ${rBottomY}
           Q ${ax + 100 + ws * 42} ${ay + 15} ${ax + 40} ${ay + 15}`}
-        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="2" strokeOpacity="0.5" />
-      <path d={`M ${ax + 30} ${ay} Q ${ax + 70 + ws * 45} ${ay - 30 - ws * 35} ${ax + 120 + ws * 85} ${ay - 65 - ws * 55}`}
-        stroke={secondary} strokeWidth={2.5 + ws * 2.5} fill="none" strokeLinecap="round" opacity="0.45" />
-      <path d={`M ${ax + 40} ${ay + 5} Q ${ax + 80 + ws * 32} ${ay - 10 - ws * 18} ${ax + 130 + ws * 65} ${ay - 5 - ws * 12}`}
+        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.4" />
+      {/* Leading edge bone */}
+      <path d={`M ${ax + 30} ${ay} Q ${rElbowX - 5} ${rElbowY + 5} ${rTipX} ${rTipY}`}
+        stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
+      {/* Elbow joint */}
+      <circle cx={rElbowX} cy={rElbowY} r={2 + ws * 2} fill={secondary} opacity="0.4" />
+      {/* Trailing edge bone */}
+      <path d={`M ${ax + 40} ${ay + 8} Q ${ax + 85 + ws * 35} ${ay + 5 - ws * 8} ${rBottomX} ${rBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
-      {ws > 0.45 && <circle cx={ax + 122 + ws * 85} cy={ay - 67 - ws * 55} r={2 + ws * 2} fill={accent} opacity="0.6" />}
-      {t > 0.25 && [0.25, 0.5, 0.75].map((f, i) => (
-        <line key={`rv${i}`}
-          x1={ax + 30 + f * (95 + ws * 65)} y1={ay - f * (35 + ws * 25)}
-          x2={ax + 40 + f * (75 + ws * 42)} y2={ay + 15 - f * 6}
-          stroke={accent} strokeWidth="0.8" opacity={0.1 + t * 0.12} />
-      ))}
+      {/* Wing finger bones */}
+      {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
+        const bx1 = ax + 30 + f * (rElbowX - (ax + 30)) + f * (rTipX - rElbowX) * 0.3;
+        const by1 = ay - f * (ay - rElbowY) - f * (rElbowY - rTipY) * 0.3;
+        const bx2 = ax + 40 + f * (rBottomX - (ax + 40));
+        const by2 = ay + 8 - f * (ay + 8 - rBottomY);
+        return (
+          <line key={`rv${i}`} x1={bx1} y1={by1} x2={bx2} y2={by2}
+            stroke={accent} strokeWidth={0.6 + t * 0.6} opacity={0.08 + t * 0.12} />
+        );
+      })}
+      {/* Wing tip claw */}
+      {ws > 0.45 && <circle cx={rTipX} cy={rTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />}
     </motion.g>
   );
 }

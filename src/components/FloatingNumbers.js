@@ -71,7 +71,7 @@ export default function FloatingNumbers() {
   if (!currentQuestion) return null;
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[180px] my-4">
+    <div className="relative flex flex-col items-center justify-center my-4" style={{ height: 180 }}>
       <AnimatePresence mode="wait">
         {/* === QUESTION PHASE: floating number bubbles === */}
         {phase === 'question' && (

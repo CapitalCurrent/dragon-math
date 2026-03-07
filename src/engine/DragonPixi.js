@@ -1,14 +1,46 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Application, Texture, Sprite, Graphics } from 'pixi.js';
 
-// Particle configs per dragon type
+// ============================================================
+// PARTICLE CONFIGS — per dragon extraFeature
+// ============================================================
 const PARTICLE_CONFIGS = {
-  embers:  { count: 25, colors: [0xff6b35, 0xff9800, 0xffeb3b], vy: -60, spread: 80, size: [2, 5], life: [1, 2.5], gravity: -15, vxSpread: 8 },
-  frost:   { count: 18, colors: [0x4fc3f7, 0x81d4fa, 0xe1f5fe], vy: -20, spread: 90, size: [1.5, 4], life: [2, 4], gravity: -3, vxSpread: 12 },
-  moss:    { count: 10, colors: [0x8bc34a, 0xa5d6a7, 0x795548], vy: -8, spread: 60, size: [3, 6], life: [3, 5], gravity: 2, vxSpread: 5 },
-  smoke:   { count: 15, colors: [0x9c27b0, 0x7b1fa2, 0xe1bee7], vy: -35, spread: 80, size: [2, 6], life: [1.5, 3], gravity: -8, vxSpread: 10 },
-  sparkle: { count: 22, colors: [0xffd54f, 0xfff176, 0xffffff], vy: -25, spread: 100, size: [1, 3.5], life: [0.5, 1.5], gravity: 0, vxSpread: 15 },
-  sparks:  { count: 20, colors: [0x29b6f6, 0x4dd0e1, 0xffee58], vy: -70, spread: 60, size: [1, 3], life: [0.3, 1], gravity: 8, vxSpread: 20 },
+  embers:  { count: 30, colors: [0xff6b35, 0xff9800, 0xffeb3b], vy: -60, spread: 80, size: [2, 5], life: [1, 2.5], gravity: -15, vxSpread: 10, shape: 'circle', trail: true },
+  frost:   { count: 22, colors: [0x4fc3f7, 0x81d4fa, 0xe1f5fe], vy: -20, spread: 90, size: [1.5, 4], life: [2, 4], gravity: -3, vxSpread: 12, shape: 'diamond', trail: false },
+  moss:    { count: 12, colors: [0x8bc34a, 0xa5d6a7, 0x66bb6a], vy: -8, spread: 60, size: [3, 6], life: [3, 5], gravity: 2, vxSpread: 5, shape: 'circle', trail: false },
+  smoke:   { count: 18, colors: [0x9c27b0, 0x7b1fa2, 0xe1bee7], vy: -35, spread: 80, size: [3, 7], life: [1.5, 3], gravity: -8, vxSpread: 10, shape: 'circle', trail: true },
+  sparkle: { count: 26, colors: [0xffd54f, 0xfff176, 0xffffff], vy: -25, spread: 100, size: [1, 3.5], life: [0.5, 1.5], gravity: 0, vxSpread: 18, shape: 'star', trail: false },
+  sparks:  { count: 24, colors: [0x29b6f6, 0x4dd0e1, 0xffee58], vy: -70, spread: 60, size: [1, 3], life: [0.3, 1], gravity: 8, vxSpread: 25, shape: 'line', trail: true },
+};
+
+// ============================================================
+// SKILL VFX CONFIGS — per dragon type
+// ============================================================
+const SKILL_VFX = {
+  embers: {
+    type: 'breath', color: 0xff6b35, color2: 0xffeb3b,
+    particleCount: 40, speed: 300, spread: 0.6, size: [3, 8], life: 0.8,
+  },
+  frost: {
+    type: 'ring', color: 0x4fc3f7, color2: 0xe1f5fe,
+    particleCount: 30, speed: 200, spread: Math.PI * 2, size: [2, 5], life: 1.0,
+  },
+  moss: {
+    type: 'ground', color: 0x8bc34a, color2: 0x795548,
+    particleCount: 25, speed: 150, spread: Math.PI, size: [4, 10], life: 1.2,
+  },
+  smoke: {
+    type: 'tendrils', color: 0x9c27b0, color2: 0x4a148c,
+    particleCount: 20, speed: 120, spread: 0.8, size: [3, 7], life: 1.5,
+  },
+  sparkle: {
+    type: 'starburst', color: 0xffd54f, color2: 0xffffff,
+    particleCount: 35, speed: 250, spread: Math.PI * 2, size: [2, 6], life: 0.6,
+  },
+  sparks: {
+    type: 'lightning', color: 0x29b6f6, color2: 0xffee58,
+    particleCount: 15, speed: 400, spread: 0.5, size: [1, 3], life: 0.4,
+  },
 };
 
 function resetParticle(p, config, cx, cy) {
@@ -23,33 +55,145 @@ function resetParticle(p, config, cx, cy) {
   p.baseAlpha = 0.3 + Math.random() * 0.5;
   p.alpha = 0;
   p.gravity = config.gravity;
+  p.rotation = Math.random() * Math.PI * 2;
+  p.rotSpeed = (Math.random() - 0.5) * 3;
+  // Trail history
+  p.trail = config.trail ? [] : null;
 }
 
-/**
- * DragonPixi — renders the SVG dragon off-screen, captures to a Pixi texture,
- * then displays with GPU-accelerated particles + breathing animation.
- */
-export default function DragonPixi({ dragon, progress, size = 440, chomping = false, DragonSVGComponent }) {
+function resetSkillParticle(p, vfx, cx, cy) {
+  p.life = 0;
+  p.maxLife = vfx.life + Math.random() * 0.3;
+
+  const angle = (() => {
+    switch (vfx.type) {
+      case 'breath': return -Math.PI * 0.5 + (Math.random() - 0.5) * vfx.spread;
+      case 'ring': return Math.random() * Math.PI * 2;
+      case 'ground': return Math.PI * 0.5 + (Math.random() - 0.5) * 0.8;
+      case 'tendrils': return -Math.PI * 0.5 + (Math.random() - 0.5) * vfx.spread;
+      case 'starburst': return Math.random() * Math.PI * 2;
+      case 'lightning': return -Math.PI * 0.3 + (Math.random() - 0.5) * vfx.spread;
+      default: return Math.random() * Math.PI * 2;
+    }
+  })();
+
+  const speed = vfx.speed * (0.5 + Math.random() * 0.5);
+  p.x = cx;
+  p.y = cy - 80;
+  p.vx = Math.cos(angle) * speed;
+  p.vy = Math.sin(angle) * speed;
+  p.size = vfx.size[0] + Math.random() * (vfx.size[1] - vfx.size[0]);
+  p.color = Math.random() > 0.5 ? vfx.color : vfx.color2;
+  p.alpha = 1;
+  p.baseAlpha = 1;
+  p.gravity = vfx.type === 'ground' ? 100 : vfx.type === 'lightning' ? 0 : -20;
+  p.rotation = angle;
+  p.rotSpeed = (Math.random() - 0.5) * 8;
+}
+
+// Draw a single particle shape
+function drawParticle(gfx, p, shape) {
+  if (p.alpha < 0.01) return;
+  switch (shape) {
+    case 'diamond':
+      gfx.moveTo(p.x, p.y - p.size);
+      gfx.lineTo(p.x + p.size * 0.6, p.y);
+      gfx.lineTo(p.x, p.y + p.size);
+      gfx.lineTo(p.x - p.size * 0.6, p.y);
+      gfx.closePath();
+      gfx.fill({ color: p.color, alpha: p.alpha });
+      break;
+    case 'star': {
+      const s = p.size;
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + p.rotation;
+        gfx.moveTo(p.x, p.y);
+        gfx.lineTo(p.x + Math.cos(a) * s, p.y + Math.sin(a) * s);
+        gfx.stroke({ color: p.color, alpha: p.alpha, width: 1.5 });
+      }
+      gfx.circle(p.x, p.y, s * 0.4);
+      gfx.fill({ color: 0xffffff, alpha: p.alpha * 0.8 });
+      break;
+    }
+    case 'line': {
+      const a = p.rotation;
+      const len = p.size * 2;
+      gfx.moveTo(p.x - Math.cos(a) * len, p.y - Math.sin(a) * len);
+      gfx.lineTo(p.x + Math.cos(a) * len, p.y + Math.sin(a) * len);
+      gfx.stroke({ color: p.color, alpha: p.alpha, width: 1.5 });
+      break;
+    }
+    default:
+      gfx.circle(p.x, p.y, p.size);
+      gfx.fill({ color: p.color, alpha: p.alpha });
+  }
+}
+
+// Draw particle trail
+function drawTrail(gfx, p) {
+  if (!p.trail || p.trail.length < 2) return;
+  for (let i = 1; i < p.trail.length; i++) {
+    const prev = p.trail[i - 1];
+    const curr = p.trail[i];
+    const trailAlpha = (i / p.trail.length) * p.alpha * 0.3;
+    if (trailAlpha < 0.01) continue;
+    gfx.moveTo(prev.x, prev.y);
+    gfx.lineTo(curr.x, curr.y);
+    gfx.stroke({ color: p.color, alpha: trailAlpha, width: p.size * 0.5 });
+  }
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function DragonPixi({
+  dragon, progress, size = 440, chomping = false,
+  streak = 0, wrongAnswer = false,
+  DragonSVGComponent,
+}) {
   const canvasContainerRef = useRef(null);
   const svgContainerRef = useRef(null);
   const appRef = useRef(null);
   const spriteRef = useRef(null);
-  const particlesRef = useRef([]);
+  const glowGfxRef = useRef(null);
   const particleGfxRef = useRef(null);
+  const vfxGfxRef = useRef(null);
+  const particlesRef = useRef([]);
+  const skillParticlesRef = useRef([]);
   const timeRef = useRef(0);
   const chompTimeRef = useRef(0);
   const chompingRef = useRef(chomping);
+  const streakRef = useRef(streak);
+  const wrongRef = useRef(false);
+  const wrongTimeRef = useRef(0);
+  const skillActiveRef = useRef(false);
+  const skillTimeRef = useRef(0);
+  const fidgetTimerRef = useRef(0);
+  const blinkTimerRef = useRef(0);
 
   const canvasW = 540;
   const canvasH = 520;
   const cx = canvasW / 2;
   const cy = canvasH - 30;
 
-  // Keep chomping ref in sync
+  // Keep refs in sync
   useEffect(() => {
     chompingRef.current = chomping;
-    if (chomping) chompTimeRef.current = 0;
+    if (chomping) {
+      chompTimeRef.current = 0;
+      // Trigger skill VFX on chomp
+      skillActiveRef.current = true;
+      skillTimeRef.current = 0;
+    }
   }, [chomping]);
+
+  useEffect(() => { streakRef.current = streak; }, [streak]);
+  useEffect(() => {
+    if (wrongAnswer) {
+      wrongRef.current = true;
+      wrongTimeRef.current = 0;
+    }
+  }, [wrongAnswer]);
 
   // Initialize Pixi Application
   useEffect(() => {
@@ -76,12 +220,15 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
       app.canvas.style.width = canvasW + 'px';
       app.canvas.style.height = canvasH + 'px';
 
-      // Particle graphics layer
-      const gfx = new Graphics();
-      app.stage.addChild(gfx);
-      particleGfxRef.current = gfx;
+      // Layer order: glow -> particles behind -> sprite -> vfx on top
+      const glowGfx = new Graphics();
+      app.stage.addChild(glowGfx);
+      glowGfxRef.current = glowGfx;
 
-      // Dragon sprite (placeholder — texture set later)
+      const particleGfx = new Graphics();
+      app.stage.addChild(particleGfx);
+      particleGfxRef.current = particleGfx;
+
       const sprite = new Sprite();
       sprite.anchor.set(0.5, 1);
       sprite.x = cx;
@@ -89,47 +236,284 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
       app.stage.addChild(sprite);
       spriteRef.current = sprite;
 
-      // Ticker for animation
+      const vfxGfx = new Graphics();
+      app.stage.addChild(vfxGfx);
+      vfxGfxRef.current = vfxGfx;
+
+      // === MAIN TICK LOOP ===
       app.ticker.add((ticker) => {
         const dt = ticker.deltaTime / 60;
         timeRef.current += dt;
         const t = timeRef.current;
 
-        // Breathing / chomp
+        const currentStreak = streakRef.current;
+        const streakIntensity = Math.min(1, currentStreak / 10);
+
+        // --- SPRITE ANIMATION ---
         if (spriteRef.current) {
+          let scaleX = 1;
+          let scaleY = 1;
+          let posY = cy;
+          let rotation = 0;
+
           if (chompingRef.current) {
+            // Chomp: punchy scale with slight forward lean
             chompTimeRef.current += dt;
             const ct = chompTimeRef.current;
-            const s = ct < 0.15 ? 1 + ct / 0.15 * 0.18
-              : ct < 0.3 ? 1.18 - (ct - 0.15) / 0.15 * 0.28
-              : ct < 0.45 ? 0.9 + (ct - 0.3) / 0.15 * 0.18
-              : ct < 0.6 ? 1.08 - (ct - 0.45) / 0.15 * 0.08
+            const s = ct < 0.1 ? 1 + ct / 0.1 * 0.2
+              : ct < 0.2 ? 1.2 - (ct - 0.1) / 0.1 * 0.35
+              : ct < 0.35 ? 0.85 + (ct - 0.2) / 0.15 * 0.2
+              : ct < 0.5 ? 1.05 - (ct - 0.35) / 0.15 * 0.05
               : 1;
-            spriteRef.current.scale.set(s);
-            spriteRef.current.y = cy;
+            scaleX = s;
+            scaleY = s;
+            rotation = ct < 0.2 ? -0.05 * Math.sin(ct * 30) : 0;
+          } else if (wrongRef.current) {
+            // Wrong answer: shake side to side
+            wrongTimeRef.current += dt;
+            const wt = wrongTimeRef.current;
+            if (wt > 0.6) { wrongRef.current = false; }
+            else {
+              const shake = Math.sin(wt * 40) * 8 * (1 - wt / 0.6);
+              spriteRef.current.x = cx + shake;
+              rotation = shake * 0.003;
+            }
           } else {
-            spriteRef.current.scale.set(1 + Math.sin(t * 1.2) * 0.015);
-            spriteRef.current.y = cy + Math.sin(t * 1.2) * 3;
+            spriteRef.current.x = cx;
+          }
+
+          // Idle breathing — asymmetric, deeper occasional breaths
+          if (!chompingRef.current && !wrongRef.current) {
+            const breathCycle = Math.sin(t * 1.2);
+            const deepBreath = Math.sin(t * 0.3) > 0.9 ? 0.01 : 0;
+            const breathAmt = 0.015 + deepBreath + streakIntensity * 0.008;
+            scaleY = 1 + breathCycle * breathAmt;
+            scaleX = 1 - breathCycle * breathAmt * 0.3; // slight horizontal compress
+            posY = cy + breathCycle * 3;
+
+            // Fidget: periodic small rotation
+            fidgetTimerRef.current += dt;
+            if (fidgetTimerRef.current > 4 + Math.random() * 3) {
+              fidgetTimerRef.current = 0;
+            }
+            const fidgetPhase = fidgetTimerRef.current;
+            if (fidgetPhase < 0.8) {
+              rotation = Math.sin(fidgetPhase * Math.PI * 2.5) * 0.02;
+            }
+
+            // Eye blink simulation: brief squash every few seconds
+            blinkTimerRef.current += dt;
+            if (blinkTimerRef.current > 3 + Math.random() * 4) {
+              blinkTimerRef.current = 0;
+            }
+            if (blinkTimerRef.current < 0.1) {
+              scaleY *= 0.97;
+            }
+          }
+
+          spriteRef.current.scale.set(scaleX, scaleY);
+          spriteRef.current.y = posY;
+          spriteRef.current.rotation = rotation;
+        }
+
+        // --- GLOW AURA ---
+        if (glowGfxRef.current) {
+          glowGfxRef.current.clear();
+          const dragonColors = dragon?.colors;
+          if (dragonColors) {
+            const glowPulse = 0.5 + Math.sin(t * 1.5) * 0.3 + streakIntensity * 0.4;
+            const baseRadius = 60 + streakIntensity * 40;
+
+            // Ground glow pool
+            glowGfxRef.current.ellipse(cx, cy + 5, baseRadius * 1.5, 20);
+            glowGfxRef.current.fill({
+              color: parseInt(dragonColors.glow.replace('#', ''), 16),
+              alpha: 0.08 * glowPulse,
+            });
+
+            // Aura behind dragon (only visible at higher streaks)
+            if (currentStreak >= 3) {
+              const auraAlpha = Math.min(0.15, (currentStreak - 3) * 0.02);
+              glowGfxRef.current.circle(cx, cy - size * 0.4, baseRadius);
+              glowGfxRef.current.fill({
+                color: parseInt(dragonColors.primary.replace('#', ''), 16),
+                alpha: auraAlpha * glowPulse,
+              });
+            }
+
+            // Streak >= 5: outer ring pulse
+            if (currentStreak >= 5) {
+              const ringRadius = baseRadius + 30 + Math.sin(t * 3) * 10;
+              glowGfxRef.current.circle(cx, cy - size * 0.35, ringRadius);
+              glowGfxRef.current.stroke({
+                color: parseInt(dragonColors.accent.replace('#', ''), 16),
+                alpha: 0.1 + Math.sin(t * 3) * 0.05,
+                width: 2,
+              });
+            }
+
+            // Streak >= 10: celebration sparkle ring
+            if (currentStreak >= 10) {
+              for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + t * 0.5;
+                const r = baseRadius + 50;
+                const sx = cx + Math.cos(angle) * r;
+                const sy = (cy - size * 0.35) + Math.sin(angle) * r * 0.6;
+                glowGfxRef.current.star(sx, sy, 4, 3, 1.5, t + i);
+                glowGfxRef.current.fill({
+                  color: parseInt(dragonColors.accent.replace('#', ''), 16),
+                  alpha: 0.3 + Math.sin(t * 4 + i) * 0.2,
+                });
+              }
+            }
           }
         }
 
-        // Particles
+        // --- AMBIENT PARTICLES ---
         if (particleGfxRef.current) {
           particleGfxRef.current.clear();
+          const feat = dragon?.physiology?.extraFeature || 'embers';
+          const config = PARTICLE_CONFIGS[feat] || PARTICLE_CONFIGS.embers;
+          const shape = config.shape || 'circle';
+
           for (const p of particlesRef.current) {
             p.life += dt;
-            const feat = dragon?.physiology?.extraFeature || 'embers';
-            const config = PARTICLE_CONFIGS[feat] || PARTICLE_CONFIGS.embers;
             if (p.life > p.maxLife) resetParticle(p, config, cx, cy);
+
             p.x += p.vx * dt;
             p.y += p.vy * dt;
             p.vy += p.gravity * dt;
+            p.rotation += p.rotSpeed * dt;
+
             const frac = p.life / p.maxLife;
             p.alpha = (frac < 0.15 ? frac / 0.15 : frac > 0.65 ? (1 - frac) / 0.35 : 1) * p.baseAlpha;
 
-            if (p.alpha > 0.01) {
-              particleGfxRef.current.circle(p.x, p.y, p.size);
-              particleGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+            // Streak boost: bigger, brighter particles
+            const streakSize = 1 + streakIntensity * 0.5;
+            const origSize = p.size;
+            p.size *= streakSize;
+            p.alpha *= (1 + streakIntensity * 0.3);
+
+            // Draw trail
+            if (p.trail) {
+              p.trail.push({ x: p.x, y: p.y });
+              if (p.trail.length > 6) p.trail.shift();
+              drawTrail(particleGfxRef.current, p);
+            }
+
+            drawParticle(particleGfxRef.current, p, shape);
+            p.size = origSize;
+          }
+        }
+
+        // --- SKILL VFX ---
+        if (vfxGfxRef.current) {
+          vfxGfxRef.current.clear();
+
+          if (skillActiveRef.current) {
+            skillTimeRef.current += dt;
+            const feat = dragon?.physiology?.extraFeature || 'embers';
+            const vfx = SKILL_VFX[feat] || SKILL_VFX.embers;
+
+            // Spawn skill particles on first frame
+            if (skillTimeRef.current < dt * 2 && skillParticlesRef.current.length === 0) {
+              skillParticlesRef.current = Array.from({ length: vfx.particleCount }, () => {
+                const p = { life: 0, maxLife: 1, x: 0, y: 0, vx: 0, vy: 0, size: 3, color: 0xffffff, alpha: 1, baseAlpha: 1, gravity: 0, rotation: 0, rotSpeed: 0 };
+                resetSkillParticle(p, vfx, cx, cy);
+                return p;
+              });
+            }
+
+            // Update and draw skill particles
+            let allDead = true;
+            for (const p of skillParticlesRef.current) {
+              p.life += dt;
+              if (p.life > p.maxLife) {
+                p.alpha = 0;
+                continue;
+              }
+              allDead = false;
+
+              p.x += p.vx * dt;
+              p.y += p.vy * dt;
+              p.vy += p.gravity * dt;
+              p.rotation += p.rotSpeed * dt;
+
+              const frac = p.life / p.maxLife;
+              p.alpha = frac < 0.1 ? frac / 0.1 : (1 - frac) / 0.9;
+              p.alpha *= p.baseAlpha;
+
+              // Draw based on VFX type
+              if (p.alpha > 0.01) {
+                switch (vfx.type) {
+                  case 'breath':
+                    // Flame-like elongated circles
+                    vfxGfxRef.current.ellipse(p.x, p.y, p.size * 1.5, p.size);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+                    // Hot core
+                    vfxGfxRef.current.circle(p.x, p.y, p.size * 0.4);
+                    vfxGfxRef.current.fill({ color: 0xffffff, alpha: p.alpha * 0.5 });
+                    break;
+                  case 'ring':
+                    // Ice crystals — diamond shapes
+                    vfxGfxRef.current.moveTo(p.x, p.y - p.size);
+                    vfxGfxRef.current.lineTo(p.x + p.size * 0.5, p.y);
+                    vfxGfxRef.current.lineTo(p.x, p.y + p.size);
+                    vfxGfxRef.current.lineTo(p.x - p.size * 0.5, p.y);
+                    vfxGfxRef.current.closePath();
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+                    break;
+                  case 'ground':
+                    // Rock chunks
+                    vfxGfxRef.current.roundRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size, 2);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+                    break;
+                  case 'tendrils':
+                    // Smoky wisps — thick strokes
+                    vfxGfxRef.current.circle(p.x, p.y, p.size);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha * 0.6 });
+                    vfxGfxRef.current.circle(p.x + p.size, p.y - p.size * 0.5, p.size * 0.7);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha * 0.3 });
+                    break;
+                  case 'starburst':
+                    // Golden sparkles with rays
+                    vfxGfxRef.current.star(p.x, p.y, 4, p.size, p.size * 0.4, p.rotation);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+                    break;
+                  case 'lightning': {
+                    // Zigzag bolt segments
+                    const len = p.size * 4;
+                    let lx = p.x, ly = p.y;
+                    vfxGfxRef.current.moveTo(lx, ly);
+                    for (let seg = 0; seg < 4; seg++) {
+                      lx += (Math.random() - 0.3) * len;
+                      ly += (Math.random() - 0.5) * len * 0.5 - len * 0.2;
+                      vfxGfxRef.current.lineTo(lx, ly);
+                    }
+                    vfxGfxRef.current.stroke({ color: p.color, alpha: p.alpha, width: 2 });
+                    // Glow dot at tip
+                    vfxGfxRef.current.circle(lx, ly, 3);
+                    vfxGfxRef.current.fill({ color: 0xffffff, alpha: p.alpha * 0.8 });
+                    break;
+                  }
+                  default:
+                    vfxGfxRef.current.circle(p.x, p.y, p.size);
+                    vfxGfxRef.current.fill({ color: p.color, alpha: p.alpha });
+                }
+              }
+            }
+
+            // Screen flash on skill start
+            if (skillTimeRef.current < 0.15) {
+              const flashAlpha = (1 - skillTimeRef.current / 0.15) * 0.2;
+              const flashColor = parseInt((dragon?.colors?.glow || '#ffffff').replace('#', ''), 16);
+              vfxGfxRef.current.rect(0, 0, canvasW, canvasH);
+              vfxGfxRef.current.fill({ color: flashColor, alpha: flashAlpha });
+            }
+
+            if (allDead && skillTimeRef.current > 0.3) {
+              skillActiveRef.current = false;
+              skillParticlesRef.current = [];
             }
           }
         }
@@ -140,23 +524,27 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
 
     return () => {
       destroyed = true;
-      if (app) {
-        app.destroy(true, { children: true });
-      }
+      if (app) app.destroy(true, { children: true });
       appRef.current = null;
       spriteRef.current = null;
+      glowGfxRef.current = null;
       particleGfxRef.current = null;
+      vfxGfxRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initialize particles when dragon changes
+  // Initialize ambient particles when dragon changes
   useEffect(() => {
     if (!dragon) return;
     const feat = dragon.physiology?.extraFeature || 'embers';
     const config = PARTICLE_CONFIGS[feat] || PARTICLE_CONFIGS.embers;
     particlesRef.current = Array.from({ length: config.count }, () => {
-      const p = { life: 0, maxLife: 1, x: 0, y: 0, vx: 0, vy: 0, size: 2, color: 0xffffff, alpha: 0, baseAlpha: 0.5, gravity: 0 };
+      const p = {
+        life: 0, maxLife: 1, x: 0, y: 0, vx: 0, vy: 0,
+        size: 2, color: 0xffffff, alpha: 0, baseAlpha: 0.5, gravity: 0,
+        rotation: 0, rotSpeed: 0, trail: null,
+      };
       resetParticle(p, config, cx, cy);
       p.life = Math.random() * p.maxLife;
       return p;
@@ -164,7 +552,7 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragon?.id, cx, cy]);
 
-  // Capture SVG to Pixi texture when dragon/progress changes
+  // Capture SVG to Pixi texture
   const captureSVG = useCallback(() => {
     if (!svgContainerRef.current || !spriteRef.current) return;
     const svgEl = svgContainerRef.current.querySelector('svg');
@@ -182,9 +570,11 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const tex = Texture.from(canvas);
-      spriteRef.current.texture = tex;
-      spriteRef.current.width = size;
-      spriteRef.current.height = size;
+      if (spriteRef.current) {
+        spriteRef.current.texture = tex;
+        spriteRef.current.width = size;
+        spriteRef.current.height = size;
+      }
       URL.revokeObjectURL(url);
     };
     img.src = url;
@@ -205,8 +595,7 @@ export default function DragonPixi({ dragon, progress, size = 440, chomping = fa
       >
         <DragonSVGComponent dragon={dragon} progress={progress} size={size} chomping={false} />
       </div>
-
-      {/* Pixi canvas container */}
+      {/* Pixi canvas */}
       <div ref={canvasContainerRef} style={{ width: canvasW, height: canvasH }} />
     </div>
   );

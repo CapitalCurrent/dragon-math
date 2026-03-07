@@ -115,7 +115,7 @@ function DragonCave({ dragon, progress, children }) {
 }
 
 export default function GameScreen() {
-  const { dragon, progress, showMerge } = useGame();
+  const { dragon, progress, showMerge, streak, wrongAnswer } = useGame();
   const version = useVersion();
   const isPixi = version === 'v2';
 
@@ -147,6 +147,8 @@ export default function GameScreen() {
                     progress={progress}
                     size={440}
                     chomping={showMerge}
+                    streak={streak}
+                    wrongAnswer={wrongAnswer}
                     DragonSVGComponent={DragonSVG}
                   />
                 </DragonCave>

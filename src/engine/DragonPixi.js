@@ -170,11 +170,17 @@ export default function DragonPixi({
   const skillTimeRef = useRef(0);
   const fidgetTimerRef = useRef(0);
   const blinkTimerRef = useRef(0);
-
   const canvasW = 540;
   const canvasH = 520;
   const cx = canvasW / 2;
   const cy = canvasH - 30;
+
+  // Smooth lerp state (current values that chase targets)
+  const currentXRef = useRef(cx);
+  const currentYRef = useRef(cy);
+  const currentScaleXRef = useRef(1);
+  const currentScaleYRef = useRef(1);
+  const currentRotRef = useRef(0);
 
   // Keep refs in sync
   useEffect(() => {
@@ -249,12 +255,15 @@ export default function DragonPixi({
         const currentStreak = streakRef.current;
         const streakIntensity = Math.min(1, currentStreak / 10);
 
-        // --- SPRITE ANIMATION ---
+        // --- SPRITE ANIMATION (lerp-smoothed) ---
         if (spriteRef.current) {
-          let scaleX = 1;
-          let scaleY = 1;
-          let posY = cy;
-          let rotation = 0;
+          // Compute target values, then lerp toward them
+          let tgtX = cx;
+          let tgtY = cy;
+          let tgtSX = 1;
+          let tgtSY = 1;
+          let tgtRot = 0;
+          const lerpSpeed = 12; // higher = snappier (frames to ~63%)
 
           if (chompingRef.current) {
             // Chomp: punchy scale with slight forward lean
@@ -265,31 +274,32 @@ export default function DragonPixi({
               : ct < 0.35 ? 0.85 + (ct - 0.2) / 0.15 * 0.2
               : ct < 0.5 ? 1.05 - (ct - 0.35) / 0.15 * 0.05
               : 1;
-            scaleX = s;
-            scaleY = s;
-            rotation = ct < 0.2 ? -0.05 * Math.sin(ct * 30) : 0;
+            tgtSX = s;
+            tgtSY = s;
+            tgtRot = ct < 0.2 ? -0.05 * Math.sin(ct * 30) : 0;
+            tgtX = cx;
+            tgtY = cy;
           } else if (wrongRef.current) {
-            // Wrong answer: shake side to side
+            // Wrong answer: shake side to side (direct, no lerp for shake)
             wrongTimeRef.current += dt;
             const wt = wrongTimeRef.current;
             if (wt > 0.6) { wrongRef.current = false; }
             else {
               const shake = Math.sin(wt * 40) * 8 * (1 - wt / 0.6);
-              spriteRef.current.x = cx + shake;
-              rotation = shake * 0.003;
+              tgtX = cx + shake;
+              tgtRot = shake * 0.003;
             }
-          } else {
-            spriteRef.current.x = cx;
           }
 
-          // Idle breathing — asymmetric, deeper occasional breaths
+          // Idle breathing — always computed, blends in when not chomping/shaking
           if (!chompingRef.current && !wrongRef.current) {
             const breathCycle = Math.sin(t * 1.2);
             const deepBreath = Math.sin(t * 0.3) > 0.9 ? 0.01 : 0;
             const breathAmt = 0.015 + deepBreath + streakIntensity * 0.008;
-            scaleY = 1 + breathCycle * breathAmt;
-            scaleX = 1 - breathCycle * breathAmt * 0.3; // slight horizontal compress
-            posY = cy + breathCycle * 3;
+            tgtSY = 1 + breathCycle * breathAmt;
+            tgtSX = 1 - breathCycle * breathAmt * 0.3;
+            tgtY = cy + breathCycle * 3;
+            tgtX = cx;
 
             // Fidget: periodic small rotation
             fidgetTimerRef.current += dt;
@@ -298,7 +308,7 @@ export default function DragonPixi({
             }
             const fidgetPhase = fidgetTimerRef.current;
             if (fidgetPhase < 0.8) {
-              rotation = Math.sin(fidgetPhase * Math.PI * 2.5) * 0.02;
+              tgtRot = Math.sin(fidgetPhase * Math.PI * 2.5) * 0.02;
             }
 
             // Eye blink simulation: brief squash every few seconds
@@ -307,13 +317,22 @@ export default function DragonPixi({
               blinkTimerRef.current = 0;
             }
             if (blinkTimerRef.current < 0.1) {
-              scaleY *= 0.97;
+              tgtSY *= 0.97;
             }
           }
 
-          spriteRef.current.scale.set(scaleX, scaleY);
-          spriteRef.current.y = posY;
-          spriteRef.current.rotation = rotation;
+          // Smooth lerp all values toward targets
+          const lf = 1 - Math.exp(-lerpSpeed * dt);
+          currentXRef.current += (tgtX - currentXRef.current) * lf;
+          currentYRef.current += (tgtY - currentYRef.current) * lf;
+          currentScaleXRef.current += (tgtSX - currentScaleXRef.current) * lf;
+          currentScaleYRef.current += (tgtSY - currentScaleYRef.current) * lf;
+          currentRotRef.current += (tgtRot - currentRotRef.current) * lf;
+
+          spriteRef.current.x = currentXRef.current;
+          spriteRef.current.y = currentYRef.current;
+          spriteRef.current.scale.set(currentScaleXRef.current, currentScaleYRef.current);
+          spriteRef.current.rotation = currentRotRef.current;
         }
 
         // --- GLOW AURA ---

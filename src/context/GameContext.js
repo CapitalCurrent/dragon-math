@@ -26,6 +26,7 @@ const initialState = {
   newSkill: null, // temporarily set when a skill is unlocked
   wrongAnswer: false,
   showMerge: false,
+  eating: false, // true when answer is flying to dragon (mouth open phase)
   totalCorrect: 0, // lifetime
   totalPlayed: 0,  // lifetime
 };
@@ -55,6 +56,7 @@ function reducer(state, action) {
         currentQuestion: levelData.generate(),
         wrongAnswer: false,
         showMerge: false,
+        eating: false,
       };
     }
 
@@ -101,6 +103,9 @@ function reducer(state, action) {
         wrongAnswer: true,
         totalPlayed: state.totalPlayed + 1,
       };
+
+    case 'START_EATING':
+      return { ...state, eating: true };
 
     case 'CLEAR_SKILL_POPUP':
       return { ...state, newSkill: null };

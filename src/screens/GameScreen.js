@@ -115,7 +115,7 @@ function DragonCave({ dragon, progress, children }) {
 }
 
 export default function GameScreen() {
-  const { dragon, progress, showMerge, streak, wrongAnswer } = useGame();
+  const { dragon, progress, eating, streak, wrongAnswer } = useGame();
   const version = useVersion();
   const isPixi = version === 'v2';
 
@@ -138,7 +138,7 @@ export default function GameScreen() {
             {isPixi ? (
               <Suspense fallback={
                 <DragonCave dragon={dragon} progress={progress}>
-                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={showMerge} />
+                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={eating} />
                 </DragonCave>
               }>
                 <DragonCave dragon={dragon} progress={progress}>
@@ -146,7 +146,7 @@ export default function GameScreen() {
                     dragon={dragon}
                     progress={progress}
                     size={440}
-                    chomping={showMerge}
+                    chomping={eating}
                     streak={streak}
                     wrongAnswer={wrongAnswer}
                     DragonSVGComponent={DragonSVG}
@@ -155,7 +155,7 @@ export default function GameScreen() {
               </Suspense>
             ) : (
               <DragonCave dragon={dragon} progress={progress}>
-                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={showMerge} />
+                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={eating} />
               </DragonCave>
             )}
           </div>

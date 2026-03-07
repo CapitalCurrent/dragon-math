@@ -1006,7 +1006,7 @@ function Spines({ dragon, t, bodyCx, bodyCy, spineCount }) {
 
 // Type-specific extra visual features (particles, textures, unique elements)
 function DragonExtras({ dragon, t, bodyCx, bodyCy, bodyRx, bodyRy }) {
-  const { primary, accent, glow } = dragon.colors;
+  const { primary, accent } = dragon.colors;
   const extra = dragon.physiology?.extraFeature;
   if (!extra || t < 0.15) return null;
 

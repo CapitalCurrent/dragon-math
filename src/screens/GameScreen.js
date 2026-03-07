@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
+import { useVersion } from '../App';
 import DragonSVG from '../components/DragonSVG';
 import FloatingNumbers from '../components/FloatingNumbers';
 import AnswerInput from '../components/AnswerInput';
 import ProgressBar from '../components/ProgressBar';
 import SkillBar from '../components/SkillBar';
+
+const DragonPixi = lazy(() => import('../engine/DragonPixi'));
 
 function DragonCave({ dragon, progress, children }) {
   const { primary, accent, glow } = dragon.colors;
@@ -113,6 +116,8 @@ function DragonCave({ dragon, progress, children }) {
 
 export default function GameScreen() {
   const { dragon, progress, showMerge } = useGame();
+  const version = useVersion();
+  const isPixi = version === 'v2';
 
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
@@ -130,14 +135,27 @@ export default function GameScreen() {
         {/* Dragon display — fixed width prevents layout shift during chomp */}
         <div className="flex flex-col items-center" style={{ width: 540 }}>
           <div className="flex-shrink-0">
-            <DragonCave dragon={dragon} progress={progress}>
-              <DragonSVG
-                dragon={dragon}
-                progress={progress}
-                size={440}
-                chomping={showMerge}
-              />
-            </DragonCave>
+            {isPixi ? (
+              <Suspense fallback={
+                <DragonCave dragon={dragon} progress={progress}>
+                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={showMerge} />
+                </DragonCave>
+              }>
+                <DragonCave dragon={dragon} progress={progress}>
+                  <DragonPixi
+                    dragon={dragon}
+                    progress={progress}
+                    size={440}
+                    chomping={showMerge}
+                    DragonSVGComponent={DragonSVG}
+                  />
+                </DragonCave>
+              </Suspense>
+            ) : (
+              <DragonCave dragon={dragon} progress={progress}>
+                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={showMerge} />
+              </DragonCave>
+            )}
           </div>
 
           {/* Stage name + description */}

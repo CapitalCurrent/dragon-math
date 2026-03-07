@@ -695,7 +695,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             fill="none" strokeLinecap="round" opacity="0.12" />
 
           {/* === HEAD (proportions change with maturity) === */}
-          <Head dragon={dragon} t={t}
+          <Head dragon={dragon} t={t} chomping={chomping}
             headCx={headCx} headCy={headCy} headRx={headRx} headRy={headRy}
             snoutLen={snoutLen} hornLen={hornLen} eyeRatio={eyeRatio}
             jawAngularity={jawAngularity} browRidge={browRidge}
@@ -718,7 +718,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
 
 // === SUB-COMPONENTS ===
 
-function Head({ dragon, t, headCx, headCy, headRx, headRy, snoutLen, hornLen, eyeRatio, jawAngularity, browRidge, breathIntensity }) {
+function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, hornLen, eyeRatio, jawAngularity, browRidge, breathIntensity }) {
   const { primary, secondary, accent, glow } = dragon.colors;
 
   // Eye size decreases with maturity (baby=big cute, adult=narrow fierce)
@@ -732,7 +732,9 @@ function Head({ dragon, t, headCx, headCy, headRx, headRy, snoutLen, hornLen, ey
   const snoutTipY = headCy + 3;
 
   // Jaw drops more with maturity (angular vs round)
-  const jawDrop = 4 + jawAngularity * 10;
+  // Extra jaw drop when chomping
+  const baseJawDrop = 4 + jawAngularity * 10;
+  const jawDrop = chomping ? baseJawDrop + 12 + t * 8 : baseJawDrop;
 
   return (
     <g>
@@ -757,6 +759,76 @@ function Head({ dragon, t, headCx, headCy, headRx, headRy, snoutLen, hornLen, ey
       <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}
                  Q ${snoutTipX + 15} ${snoutTipY + jawDrop} ${snoutTipX + 3} ${snoutTipY + jawDrop * 0.6}`}
         stroke={primary} strokeWidth={1.5 + jawAngularity * 2} fill="none" opacity={0.3 + jawAngularity * 0.25} />
+
+      {/* === OPEN MOUTH with teeth and tongue (when chomping) === */}
+      {chomping && (() => {
+        const mouthX = snoutTipX + 5;
+        const mouthY = snoutTipY + 2;
+        const mouthW = headRx * 1.2 + t * 8;
+        const mouthH = jawDrop * 0.7;
+        const teethCount = Math.floor(3 + t * 4);
+        const toothH = 3 + t * 4;
+        return (
+          <g>
+            {/* Mouth interior (dark) */}
+            <ellipse cx={mouthX + mouthW * 0.4} cy={mouthY + mouthH * 0.3}
+              rx={mouthW * 0.5} ry={mouthH * 0.55}
+              fill="#0a0008" />
+
+            {/* Tongue */}
+            <motion.path
+              d={`M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.4}
+                  Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.8}
+                    ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.5}
+                  Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.2}
+                    ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.45}`}
+              fill="#cc2244" stroke="#991133" strokeWidth="0.8"
+              animate={{ d: [
+                `M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.4}
+                 Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.85}
+                   ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.55}
+                 Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.25}
+                   ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.5}`,
+                `M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.35}
+                 Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.75}
+                   ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.45}
+                 Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.2}
+                   ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.4}`,
+              ]}}
+              transition={{ duration: 0.4, repeat: Infinity, repeatType: 'reverse' }}
+            />
+
+            {/* Upper teeth */}
+            {Array.from({ length: teethCount }, (_, i) => {
+              const tx = mouthX + mouthW * 0.1 + (i / (teethCount - 1)) * mouthW * 0.7;
+              return (
+                <polygon key={`ut${i}`}
+                  points={`${tx - 1.5},${mouthY - 1} ${tx + 1.5},${mouthY - 1} ${tx},${mouthY + toothH}`}
+                  fill="#f0f0e0" stroke="#ccc" strokeWidth="0.3" />
+              );
+            })}
+
+            {/* Lower teeth (smaller, pointing up) */}
+            {Array.from({ length: teethCount - 1 }, (_, i) => {
+              const tx = mouthX + mouthW * 0.15 + (i / (teethCount - 2)) * mouthW * 0.6;
+              const bottomY = mouthY + mouthH * 0.6;
+              return (
+                <polygon key={`lt${i}`}
+                  points={`${tx - 1.2},${bottomY + 1} ${tx + 1.2},${bottomY + 1} ${tx},${bottomY - toothH * 0.7}`}
+                  fill="#e8e8d8" stroke="#bbb" strokeWidth="0.3" />
+              );
+            })}
+
+            {/* Fangs (larger corner teeth) */}
+            <polygon
+              points={`${mouthX + 1},${mouthY - 2} ${mouthX + 4},${mouthY - 2} ${mouthX + 2.5},${mouthY + toothH * 1.5}`}
+              fill="#fffff0" stroke="#ddd" strokeWidth="0.4" />
+            <polygon
+              points={`${mouthX + mouthW * 0.7},${mouthY - 2} ${mouthX + mouthW * 0.7 + 3},${mouthY - 2} ${mouthX + mouthW * 0.7 + 1.5},${mouthY + toothH * 1.3}`}
+              fill="#fffff0" stroke="#ddd" strokeWidth="0.4" />
+          </g>
+        );
+      })()}
 
       {/* Nostrils */}
       <circle cx={snoutTipX + 6} cy={snoutTipY - 2} r={2 + snoutLen} fill={glow} opacity="0.7" />

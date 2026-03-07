@@ -573,13 +573,35 @@ export default function DragonPixi({
   }, [dragon?.id, cx, cy]);
 
   // Capture SVG to Pixi texture
+  // DragonSVG renders a wrapper div (size × size, flex align-end center)
+  // with the actual SVG inside (which may be smaller, e.g. egg = 242px).
+  // We build a composite SVG at the full wrapper size, positioning the
+  // inner SVG content at bottom-center to match the CSS flex layout.
   const captureSVG = useCallback(() => {
     if (!svgContainerRef.current || !spriteRef.current) return;
     const svgEl = svgContainerRef.current.querySelector('svg');
     if (!svgEl) return;
 
-    const svgData = new XMLSerializer().serializeToString(svgEl);
-    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    // Get the inner SVG's rendered dimensions from its parent (motion.div)
+    const parent = svgEl.parentElement;
+    const innerW = parent ? parent.offsetWidth : size;
+    const innerH = parent ? parent.offsetHeight : size;
+
+    // Clone SVG and set explicit pixel dimensions (replacing width="100%" etc.)
+    const clone = svgEl.cloneNode(true);
+    clone.setAttribute('width', String(innerW));
+    clone.setAttribute('height', String(innerH));
+
+    // Wrap in a full-size SVG positioned at bottom-center (matching flex layout)
+    const offsetX = (size - innerW) / 2;
+    const offsetY = size - innerH;
+    const wrapperSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <g transform="translate(${offsetX},${offsetY})">
+        ${new XMLSerializer().serializeToString(clone)}
+      </g>
+    </svg>`;
+
+    const blob = new Blob([wrapperSVG], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {

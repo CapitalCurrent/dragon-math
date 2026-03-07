@@ -241,13 +241,13 @@ export default function FloatingNumbers() {
           </motion.div>
         )}
 
-        {/* === CHOMP PHASE: no skills yet — dragon bites the answer === */}
+        {/* === CHOMP PHASE: dragon tugs the answer toward itself === */}
         {phase === 'chomp' && (
           <motion.div
             key="chomp"
             className="flex items-center justify-center"
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
           >
             <motion.div
               className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
@@ -258,10 +258,12 @@ export default function FloatingNumbers() {
                 boxShadow: `0 0 30px ${colors.glow}`,
               }}
               animate={{
-                scale: [1, 1.15, 0.85, 1.05, 1],
+                scale: [1, 1.15, 0.9, 1.1, 1],
+                x: [0, 5, -15, -8, -20],
+                y: [0, 5, -20, -10, -30],
                 rotate: [0, -5, 5, -3, 0],
               }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
               {currentQuestion.answer}
             </motion.div>
@@ -273,22 +275,46 @@ export default function FloatingNumbers() {
           <motion.div
             key="eat"
             className="flex items-center justify-center"
+            style={{ position: 'relative' }}
           >
+            {/* Glowing trail particles */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <motion.div
+                key={`trail-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 12 - i * 2,
+                  height: 12 - i * 2,
+                  background: i % 2 === 0 ? colors.accent : colors.glow,
+                  boxShadow: `0 0 8px ${colors.glow}`,
+                }}
+                initial={{ x: 0, y: 0, opacity: 0 }}
+                animate={{
+                  x: -200 * (0.5 + i * 0.1),
+                  y: -300 * (0.5 + i * 0.1),
+                  opacity: [0, 0.8, 0],
+                  scale: [1, 0.5, 0],
+                }}
+                transition={{ duration: 0.6, delay: i * 0.06, ease: 'easeIn' }}
+              />
+            ))}
+            {/* Main answer bubble — flies toward dragon (up-left) */}
             <motion.div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-xl"
+              className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
               style={{
                 background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
                 color: '#fff',
-                textShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                boxShadow: `0 0 20px ${colors.glow}`,
+                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
               }}
-              initial={{ scale: 1, y: 0, opacity: 1 }}
+              initial={{ scale: 1, x: 0, y: 0, opacity: 1 }}
               animate={{
-                y: -180,
-                scale: 0.3,
-                opacity: 0,
+                x: -200,
+                y: -300,
+                scale: [1, 1.2, 0.4],
+                opacity: [1, 1, 0],
               }}
-              transition={{ duration: 0.6, ease: 'easeIn' }}
+              transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
             >
               {currentQuestion.answer}
             </motion.div>

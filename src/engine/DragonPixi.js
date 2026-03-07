@@ -582,14 +582,12 @@ export default function DragonPixi({
     const svgEl = svgContainerRef.current.querySelector('svg');
     if (!svgEl) return;
 
-    // Get the inner SVG's actual rendered dimensions from its parent
-    const parent = svgEl.parentElement;
-    const innerW = parent ? parent.offsetWidth : size;
-    const innerH = parent ? parent.offsetHeight : size;
+    // Get the SVG's actual rendered size (handles both percentage and pixel widths)
+    const rect = svgEl.getBoundingClientRect();
+    const innerW = rect.width || size;
+    const innerH = rect.height || size;
 
-    console.log('[captureSVG] innerW:', innerW, 'innerH:', innerH, 'parent tag:', parent?.tagName, 'parent style.width:', parent?.style.width);
-
-    // Clone and set explicit pixel dimensions (SVG has width="100%")
+    // Clone and set explicit pixel dimensions (some SVGs use width="100%")
     const clone = svgEl.cloneNode(true);
     clone.setAttribute('width', String(innerW));
     clone.setAttribute('height', String(innerH));

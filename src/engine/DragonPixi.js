@@ -331,7 +331,8 @@ export default function DragonPixi({
 
           spriteRef.current.x = currentXRef.current;
           spriteRef.current.y = currentYRef.current;
-          spriteRef.current.scale.set(currentScaleXRef.current, currentScaleYRef.current);
+          // Negate scaleX to flip dragon horizontally (SVG faces left, we want right)
+          spriteRef.current.scale.set(-currentScaleXRef.current, currentScaleYRef.current);
           spriteRef.current.rotation = currentRotRef.current;
         }
 

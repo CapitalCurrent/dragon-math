@@ -135,8 +135,8 @@ export function GameProvider({ children }) {
     if (!state.currentQuestion) return;
     if (parseInt(answer) === state.currentQuestion.answer) {
       dispatch({ type: 'CORRECT_ANSWER' });
-      // Next question after animation
-      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 1800);
+      // Next question after animation (join 800 + skill 900 + eat 600 + buffer 200)
+      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 2500);
     } else {
       dispatch({ type: 'WRONG_ANSWER' });
     }

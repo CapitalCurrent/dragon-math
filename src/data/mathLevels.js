@@ -63,35 +63,35 @@ export const MATH_LEVELS = [
       const answer = Math.floor(Math.random() * 10);
       const b = Math.floor(Math.random() * 10);
       const a = answer + b;
-      return { a, b, op: '-', answer, display: `${a} - ${b}` };
+      return { a, b, op: '-', answer, display: `${a} − ${b}` };
     },
   },
   {
     id: 6,
-    name: 'Subtraction to 20',
-    description: 'Subtract with numbers up to 20',
+    name: 'Subtraction to 18',
+    description: 'Subtract with sums up to 18',
     passThreshold: 0.95,
     generate: () => {
-      const a = Math.floor(Math.random() * 21);
+      // a ranges 0-18, b ≤ a, answer = a - b ≥ 0
+      const a = Math.floor(Math.random() * 19); // 0-18
       const b = Math.floor(Math.random() * (a + 1));
-      return { a, b, op: '-', answer: a - b, display: `${a} - ${b}` };
+      return { a, b, op: '-', answer: a - b, display: `${a} − ${b}` };
     },
   },
   {
     id: 7,
     name: 'Mixed Add & Subtract',
-    description: 'Both addition and subtraction!',
+    description: 'Addition and subtraction to 18!',
     passThreshold: 0.95,
     generate: () => {
       if (Math.random() < 0.5) {
         const a = Math.floor(Math.random() * 10);
-        const b = Math.floor(Math.random() * 10);
+        const b = Math.floor(Math.random() * (19 - a)); // sum ≤ 18
         return { a, b, op: '+', answer: a + b, display: `${a} + ${b}` };
       } else {
-        const answer = Math.floor(Math.random() * 10);
-        const b = Math.floor(Math.random() * 10);
-        const a = answer + b;
-        return { a, b, op: '-', answer, display: `${a} - ${b}` };
+        const a = Math.floor(Math.random() * 19); // 0-18
+        const b = Math.floor(Math.random() * (a + 1));
+        return { a, b, op: '-', answer: a - b, display: `${a} − ${b}` };
       }
     },
   },

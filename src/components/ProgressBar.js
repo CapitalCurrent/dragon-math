@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
-import { QUESTIONS_PER_ROUND } from '../data/mathLevels';
+import { MATH_LEVELS, QUESTIONS_PER_ROUND } from '../data/mathLevels';
 
 export default function ProgressBar() {
-  const { dragon, progress, correctAnswers, streak, accuracy } = useGame();
+  const { dragon, progress, correctAnswers, streak, accuracy, level } = useGame();
+  const levelData = MATH_LEVELS[level - 1];
   if (!dragon) return null;
 
   const stageIndex = Math.min(4, Math.floor(progress * 5));
@@ -18,7 +19,7 @@ export default function ProgressBar() {
           className="text-sm font-bold"
           style={{ color: dragon.colors.accent }}
         >
-          {stage?.name}
+          {levelData?.name || stage?.name}
         </span>
         <span className="text-sm text-gray-400">
           {correctAnswers} / {QUESTIONS_PER_ROUND}

@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useGame, SCREENS } from '../context/GameContext';
+import { MATH_LEVELS } from '../data/mathLevels';
 
 export default function TitleScreen() {
-  const { dispatch } = useGame();
+  const { dispatch, level } = useGame();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
@@ -58,6 +59,32 @@ export default function TitleScreen() {
       >
         Start Adventure!
       </motion.button>
+
+      {/* Level selector */}
+      <motion.div
+        className="mt-8 flex flex-wrap justify-center gap-2 max-w-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+      >
+        {MATH_LEVELS.map((lvl) => (
+          <button
+            key={lvl.id}
+            className="px-3 py-1.5 rounded-xl text-sm font-bold transition-all"
+            style={{
+              background: level === lvl.id
+                ? 'linear-gradient(135deg, #ff6b35, #ff9800)'
+                : '#1a1a3a',
+              color: level === lvl.id ? '#fff' : '#888',
+              border: level === lvl.id ? '2px solid #ff9800' : '2px solid #333',
+            }}
+            onClick={() => dispatch({ type: 'SET_LEVEL', level: lvl.id })}
+            title={lvl.description}
+          >
+            {lvl.name}
+          </button>
+        ))}
+      </motion.div>
 
       {/* Floating decorative elements */}
       {['✨', '⚡', '❄️', '🔥', '💎', '🌟'].map((emoji, i) => (

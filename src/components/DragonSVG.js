@@ -535,18 +535,56 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             <stop offset="40%" stopColor={primary} />
             <stop offset="100%" stopColor={secondary} />
           </radialGradient>
+          {/* 3D body highlight — top-left light source */}
+          <radialGradient id={`body-hi-${dragon.id}`} cx="30%" cy="25%">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.18" />
+            <stop offset="40%" stopColor="#fff" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+          </radialGradient>
+          {/* 3D body shadow — bottom */}
+          <radialGradient id={`body-sh-${dragon.id}`} cx="50%" cy="85%">
+            <stop offset="0%" stopColor="#000" stopOpacity="0.25" />
+            <stop offset="60%" stopColor="#000" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0" />
+          </radialGradient>
+          {/* Rim light — edge glow from ambient */}
+          <radialGradient id={`rim-${dragon.id}`} cx="75%" cy="20%">
+            <stop offset="0%" stopColor={glow} stopOpacity="0" />
+            <stop offset="70%" stopColor={glow} stopOpacity="0" />
+            <stop offset="95%" stopColor={glow} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={glow} stopOpacity="0.35" />
+          </radialGradient>
           <radialGradient id={`belly-${dragon.id}`} cx="50%" cy="20%">
             <stop offset="0%" stopColor={accent} stopOpacity="0.8" />
             <stop offset="100%" stopColor={primary} stopOpacity="0.2" />
           </radialGradient>
           <linearGradient id={`wg-${dragon.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={primary} stopOpacity="0.45" />
-            <stop offset="100%" stopColor={secondary} stopOpacity="0.1" />
+            <stop offset="50%" stopColor={secondary} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={secondary} stopOpacity="0.08" />
+          </linearGradient>
+          {/* Wing vein glow */}
+          <linearGradient id={`wv-${dragon.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={glow} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={accent} stopOpacity="0.1" />
           </linearGradient>
           <radialGradient id={`eg-${dragon.id}`}>
             <stop offset="0%" stopColor="#fff" />
             <stop offset="35%" stopColor={accent} />
             <stop offset="100%" stopColor={glow} />
+          </radialGradient>
+          {/* Ambient aura glow */}
+          <radialGradient id={`aura-${dragon.id}`} cx="50%" cy="50%">
+            <stop offset="0%" stopColor={glow} stopOpacity="0" />
+            <stop offset="60%" stopColor={glow} stopOpacity="0" />
+            <stop offset="85%" stopColor={glow} stopOpacity={0.04 + t * 0.04} />
+            <stop offset="100%" stopColor={primary} stopOpacity={0.02 + t * 0.03} />
+          </radialGradient>
+          {/* Head 3D gradient */}
+          <radialGradient id={`head-g-${dragon.id}`} cx="35%" cy="30%">
+            <stop offset="0%" stopColor={accent} stopOpacity="0.35" />
+            <stop offset="40%" stopColor={primary} />
+            <stop offset="100%" stopColor={secondary} />
           </radialGradient>
           <filter id={`gl-${dragon.id}`}>
             <feGaussianBlur stdDeviation="2" result="b" />
@@ -557,6 +595,10 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
+
+        {/* Ambient aura behind dragon */}
+        <ellipse cx={bodyCx} cy={bodyCy - 10} rx={bodyRx * 2.5 + t * 40} ry={bodyRy * 2 + t * 35}
+          fill={`url(#aura-${dragon.id})`} />
 
         <g filter={`url(#gl-${dragon.id})`}>
 
@@ -609,51 +651,98 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             anchorX={bodyCx - 10} anchorY={bodyCy - 30} />
 
           {/* === BODY === */}
+          {/* Main body fill */}
           <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
             fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.25" />
+          {/* 3D highlight (top-left light) */}
+          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
+            fill={`url(#body-hi-${dragon.id})`} />
+          {/* 3D shadow (bottom) */}
+          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
+            fill={`url(#body-sh-${dragon.id})`} />
+          {/* Rim light (edge catch from ambient) */}
+          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
+            fill={`url(#rim-${dragon.id})`} />
 
           {/* Shoulder muscle contour (grows with maturity) */}
-          {t > 0.2 && (
+          {t > 0.15 && (
             <path d={`M ${bodyCx - bodyRx * 0.6} ${bodyCy - bodyRy * 0.5}
                        Q ${bodyCx - bodyRx * 0.9} ${bodyCy - bodyRy * 0.1} ${bodyCx - bodyRx * 0.7} ${bodyCy + bodyRy * 0.3}`}
-              stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.1 + t * 0.15} />
+              stroke={primary} strokeWidth={1.2 + t * 2} fill="none" opacity={0.12 + t * 0.18} />
+          )}
+          {/* Secondary shoulder highlight */}
+          {t > 0.3 && (
+            <path d={`M ${bodyCx - bodyRx * 0.55} ${bodyCy - bodyRy * 0.45}
+                       Q ${bodyCx - bodyRx * 0.75} ${bodyCy - bodyRy * 0.15} ${bodyCx - bodyRx * 0.65} ${bodyCy + bodyRy * 0.15}`}
+              stroke={accent} strokeWidth={0.6 + t} fill="none" opacity={0.06 + t * 0.08} />
           )}
           {/* Hip muscle contour */}
-          {t > 0.2 && (
+          {t > 0.15 && (
             <path d={`M ${bodyCx + bodyRx * 0.5} ${bodyCy - bodyRy * 0.4}
                        Q ${bodyCx + bodyRx * 0.85} ${bodyCy} ${bodyCx + bodyRx * 0.6} ${bodyCy + bodyRy * 0.5}`}
-              stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.1 + t * 0.15} />
+              stroke={primary} strokeWidth={1.2 + t * 2} fill="none" opacity={0.12 + t * 0.18} />
+          )}
+          {/* Hip highlight */}
+          {t > 0.3 && (
+            <path d={`M ${bodyCx + bodyRx * 0.45} ${bodyCy - bodyRy * 0.3}
+                       Q ${bodyCx + bodyRx * 0.7} ${bodyCy + bodyRy * 0.05} ${bodyCx + bodyRx * 0.55} ${bodyCy + bodyRy * 0.35}`}
+              stroke={accent} strokeWidth={0.6 + t} fill="none" opacity={0.06 + t * 0.08} />
           )}
           {/* Chest ridge (adult only) */}
-          {t > 0.4 && (
-            <path d={`M ${bodyCx - bodyRx * 0.3} ${bodyCy - bodyRy * 0.8}
-                       Q ${bodyCx - bodyRx * 0.15} ${bodyCy - bodyRy * 0.5} ${bodyCx - bodyRx * 0.25} ${bodyCy}`}
-              stroke={accent} strokeWidth={0.8 + t * 0.8} fill="none" opacity={0.08 + t * 0.1} />
+          {t > 0.35 && (
+            <path d={`M ${bodyCx - bodyRx * 0.3} ${bodyCy - bodyRy * 0.85}
+                       Q ${bodyCx - bodyRx * 0.12} ${bodyCy - bodyRy * 0.5} ${bodyCx - bodyRx * 0.22} ${bodyCy + bodyRy * 0.1}`}
+              stroke={accent} strokeWidth={0.8 + t * 1.2} fill="none" opacity={0.08 + t * 0.12} />
           )}
+          {/* Ribcage suggestion (adult) */}
+          {t > 0.5 && [0.3, 0.5, 0.7].map((f, i) => (
+            <path key={`rib${i}`}
+              d={`M ${bodyCx - bodyRx * 0.15} ${bodyCy - bodyRy * (0.3 - i * 0.22)}
+                   Q ${bodyCx + bodyRx * (0.3 + i * 0.05)} ${bodyCy - bodyRy * (0.15 - i * 0.18)}
+                     ${bodyCx + bodyRx * 0.4} ${bodyCy + bodyRy * (i * 0.15)}`}
+              stroke={primary} strokeWidth={0.6 + t * 0.6} fill="none" opacity={0.04 + t * 0.06} />
+          ))}
 
-          {/* Body scale texture (increases with age) */}
-          <g opacity={0.08 + scaleDetail * 0.2}>
-            {Array.from({ length: Math.floor(3 + scaleDetail * 8) }, (_, i) => {
-              const row = Math.floor(i / 3);
-              const col = i % 3;
-              const cx = bodyCx - 18 + col * 16 - row * 4;
-              const cy = bodyCy - 25 + row * 16;
+          {/* Overlapping scale pattern (more dimensional than old arcs) */}
+          <g opacity={0.06 + scaleDetail * 0.22}>
+            {Array.from({ length: Math.floor(4 + scaleDetail * 12) }, (_, i) => {
+              const row = Math.floor(i / 4);
+              const col = i % 4;
+              const offset = row % 2 === 0 ? 0 : 7;
+              const cx = bodyCx - 22 + col * 14 + offset - row * 3;
+              const cy = bodyCy - 30 + row * 12;
+              const s = 4 + scaleDetail * 2;
               return (
-                <path key={`sc${i}`}
-                  d={`M ${cx - 5} ${cy} Q ${cx} ${cy - 4} ${cx + 5} ${cy}`}
-                  stroke={accent} strokeWidth="1" fill="none" />
+                <g key={`sc${i}`}>
+                  <path
+                    d={`M ${cx - s} ${cy + s * 0.3} Q ${cx - s * 0.3} ${cy - s * 0.6} ${cx} ${cy - s * 0.8}
+                        Q ${cx + s * 0.3} ${cy - s * 0.6} ${cx + s} ${cy + s * 0.3}`}
+                    stroke={accent} strokeWidth="0.8" fill="none" />
+                  {/* Scale highlight */}
+                  <path
+                    d={`M ${cx - s * 0.5} ${cy} Q ${cx} ${cy - s * 0.4} ${cx + s * 0.5} ${cy}`}
+                    stroke="#fff" strokeWidth="0.3" fill="none" opacity="0.3" />
+                </g>
               );
             })}
           </g>
 
-          {/* Belly plates */}
-          <g opacity={0.4 + t * 0.2}>
+          {/* Belly plates (more 3D) */}
+          <g opacity={0.45 + t * 0.25}>
             {Array.from({ length: bellyPlates }, (_, i) => {
               const cy = bodyCy - 28 + i * (bodyRy * 1.4 / bellyPlates);
               const rx = (bodyRx * 0.45) - i * 1.5;
               return rx > 3 ? (
-                <ellipse key={`bp${i}`} cx={bodyCx} cy={cy} rx={rx} ry={5}
-                  fill={`url(#belly-${dragon.id})`} stroke={accent} strokeWidth="0.5" strokeOpacity="0.2" />
+                <g key={`bp${i}`}>
+                  <ellipse cx={bodyCx} cy={cy} rx={rx} ry={5}
+                    fill={`url(#belly-${dragon.id})`} stroke={accent} strokeWidth="0.5" strokeOpacity="0.25" />
+                  {/* Plate highlight */}
+                  <ellipse cx={bodyCx - rx * 0.15} cy={cy - 1.5} rx={rx * 0.6} ry={2}
+                    fill="#fff" opacity="0.06" />
+                  {/* Plate shadow */}
+                  <ellipse cx={bodyCx} cy={cy + 2.5} rx={rx * 0.8} ry={1.5}
+                    fill="#000" opacity="0.06" />
+                </g>
               ) : null;
             })}
           </g>
@@ -678,21 +767,62 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             legThick={legThick} clawSize={clawSize} t={t}
             color={primary} accent={accent} side="near" />
 
-          {/* === SPINES (style varies by dragon type) === */}
-          <Spines dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy} spineCount={spineCount} />
+          {/* === SPINES along dorsal ridge (back → neck → head) === */}
+          <Spines dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy}
+            bodyRx={bodyRx} bodyRy={bodyRy} spineCount={spineCount}
+            neckTopX={neckTopX} neckTopY={neckTopY} neckLen={neckLen}
+            headCx={headCx} headCy={headCy} headRy={headRy} />
 
-          {/* === NECK (lengthens dramatically with maturity) === */}
-          <path d={`M ${bodyCx - 25} ${bodyCy - 35}
-                     Q ${bodyCx - 50 - neckLen * 15} ${bodyCy - 60 - neckLen * 30}
-                       ${neckTopX} ${neckTopY}`}
-            stroke={primary} strokeWidth={14 + (1 - t) * 6 + t * 8}
-            fill="none" strokeLinecap="round" />
-          {/* Neck underside highlight */}
-          <path d={`M ${bodyCx - 22} ${bodyCy - 30}
-                     Q ${bodyCx - 46 - neckLen * 12} ${bodyCy - 55 - neckLen * 28}
-                       ${neckTopX + 3} ${neckTopY + 4}`}
-            stroke={accent} strokeWidth={5 + (1 - t) * 3 + t * 2}
-            fill="none" strokeLinecap="round" opacity="0.12" />
+          {/* === NECK (tapered polygon — thick at body, narrow at head) === */}
+          {(() => {
+            // Neck as a filled tapered shape instead of a uniform stroke
+            const neckW_base = 10 + (1 - t) * 4 + t * 6; // half-width at body end
+            const neckW_top = 5 + (1 - t) * 3 + t * 2;   // half-width at head end
+            const midX = bodyCx - 50 - neckLen * 15;
+            const midY = bodyCy - 60 - neckLen * 30;
+            // Top edge (dorsal) — slightly higher
+            const topPath = `M ${bodyCx - 25 - neckW_base * 0.3} ${bodyCy - 35 - neckW_base * 0.8}
+                             Q ${midX - neckW_base * 0.2} ${midY - neckW_base * 0.6}
+                               ${neckTopX - neckW_top * 0.3} ${neckTopY - neckW_top * 0.6}`;
+            // Bottom edge (ventral) — lower
+            const botPath = `L ${neckTopX + neckW_top * 0.5} ${neckTopY + neckW_top * 0.8}
+                             Q ${midX + neckW_base * 0.5} ${midY + neckW_base * 0.8}
+                               ${bodyCx - 25 + neckW_base * 0.5} ${bodyCy - 35 + neckW_base * 0.6} Z`;
+            return (
+              <g>
+                {/* Neck shadow */}
+                <path d={`${topPath} ${botPath}`}
+                  fill="#000" opacity="0.1" transform="translate(2, 3)" />
+                {/* Neck fill */}
+                <path d={`${topPath} ${botPath}`}
+                  fill={primary} stroke={primary} strokeWidth="0.8" strokeOpacity="0.3" />
+                {/* Neck highlight (dorsal edge) */}
+                <path d={topPath}
+                  stroke="#fff" strokeWidth={1.5 + t * 0.5}
+                  fill="none" strokeLinecap="round" opacity={0.06 + t * 0.06} />
+                {/* Neck underside (ventral) lighter */}
+                <path d={`M ${neckTopX + neckW_top * 0.3} ${neckTopY + neckW_top * 0.5}
+                           Q ${midX + neckW_base * 0.3} ${midY + neckW_base * 0.5}
+                             ${bodyCx - 25 + neckW_base * 0.3} ${bodyCy - 35 + neckW_base * 0.3}`}
+                  stroke={accent} strokeWidth={2 + t}
+                  fill="none" strokeLinecap="round" opacity="0.1" />
+              </g>
+            );
+          })()}
+          {/* Neck scale marks (horizontal bands along tapered neck) */}
+          {t > 0.2 && Array.from({ length: Math.floor(3 + t * 5) }, (_, i) => {
+            const frac = 0.1 + (i / Math.floor(3 + t * 5)) * 0.75;
+            const midX = bodyCx - 25 + frac * (neckTopX - (bodyCx - 25));
+            const midY = bodyCy - 35 + frac * (neckTopY - (bodyCy - 35));
+            const curveY = midY + Math.sin(frac * Math.PI) * (neckLen * -12);
+            const neckW_here = (10 + (1 - t) * 4 + t * 6) * (1 - frac * 0.4);
+            return (
+              <ellipse key={`ns${i}`} cx={midX} cy={curveY}
+                rx={neckW_here * 0.45} ry={0.8 + t * 0.8}
+                fill={accent} opacity={0.05 + t * 0.07}
+                transform={`rotate(${-25 - frac * 20}, ${midX}, ${curveY})`} />
+            );
+          })}
 
           {/* === HEAD (proportions change with maturity) === */}
           <Head dragon={dragon} t={t} chomping={chomping}
@@ -706,10 +836,17 @@ function GrowingDragon({ dragon, t, size, chomping }) {
         <DragonExtras dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy}
           bodyRx={bodyRx} bodyRy={bodyRy} />
 
-        {/* Ground shadow */}
+        {/* Ground glow (element color under dragon) */}
+        <ellipse cx={bodyCx} cy={bodyCy + bodyRy + legLen * 56 + 18}
+          rx={45 + t * 35} ry={6 + t * 5}
+          fill={glow} opacity={0.04 + t * 0.06} />
+        {/* Ground shadow (layered for softness) */}
         <ellipse cx={bodyCx} cy={bodyCy + bodyRy + legLen * 56 + 22}
-          rx={50 + t * 30} ry={4 + t * 4}
-          fill="black" opacity={0.12 + t * 0.15} />
+          rx={55 + t * 35} ry={6 + t * 6}
+          fill="black" opacity={0.08 + t * 0.08} />
+        <ellipse cx={bodyCx} cy={bodyCy + bodyRy + legLen * 56 + 22}
+          rx={40 + t * 25} ry={4 + t * 3}
+          fill="black" opacity={0.15 + t * 0.18} />
       </svg>
     </motion.div>
     </div>
@@ -770,21 +907,45 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
         style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
       >
-        {/* Head shape */}
+        {/* Head shape — base */}
         <ellipse cx={headCx} cy={headCy} rx={headRx} ry={headRy}
-          fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+          fill={`url(#head-g-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+        {/* Head 3D highlight */}
+        <ellipse cx={headCx - headRx * 0.15} cy={headCy - headRy * 0.2} rx={headRx * 0.55} ry={headRy * 0.45}
+          fill="#fff" opacity="0.08" />
+        {/* Head 3D shadow (underside) */}
+        <ellipse cx={headCx} cy={headCy + headRy * 0.3} rx={headRx * 0.7} ry={headRy * 0.35}
+          fill="#000" opacity="0.1" />
+        {/* Head scale texture */}
+        {t > 0.3 && [0, 1, 2].map(i => (
+          <path key={`hs${i}`}
+            d={`M ${headCx - headRx * 0.3 + i * headRx * 0.25} ${headCy - headRy * 0.2 + i * 3}
+                Q ${headCx - headRx * 0.15 + i * headRx * 0.25} ${headCy - headRy * 0.35 + i * 3}
+                  ${headCx + i * headRx * 0.25} ${headCy - headRy * 0.2 + i * 3}`}
+            stroke={accent} strokeWidth="0.5" fill="none" opacity={0.06 + t * 0.06} />
+        ))}
 
         {/* Brow ridge (gets more prominent with age) */}
         {browRidge > 0.1 && (
-          <path d={`M ${headCx - headRx * 0.7} ${headCy - headRy * 0.5}
-                     Q ${headCx} ${headCy - headRy * 0.5 - browRidge * 8} ${headCx + headRx * 0.7} ${headCy - headRy * 0.4}`}
-            stroke={primary} strokeWidth={1.5 + browRidge * 3} fill="none" strokeLinecap="round" opacity={0.3 + browRidge * 0.3} />
+          <>
+            <path d={`M ${headCx - headRx * 0.7} ${headCy - headRy * 0.5}
+                       Q ${headCx} ${headCy - headRy * 0.5 - browRidge * 8} ${headCx + headRx * 0.7} ${headCy - headRy * 0.4}`}
+              stroke={primary} strokeWidth={1.5 + browRidge * 3} fill="none" strokeLinecap="round" opacity={0.3 + browRidge * 0.3} />
+            {/* Brow highlight */}
+            <path d={`M ${headCx - headRx * 0.6} ${headCy - headRy * 0.55}
+                       Q ${headCx} ${headCy - headRy * 0.55 - browRidge * 6} ${headCx + headRx * 0.6} ${headCy - headRy * 0.45}`}
+              stroke="#fff" strokeWidth={0.5 + browRidge} fill="none" strokeLinecap="round" opacity={0.05 + browRidge * 0.08} />
+          </>
         )}
 
         {/* Upper snout */}
         <path d={`M ${headCx - headRx * 0.6} ${headCy}
                    Q ${snoutTipX + 10} ${snoutTipY - 6 - jawAngularity * 3} ${snoutTipX} ${snoutTipY}`}
           fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+        {/* Snout highlight */}
+        <path d={`M ${headCx - headRx * 0.5} ${headCy - 2}
+                   Q ${snoutTipX + 15} ${snoutTipY - 8 - jawAngularity * 3} ${snoutTipX + 3} ${snoutTipY - 2}`}
+          stroke="#fff" strokeWidth="0.8" fill="none" opacity="0.08" />
 
         {/* Upper teeth row when chomping */}
         {chomping && (() => {
@@ -803,11 +964,15 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
           });
         })()}
 
-        {/* Front fang (upper) */}
-        {chomping && (
+        {/* Front fang (upper) — always visible, bigger when chomping */}
+        <polygon
+          points={`${snoutTipX + 1},${snoutTipY - 1} ${snoutTipX + 5},${snoutTipY - 1} ${snoutTipX + 3},${snoutTipY + (chomping ? 6 + t * 5 : 3 + t * 3)}`}
+          fill="#fffff0" stroke="#ddd" strokeWidth="0.5" opacity={chomping ? 1 : 0.85} />
+        {/* Second fang further back */}
+        {t > 0.15 && (
           <polygon
-            points={`${snoutTipX + 1},${snoutTipY - 1} ${snoutTipX + 5},${snoutTipY - 1} ${snoutTipX + 3},${snoutTipY + 6 + t * 5}`}
-            fill="#fffff0" stroke="#ddd" strokeWidth="0.5" />
+            points={`${snoutTipX + 9 + t * 3},${snoutTipY} ${snoutTipX + 13 + t * 3},${snoutTipY} ${snoutTipX + 11 + t * 3},${snoutTipY + (chomping ? 5 + t * 4 : 2 + t * 2.5)}`}
+            fill="#f0f0e0" stroke="#ccc" strokeWidth="0.4" opacity={chomping ? 1 : 0.7} />
         )}
       </motion.g>
 
@@ -1067,20 +1232,51 @@ function Arm({ x, y, legThick, clawSize, t, color, accent, side }) {
   );
 }
 
-// Spines vary by dragon type
-function Spines({ dragon, t, bodyCx, bodyCy, spineCount }) {
+// Spines along dorsal ridge: tail-base → back → neck → head
+function Spines({ dragon, t, bodyCx, bodyCy, bodyRx, bodyRy, spineCount, neckTopX, neckTopY, neckLen, headCx, headCy, headRy }) {
   const { primary, accent } = dragon.colors;
   const style = dragon.physiology?.spineStyle || 'flame';
 
+  // Build dorsal path points from tail-base through back, up neck, to head
+  const totalSpines = spineCount + Math.floor(2 + t * 3); // extra for neck
+  const dorsalPoints = [];
+  for (let i = 0; i < totalSpines; i++) {
+    const frac = i / Math.max(1, totalSpines - 1);
+    let sx, sy;
+    if (frac < 0.55) {
+      // Back portion — along top of body
+      const backFrac = frac / 0.55;
+      sx = bodyCx + bodyRx * 0.3 - backFrac * (bodyRx * 0.3 + 25);
+      sy = bodyCy - bodyRy * (0.85 + Math.sin(backFrac * Math.PI) * 0.15);
+    } else {
+      // Neck portion — follows dorsal edge up to head
+      const neckFrac = (frac - 0.55) / 0.45;
+      const neckMidX = bodyCx - 50 - neckLen * 15;
+      const neckMidY = bodyCy - 60 - neckLen * 30;
+      const neckW = 10 + (1 - t) * 4 + t * 6;
+      // Quadratic interpolation along neck dorsal
+      const oneMinusFrac = 1 - neckFrac;
+      sx = oneMinusFrac * oneMinusFrac * (bodyCx - 25 - neckW * 0.3) +
+           2 * oneMinusFrac * neckFrac * (neckMidX - neckW * 0.2) +
+           neckFrac * neckFrac * (headCx);
+      sy = oneMinusFrac * oneMinusFrac * (bodyCy - 35 - neckW * 0.8) +
+           2 * oneMinusFrac * neckFrac * (neckMidY - neckW * 0.6) +
+           neckFrac * neckFrac * (headCy - headRy * 0.7);
+    }
+    dorsalPoints.push({ sx, sy, frac });
+  }
+
   return (
-    <g opacity={0.4 + t * 0.6}>
-      {Array.from({ length: spineCount }, (_, i) => {
-        const frac = i / Math.max(1, spineCount - 1);
-        const sx = bodyCx - 50 + frac * 90;
-        const sy = bodyCy - 55 + Math.sin(frac * Math.PI * 0.8) * 15 + frac * 10;
-        const baseH = (4 + t * 18) * (0.6 + (1 - Math.abs(frac - 0.4)) * 0.6);
-        const lean = (frac - 0.4) * 6;
-        const w = 2.5 + t * 1.5;
+    <g opacity={0.45 + t * 0.55}>
+      {dorsalPoints.map(({ sx, sy, frac }, i) => {
+        // Spines are tallest at mid-back, shorter on neck and tail
+        const heightMod = frac < 0.55
+          ? 0.5 + Math.sin((frac / 0.55) * Math.PI * 0.8) * 0.5
+          : 0.35 + (1 - (frac - 0.55) / 0.45) * 0.4;
+        const baseH = (4 + t * 16) * heightMod;
+        // Lean backward slightly
+        const lean = frac < 0.55 ? (frac / 0.55 - 0.5) * 4 : -2 - ((frac - 0.55) / 0.45) * 3;
+        const w = 2 + t * 1.5;
 
         switch (style) {
           case 'crystal': {
@@ -1280,7 +1476,7 @@ function DragonExtras({ dragon, t, bodyCx, bodyCy, bodyRx, bodyRy }) {
 }
 
 function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
-  const { primary, secondary, accent } = dragon.colors;
+  const { primary, secondary, accent, glow } = dragon.colors;
   const ax = anchorX;
   const ay = anchorY;
 
@@ -1319,19 +1515,41 @@ function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
       {/* Trailing edge bone */}
       <path d={`M ${ax - 30} ${ay + 8} Q ${ax - 75 - ws * 35} ${ay + 5 - ws * 8} ${lBottomX} ${lBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
-      {/* Wing finger bones (veins across membrane) */}
+      {/* Wing finger bones (veins across membrane) — with glow */}
       {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
         const bx1 = ax - 20 - f * (ax - 20 - lElbowX) - f * (lElbowX - lTipX) * 0.3;
         const by1 = ay - f * (ay - lElbowY) - f * (lElbowY - lTipY) * 0.3;
         const bx2 = ax - 30 - f * (ax - 30 - lBottomX);
         const by2 = ay + 8 - f * (ay + 8 - lBottomY);
         return (
-          <line key={`lv${i}`} x1={bx1} y1={by1} x2={bx2} y2={by2}
-            stroke={accent} strokeWidth={0.6 + t * 0.6} opacity={0.08 + t * 0.12} />
+          <g key={`lv${i}`}>
+            {/* Vein glow */}
+            <line x1={bx1} y1={by1} x2={bx2} y2={by2}
+              stroke={glow} strokeWidth={2 + t * 1.5} opacity={0.03 + t * 0.04} />
+            {/* Vein line */}
+            <line x1={bx1} y1={by1} x2={bx2} y2={by2}
+              stroke={accent} strokeWidth={0.6 + t * 0.8} opacity={0.1 + t * 0.15} />
+          </g>
+        );
+      })}
+      {/* Wing membrane texture (subtle cross-hatching on mature wings) */}
+      {t > 0.4 && [0.3, 0.6].map((f, i) => {
+        const bx1 = ax - 20 - f * (ax - 20 - lElbowX) - f * (lElbowX - lTipX) * 0.15;
+        const by1 = ay - f * (ay - lElbowY) + 5;
+        const bx2 = ax - 30 - f * 0.8 * (ax - 30 - lBottomX);
+        const by2 = ay + 8 - f * 0.8 * (ay + 8 - lBottomY);
+        return (
+          <line key={`lm${i}`} x1={bx1} y1={by1} x2={bx2} y2={by2}
+            stroke={primary} strokeWidth="0.4" opacity={0.04 + t * 0.04} strokeDasharray="3 5" />
         );
       })}
       {/* Wing tip claw */}
-      {ws > 0.45 && <circle cx={lTipX} cy={lTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />}
+      {ws > 0.45 && (
+        <g>
+          <circle cx={lTipX} cy={lTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />
+          <circle cx={lTipX} cy={lTipY} r={1 + ws * 1.5} fill="#fff" opacity="0.15" />
+        </g>
+      )}
 
       {/* Right wing — membrane */}
       <path d={`M ${ax + 30} ${ay}
@@ -1347,19 +1565,28 @@ function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
       {/* Trailing edge bone */}
       <path d={`M ${ax + 40} ${ay + 8} Q ${ax + 85 + ws * 35} ${ay + 5 - ws * 8} ${rBottomX} ${rBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
-      {/* Wing finger bones */}
+      {/* Wing finger bones — with glow */}
       {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
         const bx1 = ax + 30 + f * (rElbowX - (ax + 30)) + f * (rTipX - rElbowX) * 0.3;
         const by1 = ay - f * (ay - rElbowY) - f * (rElbowY - rTipY) * 0.3;
         const bx2 = ax + 40 + f * (rBottomX - (ax + 40));
         const by2 = ay + 8 - f * (ay + 8 - rBottomY);
         return (
-          <line key={`rv${i}`} x1={bx1} y1={by1} x2={bx2} y2={by2}
-            stroke={accent} strokeWidth={0.6 + t * 0.6} opacity={0.08 + t * 0.12} />
+          <g key={`rv${i}`}>
+            <line x1={bx1} y1={by1} x2={bx2} y2={by2}
+              stroke={glow} strokeWidth={2 + t * 1.5} opacity={0.03 + t * 0.04} />
+            <line x1={bx1} y1={by1} x2={bx2} y2={by2}
+              stroke={accent} strokeWidth={0.6 + t * 0.8} opacity={0.1 + t * 0.15} />
+          </g>
         );
       })}
       {/* Wing tip claw */}
-      {ws > 0.45 && <circle cx={rTipX} cy={rTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />}
+      {ws > 0.45 && (
+        <g>
+          <circle cx={rTipX} cy={rTipY} r={2 + ws * 2.5} fill={accent} opacity="0.6" />
+          <circle cx={rTipX} cy={rTipY} r={1 + ws * 1.5} fill="#fff" opacity="0.15" />
+        </g>
+      )}
     </motion.g>
   );
 }

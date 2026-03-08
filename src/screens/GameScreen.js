@@ -117,11 +117,9 @@ function DragonCave({ dragon, progress, children }) {
 // Flying answer overlay — renders at fixed position so it can cross layout boundaries
 function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
   const colors = dragon?.colors || {};
-  const startRef = useRef(null);
   const [coords, setCoords] = React.useState(null);
 
   React.useEffect(() => {
-    // Calculate start (numbers area center) and end (dragon head area)
     const numEl = numbersRef?.current;
     const dragEl = dragonRef?.current;
     if (!numEl || !dragEl) return;
@@ -129,11 +127,8 @@ function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
     const numRect = numEl.getBoundingClientRect();
     const dragRect = dragEl.getBoundingClientRect();
 
-    // Start: center of numbers area
     const startX = numRect.left + numRect.width / 2;
-    const startY = numRect.top + numRect.height / 2;
-
-    // End: upper-center of dragon cave (where the head roughly is)
+    const startY = numRect.top + numRect.height * 0.3;
     const endX = dragRect.left + dragRect.width / 2;
     const endY = dragRect.top + dragRect.height * 0.35;
 
@@ -144,69 +139,194 @@ function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 50 }}>
-      {/* Trail particles */}
-      {[0, 1, 2, 3, 4].map(i => (
+      {/* Trail particles — slower, more visible */}
+      {[0, 1, 2, 3, 4, 5, 6].map(i => (
         <motion.div
           key={`trail-${i}`}
           style={{
             position: 'absolute',
             left: coords.startX,
             top: coords.startY,
-            width: 12 - i * 2,
-            height: 12 - i * 2,
+            width: 16 - i * 2,
+            height: 16 - i * 2,
             borderRadius: '50%',
             background: i % 2 === 0 ? colors.accent : colors.glow,
-            boxShadow: `0 0 10px ${colors.glow}`,
+            boxShadow: `0 0 12px ${colors.glow}`,
             transform: 'translate(-50%, -50%)',
           }}
           initial={{ x: 0, y: 0, opacity: 0 }}
           animate={{
-            x: coords.dx * (0.5 + i * 0.08),
-            y: coords.dy * (0.5 + i * 0.08),
-            opacity: [0, 0.9, 0],
-            scale: [1, 0.5, 0],
+            x: coords.dx * (0.3 + i * 0.08),
+            y: coords.dy * (0.3 + i * 0.08),
+            opacity: [0, 0.9, 0.6, 0],
+            scale: [0.5, 1, 0.3],
           }}
-          transition={{ duration: 0.6, delay: i * 0.05, ease: 'easeIn' }}
+          transition={{ duration: 1.0, delay: 0.3 + i * 0.08, ease: 'easeOut' }}
         />
       ))}
-      {/* Main answer bubble */}
+      {/* Main answer bubble — hovers first, then arcs to dragon */}
       <motion.div
-        ref={startRef}
         style={{
           position: 'absolute',
           left: coords.startX,
           top: coords.startY,
-          width: 80,
-          height: 80,
+          width: 90,
+          height: 90,
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 36,
+          fontSize: 40,
           fontWeight: 900,
           color: '#fff',
           textShadow: '0 2px 8px rgba(0,0,0,0.5)',
           background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
-          boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
+          boxShadow: `0 0 40px ${colors.glow}, 0 0 80px ${colors.glow}40`,
           transform: 'translate(-50%, -50%)',
         }}
         initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
         animate={{
-          x: coords.dx,
-          y: coords.dy,
-          scale: [1, 1.15, 0.3],
-          opacity: [1, 1, 0],
+          x: [0, 0, coords.dx * 0.3, coords.dx],
+          y: [0, -20, coords.dy * 0.5 - 40, coords.dy],
+          scale: [1, 1.2, 1.0, 0.2],
+          opacity: [1, 1, 1, 0],
         }}
-        transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1], times: [0, 0.15, 0.55, 1] }}
       >
         {answer}
       </motion.div>
+      {/* Impact flash at dragon position */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          left: coords.endX,
+          top: coords.endY,
+          width: 120,
+          height: 120,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${colors.glow}80, ${colors.accent}40, transparent 70%)`,
+          transform: 'translate(-50%, -50%)',
+        }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: [0, 2, 2.5], opacity: [0, 0.8, 0] }}
+        transition={{ delay: 1.2, duration: 0.4 }}
+      />
     </div>
   );
 }
 
+// Full-screen dramatic skill activation overlay
+function SkillBlast({ skill, dragon, dispatch }) {
+  const colors = dragon?.colors || {};
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => dispatch({ type: 'CLEAR_ACTIVE_SKILL' }), 2200);
+    return () => clearTimeout(timer);
+  }, [dispatch]);
+
+  return (
+    <motion.div
+      style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 60 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Full-screen color flash */}
+      <motion.div
+        style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(circle at 50% 50%, ${colors.glow}60, ${colors.primary}20, transparent 70%)`,
+        }}
+        animate={{ opacity: [0, 0.8, 0.4, 0] }}
+        transition={{ duration: 1.5 }}
+      />
+
+      {/* Giant skill icon */}
+      <motion.div
+        style={{
+          position: 'absolute', left: '50%', top: '40%',
+          fontSize: 120, transform: 'translate(-50%, -50%)',
+          filter: `drop-shadow(0 0 30px ${colors.glow})`,
+        }}
+        initial={{ scale: 0, rotate: -45 }}
+        animate={{
+          scale: [0, 2, 1.5, 2.5, 0],
+          rotate: [0, 15, -15, 10, 0],
+          opacity: [0, 1, 1, 1, 0],
+        }}
+        transition={{ duration: 2.0, times: [0, 0.15, 0.4, 0.7, 1] }}
+      >
+        {skill.icon}
+      </motion.div>
+
+      {/* Skill name text */}
+      <motion.div
+        style={{
+          position: 'absolute', left: '50%', top: '58%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: 32, fontWeight: 900,
+          color: colors.accent,
+          textShadow: `0 0 20px ${colors.glow}, 0 0 40px ${colors.primary}`,
+          whiteSpace: 'nowrap',
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: [0, 1, 1, 0], y: [20, 0, 0, -10] }}
+        transition={{ duration: 2.0, times: [0, 0.2, 0.7, 1] }}
+      >
+        {skill.name}!
+      </motion.div>
+
+      {/* Burst rays */}
+      {Array.from({ length: 12 }, (_, i) => {
+        const angle = (i / 12) * Math.PI * 2;
+        return (
+          <motion.div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: '50%', top: '40%',
+              width: 4, height: 80,
+              borderRadius: 2,
+              background: `linear-gradient(to bottom, ${colors.accent}, transparent)`,
+              transformOrigin: '50% 0',
+              transform: `rotate(${angle}rad)`,
+            }}
+            initial={{ scaleY: 0, opacity: 0 }}
+            animate={{ scaleY: [0, 1, 0], opacity: [0, 0.7, 0] }}
+            transition={{ duration: 1.0, delay: 0.1 + i * 0.03 }}
+          />
+        );
+      })}
+
+      {/* Floating particles */}
+      {Array.from({ length: 20 }, (_, i) => (
+        <motion.div
+          key={`sp-${i}`}
+          style={{
+            position: 'absolute',
+            left: '50%', top: '40%',
+            width: 8 + Math.random() * 8,
+            height: 8 + Math.random() * 8,
+            borderRadius: '50%',
+            background: i % 3 === 0 ? colors.accent : i % 3 === 1 ? colors.glow : colors.primary,
+            boxShadow: `0 0 6px ${colors.glow}`,
+          }}
+          initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+          animate={{
+            x: (Math.random() - 0.5) * 500,
+            y: (Math.random() - 0.5) * 400,
+            opacity: [0, 1, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{ duration: 1.5, delay: 0.2 + Math.random() * 0.3 }}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
 export default function GameScreen() {
-  const { dragon, progress, eating, streak, wrongAnswer, currentQuestion } = useGame();
+  const { dragon, progress, eating, streak, wrongAnswer, currentQuestion, activeSkill, dispatch } = useGame();
   const version = useVersion();
   const isPixi = version === 'v2';
   const dragonRef = useRef(null);
@@ -290,6 +410,18 @@ export default function GameScreen() {
             answer={currentQuestion.answer}
             dragonRef={dragonRef}
             numbersRef={numbersRef}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Dramatic skill activation overlay */}
+      <AnimatePresence>
+        {activeSkill && (
+          <SkillBlast
+            key={`skill-${activeSkill.name}`}
+            skill={activeSkill}
+            dragon={dragon}
+            dispatch={dispatch}
           />
         )}
       </AnimatePresence>

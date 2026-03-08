@@ -27,6 +27,8 @@ const initialState = {
   wrongAnswer: false,
   showMerge: false,
   eating: false, // true when answer is flying to dragon (mouth open phase)
+  skillCharges: {}, // { skillName: charge (0-3) } — 3 correct answers to charge
+  activeSkill: null, // set when player activates a skill (skill object)
   totalCorrect: 0, // lifetime
   totalPlayed: 0,  // lifetime
 };
@@ -47,6 +49,8 @@ function reducer(state, action) {
         progress: 0,
         unlockedSkills: [],
         newSkill: null,
+        skillCharges: {},
+        activeSkill: null,
       };
 
     case 'NEW_QUESTION': {
@@ -57,6 +61,7 @@ function reducer(state, action) {
         wrongAnswer: false,
         showMerge: false,
         eating: false,
+        activeSkill: null,
       };
     }
 
@@ -77,6 +82,15 @@ function reducer(state, action) {
 
       const isComplete = newCorrect >= QUESTIONS_PER_ROUND;
 
+      // Charge all unlocked skills (+1 per correct answer, max 3)
+      const allUnlocked = newSkill
+        ? [...state.unlockedSkills, newSkill.name]
+        : state.unlockedSkills;
+      const newCharges = { ...state.skillCharges };
+      for (const sn of allUnlocked) {
+        newCharges[sn] = Math.min(3, (newCharges[sn] || 0) + 1);
+      }
+
       return {
         ...state,
         correctAnswers: newCorrect,
@@ -88,9 +102,8 @@ function reducer(state, action) {
         totalCorrect: state.totalCorrect + 1,
         totalPlayed: state.totalPlayed + 1,
         newSkill,
-        unlockedSkills: newSkill
-          ? [...state.unlockedSkills, newSkill.name]
-          : state.unlockedSkills,
+        unlockedSkills: allUnlocked,
+        skillCharges: newCharges,
         screen: isComplete ? SCREENS.VICTORY : state.screen,
       };
     }
@@ -106,6 +119,15 @@ function reducer(state, action) {
 
     case 'START_EATING':
       return { ...state, eating: true };
+
+    case 'USE_SKILL': {
+      const skill = action.skill;
+      const charges = { ...state.skillCharges, [skill.name]: 0 };
+      return { ...state, activeSkill: skill, skillCharges: charges };
+    }
+
+    case 'CLEAR_ACTIVE_SKILL':
+      return { ...state, activeSkill: null };
 
     case 'CLEAR_SKILL_POPUP':
       return { ...state, newSkill: null };
@@ -140,8 +162,8 @@ export function GameProvider({ children }) {
     if (!state.currentQuestion) return;
     if (parseInt(answer) === state.currentQuestion.answer) {
       dispatch({ type: 'CORRECT_ANSWER' });
-      // Next question after animation (join 800 + skill 900 + eat 600 + buffer 200)
-      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 2500);
+      // Next question after animation (join 800 + skill 900 + eat/fly 1400 + buffer 300)
+      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 3400);
     } else {
       dispatch({ type: 'WRONG_ANSWER' });
     }

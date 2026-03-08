@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
 export default function AnswerInput() {
-  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge } = useGame();
+  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge, newSkill } = useGame();
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
   const colors = dragon?.colors || { primary: '#fff', accent: '#fff', glow: '#fff' };
@@ -15,6 +15,13 @@ export default function AnswerInput() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [currentQuestion, showMerge]);
+
+  // Re-focus input when skill unlock popup closes
+  useEffect(() => {
+    if (newSkill === null && currentQuestion && !showMerge) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [newSkill, currentQuestion, showMerge]);
 
   // Clear value after wrong answer shake
   useEffect(() => {

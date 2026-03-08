@@ -2,32 +2,74 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
+const CHARGE_NEEDED = 3;
+
 export default function SkillBar() {
-  const { dragon, unlockedSkills, progress } = useGame();
+  const { dragon, unlockedSkills, progress, skillCharges, activeSkill, showMerge, dispatch } = useGame();
   if (!dragon) return null;
+
+  const handleSkillClick = (skill) => {
+    const charge = skillCharges[skill.name] || 0;
+    if (charge >= CHARGE_NEEDED && !activeSkill && !showMerge) {
+      dispatch({ type: 'USE_SKILL', skill });
+    }
+  };
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 px-4">
       {dragon.skills.map((skill) => {
         const unlocked = unlockedSkills.includes(skill.name);
         const upcoming = !unlocked && progress >= skill.unlocksAt - 0.15;
+        const charge = skillCharges[skill.name] || 0;
+        const isCharged = charge >= CHARGE_NEEDED;
+        const isActive = activeSkill?.name === skill.name;
+
+        if (!unlocked && !upcoming) return null;
 
         return (
-          <motion.div
+          <motion.button
             key={skill.name}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold"
+            className="relative flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold"
             style={{
-              background: unlocked ? `${dragon.colors.primary}30` : '#1a1a2e',
-              border: `2px solid ${unlocked ? dragon.colors.primary : '#2a2a4a'}`,
-              color: unlocked ? dragon.colors.accent : '#555',
-              opacity: unlocked ? 1 : upcoming ? 0.5 : 0.25,
+              background: isActive
+                ? `linear-gradient(135deg, ${dragon.colors.primary}, ${dragon.colors.glow})`
+                : isCharged
+                  ? `${dragon.colors.primary}40`
+                  : unlocked ? '#1a1a2e' : '#111',
+              border: `2px solid ${isCharged ? dragon.colors.accent : unlocked ? dragon.colors.primary + '60' : '#2a2a4a'}`,
+              color: unlocked ? (isCharged ? '#fff' : dragon.colors.accent) : '#555',
+              opacity: unlocked ? 1 : 0.35,
+              cursor: isCharged && !showMerge ? 'pointer' : 'default',
+              boxShadow: isCharged ? `0 0 15px ${dragon.colors.glow}40` : 'none',
             }}
-            animate={unlocked ? { scale: [1, 1.1, 1] } : {}}
-            transition={{ duration: 0.5 }}
+            disabled={!isCharged || !!activeSkill || showMerge || !unlocked}
+            onClick={() => handleSkillClick(skill)}
+            animate={isCharged && !isActive ? {
+              boxShadow: [`0 0 10px ${dragon.colors.glow}30`, `0 0 25px ${dragon.colors.glow}60`, `0 0 10px ${dragon.colors.glow}30`],
+            } : isActive ? { scale: [1, 1.1, 1] } : {}}
+            transition={isCharged ? { duration: 1.5, repeat: Infinity } : { duration: 0.3 }}
+            whileTap={isCharged ? { scale: 0.9 } : {}}
           >
-            <span className="text-lg">{skill.icon}</span>
+            <span className="text-xl">{skill.icon}</span>
             <span className="hidden md:inline">{skill.name}</span>
-          </motion.div>
+            {/* Charge pips */}
+            {unlocked && !isActive && (
+              <div className="flex gap-0.5 ml-1">
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: 6,
+                      height: 6,
+                      background: i < charge ? dragon.colors.accent : '#333',
+                      boxShadow: i < charge ? `0 0 4px ${dragon.colors.glow}` : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.button>
         );
       })}
     </div>
@@ -36,6 +78,25 @@ export default function SkillBar() {
 
 export function SkillUnlockPopup() {
   const { newSkill, dragon, dispatch } = useGame();
+
+  // Close on Enter/Escape key
+  React.useEffect(() => {
+    if (!newSkill) return;
+    const handleKey = (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+        dispatch({ type: 'CLEAR_SKILL_POPUP' });
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [newSkill, dispatch]);
+
+  // Auto-close after 3 seconds
+  React.useEffect(() => {
+    if (!newSkill) return;
+    const timer = setTimeout(() => dispatch({ type: 'CLEAR_SKILL_POPUP' }), 3000);
+    return () => clearTimeout(timer);
+  }, [newSkill, dispatch]);
 
   return (
     <AnimatePresence>

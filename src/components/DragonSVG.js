@@ -520,11 +520,11 @@ function GrowingDragon({ dragon, t, size, chomping }) {
     <motion.div
       style={{ width: '100%', height: '100%' }}
       animate={chomping
-        ? { scale: [1, 1.18, 0.9, 1.08, 1] }
+        ? { scale: [1, 1.15, 0.92, 1.1, 1], y: [0, -8, 5, -3, 0] }
         : { y: [0, -5, 0] }
       }
       transition={chomping
-        ? { duration: 0.6, ease: 'easeOut' }
+        ? { duration: 0.8, ease: 'easeOut' }
         : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
       }
     >
@@ -731,101 +731,141 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
   const snoutTipX = headCx - 30 - snoutLen * 25;
   const snoutTipY = headCy + 3;
 
-  // Jaw drops more with maturity (angular vs round)
-  // Extra jaw drop when chomping
+  // Pac-Man chomp: head splits open WIDE
+  // Even baby dragon gets a huge mouth opening
   const baseJawDrop = 4 + jawAngularity * 10;
-  const jawDrop = chomping ? baseJawDrop + 12 + t * 8 : baseJawDrop;
+  const chompGap = 30 + headRy * 0.8 + t * 15; // massive opening regardless of maturity
+  const jawDrop = chomping ? chompGap : baseJawDrop;
+  // Upper skull tilts up when chomping
+  const skullTilt = chomping ? -(12 + (1 - t) * 8) : 0; // babies tilt MORE (cuter)
+  // Lower jaw tilts down
+  const jawTilt = chomping ? (15 + (1 - t) * 10) : 0;
+  // Pivot point at back of head
+  const pivotX = headCx + headRx * 0.3;
+  const pivotY = headCy;
 
   return (
     <g>
-      {/* Head shape */}
-      <ellipse cx={headCx} cy={headCy} rx={headRx} ry={headRy}
-        fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+      {/* === UPPER HEAD (tilts up when chomping) === */}
+      <g transform={chomping ? `rotate(${skullTilt} ${pivotX} ${pivotY})` : ''}>
+        {/* Head shape */}
+        <ellipse cx={headCx} cy={headCy} rx={headRx} ry={headRy}
+          fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
 
-      {/* Brow ridge (gets more prominent with age) */}
-      {browRidge > 0.1 && (
-        <path d={`M ${headCx - headRx * 0.7} ${headCy - headRy * 0.5}
-                   Q ${headCx} ${headCy - headRy * 0.5 - browRidge * 8} ${headCx + headRx * 0.7} ${headCy - headRy * 0.4}`}
-          stroke={primary} strokeWidth={1.5 + browRidge * 3} fill="none" strokeLinecap="round" opacity={0.3 + browRidge * 0.3} />
-      )}
+        {/* Brow ridge (gets more prominent with age) */}
+        {browRidge > 0.1 && (
+          <path d={`M ${headCx - headRx * 0.7} ${headCy - headRy * 0.5}
+                     Q ${headCx} ${headCy - headRy * 0.5 - browRidge * 8} ${headCx + headRx * 0.7} ${headCy - headRy * 0.4}`}
+            stroke={primary} strokeWidth={1.5 + browRidge * 3} fill="none" strokeLinecap="round" opacity={0.3 + browRidge * 0.3} />
+        )}
 
-      {/* Snout (longer + more angular with age) */}
-      <path d={`M ${headCx - headRx * 0.6} ${headCy}
-                 Q ${snoutTipX + 10} ${snoutTipY - 6 - jawAngularity * 3} ${snoutTipX} ${snoutTipY}
-                 Q ${snoutTipX + 8} ${snoutTipY + jawDrop * 0.5} ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}`}
-        fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+        {/* Upper snout */}
+        <path d={`M ${headCx - headRx * 0.6} ${headCy}
+                   Q ${snoutTipX + 10} ${snoutTipY - 6 - jawAngularity * 3} ${snoutTipX} ${snoutTipY}`}
+          fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
 
-      {/* Jaw (wider + more defined with maturity) */}
-      <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}
-                 Q ${snoutTipX + 15} ${snoutTipY + jawDrop} ${snoutTipX + 3} ${snoutTipY + jawDrop * 0.6}`}
-        stroke={primary} strokeWidth={1.5 + jawAngularity * 2} fill="none" opacity={0.3 + jawAngularity * 0.25} />
+        {/* Upper teeth row when chomping */}
+        {chomping && (() => {
+          const teethCount = Math.floor(3 + t * 4);
+          const toothH = 4 + t * 5 + (1 - t) * 3; // babies get visible teeth too
+          const teethStartX = snoutTipX + 2;
+          const teethEndX = headCx - headRx * 0.2;
+          return Array.from({ length: teethCount }, (_, i) => {
+            const tx = teethStartX + (i / (teethCount - 1)) * (teethEndX - teethStartX);
+            const ty = snoutTipY + 1;
+            return (
+              <polygon key={`ut${i}`}
+                points={`${tx - 2},${ty} ${tx + 2},${ty} ${tx},${ty + toothH}`}
+                fill="#f0f0e0" stroke="#ccc" strokeWidth="0.4" />
+            );
+          });
+        })()}
 
-      {/* === OPEN MOUTH with teeth and tongue (when chomping) === */}
+        {/* Front fang (upper) */}
+        {chomping && (
+          <polygon
+            points={`${snoutTipX + 1},${snoutTipY - 1} ${snoutTipX + 5},${snoutTipY - 1} ${snoutTipX + 3},${snoutTipY + 6 + t * 5}`}
+            fill="#fffff0" stroke="#ddd" strokeWidth="0.5" />
+        )}
+      </g>
+
+      {/* === LOWER JAW (tilts down when chomping — Pac-Man style) === */}
+      <g transform={chomping ? `rotate(${jawTilt} ${pivotX} ${pivotY})` : ''}>
+        {/* Jaw fill (visible when mouth is open) */}
+        {chomping ? (
+          <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.3}
+                     Q ${snoutTipX + 15} ${snoutTipY + baseJawDrop + 5} ${snoutTipX + 3} ${snoutTipY + baseJawDrop * 0.4}
+                     L ${headCx + headRx * 0.2} ${headCy + headRy * 0.4} Z`}
+            fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+        ) : (
+          <>
+            <path d={`M ${snoutTipX} ${snoutTipY}
+                       Q ${snoutTipX + 8} ${snoutTipY + baseJawDrop * 0.5} ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}`}
+              fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+            <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}
+                       Q ${snoutTipX + 15} ${snoutTipY + baseJawDrop} ${snoutTipX + 3} ${snoutTipY + baseJawDrop * 0.6}`}
+              stroke={primary} strokeWidth={1.5 + jawAngularity * 2} fill="none" opacity={0.3 + jawAngularity * 0.25} />
+          </>
+        )}
+
+        {/* Lower teeth when chomping */}
+        {chomping && (() => {
+          const teethCount = Math.floor(2 + t * 3);
+          const toothH = 3 + t * 4 + (1 - t) * 2;
+          const teethStartX = snoutTipX + 5;
+          const teethEndX = headCx - headRx * 0.15;
+          const jawLineY = snoutTipY + baseJawDrop * 0.3;
+          return Array.from({ length: teethCount }, (_, i) => {
+            const tx = teethStartX + (i / Math.max(1, teethCount - 1)) * (teethEndX - teethStartX);
+            return (
+              <polygon key={`lt${i}`}
+                points={`${tx - 1.5},${jawLineY + 1} ${tx + 1.5},${jawLineY + 1} ${tx},${jawLineY - toothH}`}
+                fill="#e8e8d8" stroke="#bbb" strokeWidth="0.3" />
+            );
+          });
+        })()}
+      </g>
+
+      {/* === MOUTH INTERIOR (rendered between upper and lower jaw) === */}
       {chomping && (() => {
-        const mouthX = snoutTipX + 5;
-        const mouthY = snoutTipY + 2;
-        const mouthW = headRx * 1.2 + t * 8;
-        const mouthH = jawDrop * 0.7;
-        const teethCount = Math.floor(3 + t * 4);
-        const toothH = 3 + t * 4;
+        const mouthX = snoutTipX + 3;
+        const mouthTopY = snoutTipY + 2;
+        const mouthW = headRx * 1.4 + t * 10;
+        const mouthH = chompGap * 0.6;
         return (
           <g>
-            {/* Mouth interior (dark) */}
-            <ellipse cx={mouthX + mouthW * 0.4} cy={mouthY + mouthH * 0.3}
-              rx={mouthW * 0.5} ry={mouthH * 0.55}
+            {/* Deep dark mouth cavity */}
+            <ellipse cx={mouthX + mouthW * 0.4} cy={mouthTopY + mouthH * 0.35}
+              rx={mouthW * 0.55} ry={mouthH * 0.5}
               fill="#0a0008" />
+
+            {/* Throat darkness (deeper) */}
+            <ellipse cx={mouthX + mouthW * 0.55} cy={mouthTopY + mouthH * 0.3}
+              rx={mouthW * 0.2} ry={mouthH * 0.25}
+              fill="#050004" />
 
             {/* Tongue */}
             <motion.path
-              d={`M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.4}
-                  Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.8}
-                    ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.5}
-                  Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.2}
-                    ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.45}`}
-              fill="#cc2244" stroke="#991133" strokeWidth="0.8"
+              d={`M ${mouthX + mouthW * 0.15} ${mouthTopY + mouthH * 0.5}
+                  Q ${mouthX + mouthW * 0.3} ${mouthTopY + mouthH * 0.85}
+                    ${mouthX + mouthW * 0.5} ${mouthTopY + mouthH * 0.55}
+                  Q ${mouthX + mouthW * 0.65} ${mouthTopY + mouthH * 0.3}
+                    ${mouthX + mouthW * 0.75} ${mouthTopY + mouthH * 0.5}`}
+              fill="#cc2244" stroke="#991133" strokeWidth="1"
               animate={{ d: [
-                `M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.4}
-                 Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.85}
-                   ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.55}
-                 Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.25}
-                   ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.5}`,
-                `M ${mouthX + mouthW * 0.2} ${mouthY + mouthH * 0.35}
-                 Q ${mouthX + mouthW * 0.35} ${mouthY + mouthH * 0.75}
-                   ${mouthX + mouthW * 0.5} ${mouthY + mouthH * 0.45}
-                 Q ${mouthX + mouthW * 0.6} ${mouthY + mouthH * 0.2}
-                   ${mouthX + mouthW * 0.7} ${mouthY + mouthH * 0.4}`,
+                `M ${mouthX + mouthW * 0.15} ${mouthTopY + mouthH * 0.55}
+                 Q ${mouthX + mouthW * 0.3} ${mouthTopY + mouthH * 0.9}
+                   ${mouthX + mouthW * 0.5} ${mouthTopY + mouthH * 0.6}
+                 Q ${mouthX + mouthW * 0.65} ${mouthTopY + mouthH * 0.35}
+                   ${mouthX + mouthW * 0.75} ${mouthTopY + mouthH * 0.55}`,
+                `M ${mouthX + mouthW * 0.15} ${mouthTopY + mouthH * 0.45}
+                 Q ${mouthX + mouthW * 0.3} ${mouthTopY + mouthH * 0.8}
+                   ${mouthX + mouthW * 0.5} ${mouthTopY + mouthH * 0.5}
+                 Q ${mouthX + mouthW * 0.65} ${mouthTopY + mouthH * 0.25}
+                   ${mouthX + mouthW * 0.75} ${mouthTopY + mouthH * 0.45}`,
               ]}}
-              transition={{ duration: 0.4, repeat: Infinity, repeatType: 'reverse' }}
+              transition={{ duration: 0.35, repeat: Infinity, repeatType: 'reverse' }}
             />
-
-            {/* Upper teeth */}
-            {Array.from({ length: teethCount }, (_, i) => {
-              const tx = mouthX + mouthW * 0.1 + (i / (teethCount - 1)) * mouthW * 0.7;
-              return (
-                <polygon key={`ut${i}`}
-                  points={`${tx - 1.5},${mouthY - 1} ${tx + 1.5},${mouthY - 1} ${tx},${mouthY + toothH}`}
-                  fill="#f0f0e0" stroke="#ccc" strokeWidth="0.3" />
-              );
-            })}
-
-            {/* Lower teeth (smaller, pointing up) */}
-            {Array.from({ length: teethCount - 1 }, (_, i) => {
-              const tx = mouthX + mouthW * 0.15 + (i / (teethCount - 2)) * mouthW * 0.6;
-              const bottomY = mouthY + mouthH * 0.6;
-              return (
-                <polygon key={`lt${i}`}
-                  points={`${tx - 1.2},${bottomY + 1} ${tx + 1.2},${bottomY + 1} ${tx},${bottomY - toothH * 0.7}`}
-                  fill="#e8e8d8" stroke="#bbb" strokeWidth="0.3" />
-              );
-            })}
-
-            {/* Fangs (larger corner teeth) */}
-            <polygon
-              points={`${mouthX + 1},${mouthY - 2} ${mouthX + 4},${mouthY - 2} ${mouthX + 2.5},${mouthY + toothH * 1.5}`}
-              fill="#fffff0" stroke="#ddd" strokeWidth="0.4" />
-            <polygon
-              points={`${mouthX + mouthW * 0.7},${mouthY - 2} ${mouthX + mouthW * 0.7 + 3},${mouthY - 2} ${mouthX + mouthW * 0.7 + 1.5},${mouthY + toothH * 1.3}`}
-              fill="#fffff0" stroke="#ddd" strokeWidth="0.4" />
           </g>
         );
       })()}

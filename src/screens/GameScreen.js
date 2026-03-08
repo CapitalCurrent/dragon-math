@@ -129,8 +129,9 @@ function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
 
     const startX = numRect.left + numRect.width / 2;
     const startY = numRect.top + numRect.height * 0.3;
-    const endX = dragRect.left + dragRect.width / 2;
-    const endY = dragRect.top + dragRect.height * 0.35;
+    // Target the dragon's mouth area (upper-left quadrant since dragon faces left, but SVG is scaleX(-1))
+    const endX = dragRect.left + dragRect.width * 0.35;
+    const endY = dragRect.top + dragRect.height * 0.25;
 
     setCoords({ startX, startY, endX, endY, dx: endX - startX, dy: endY - startY });
   }, [dragonRef, numbersRef]);
@@ -326,7 +327,7 @@ function SkillBlast({ skill, dragon, dispatch }) {
 }
 
 export default function GameScreen() {
-  const { dragon, progress, eating, streak, wrongAnswer, currentQuestion, activeSkill, dispatch } = useGame();
+  const { dragon, progress, eating, mouthOpen, streak, wrongAnswer, currentQuestion, activeSkill, dispatch } = useGame();
   const version = useVersion();
   const isPixi = version === 'v2';
   const dragonRef = useRef(null);
@@ -351,7 +352,7 @@ export default function GameScreen() {
             {isPixi ? (
               <Suspense fallback={
                 <DragonCave dragon={dragon} progress={progress}>
-                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={eating} />
+                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={mouthOpen} />
                 </DragonCave>
               }>
                 <DragonCave dragon={dragon} progress={progress}>
@@ -359,7 +360,7 @@ export default function GameScreen() {
                     dragon={dragon}
                     progress={progress}
                     size={440}
-                    chomping={eating}
+                    chomping={mouthOpen}
                     streak={streak}
                     wrongAnswer={wrongAnswer}
                     DragonSVGComponent={DragonSVG}
@@ -368,7 +369,7 @@ export default function GameScreen() {
               </Suspense>
             ) : (
               <DragonCave dragon={dragon} progress={progress}>
-                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={eating} />
+                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={mouthOpen} />
               </DragonCave>
             )}
           </div>

@@ -38,15 +38,20 @@ export default function FloatingNumbers() {
           // Phase 2: Dragon skill attacks the answer
           setPhase('skill');
           setSkillEffect(SKILL_EFFECTS[dragon.id]);
+          // Open mouth while skill plays, then start eating
           const t2 = setTimeout(() => {
+            dispatch({ type: 'OPEN_MOUTH' });
+          }, 500);
+          const t3 = setTimeout(() => {
             setPhase('eat');
             setSkillEffect(null);
             dispatch({ type: 'START_EATING' });
           }, 900);
-          return () => clearTimeout(t2);
+          return () => { clearTimeout(t2); clearTimeout(t3); };
         } else {
-          // No skills yet — dragon chomps the answer
+          // No skills yet — open mouth first, then answer flies in
           setPhase('chomp');
+          dispatch({ type: 'OPEN_MOUTH' });
           const t2 = setTimeout(() => {
             setPhase('eat');
             dispatch({ type: 'START_EATING' });

@@ -26,7 +26,8 @@ const initialState = {
   newSkill: null, // temporarily set when a skill is unlocked
   wrongAnswer: false,
   showMerge: false,
-  eating: false, // true when answer is flying to dragon (mouth open phase)
+  eating: false, // true when answer is flying to dragon
+  mouthOpen: false, // true when dragon's mouth is open (starts before eating)
   skillCharges: {}, // { skillName: charge (0-3) } — 3 correct answers to charge
   activeSkill: null, // set when player activates a skill (skill object)
   totalCorrect: 0, // lifetime
@@ -61,6 +62,7 @@ function reducer(state, action) {
         wrongAnswer: false,
         showMerge: false,
         eating: false,
+        mouthOpen: false,
         activeSkill: null,
       };
     }
@@ -117,8 +119,11 @@ function reducer(state, action) {
         totalPlayed: state.totalPlayed + 1,
       };
 
+    case 'OPEN_MOUTH':
+      return { ...state, mouthOpen: true };
+
     case 'START_EATING':
-      return { ...state, eating: true };
+      return { ...state, eating: true, mouthOpen: true };
 
     case 'USE_SKILL': {
       const skill = action.skill;

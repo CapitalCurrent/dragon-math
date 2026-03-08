@@ -96,16 +96,19 @@ export default function FloatingNumbers() {
             transition={{ duration: 0.3 }}
           >
             <NumberBubble value={currentQuestion.a} color={colors.primary} glow={colors.glow} delay={0} />
-            <motion.span className="text-4xl md:text-5xl font-bold" style={{ color: colors.accent }}
-              animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-              {currentQuestion.op}
-            </motion.span>
+            <OperatorBubble op={currentQuestion.op} color={colors.accent} glow={colors.glow} />
             <NumberBubble value={currentQuestion.b} color={colors.secondary} glow={colors.glow} delay={0.2} />
-            <motion.span className="text-4xl md:text-5xl font-bold text-white">=</motion.span>
+            <OperatorBubble op="=" color="#8888aa" glow={colors.glow} />
             <motion.div
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl md:text-4xl font-bold border-4 border-dashed"
-              style={{ borderColor: colors.accent, color: colors.accent }}
-              animate={{ scale: [1, 1.05, 1], rotate: [0, 3, -3, 0] }}
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl md:text-4xl font-black"
+              style={{
+                borderColor: colors.accent,
+                color: colors.accent,
+                background: `radial-gradient(circle at 35% 35%, ${colors.accent}12, transparent)`,
+                border: `3px dashed ${colors.accent}60`,
+                boxShadow: `0 0 15px ${colors.glow}15, inset 0 0 20px ${colors.glow}08`,
+              }}
+              animate={{ scale: [1, 1.06, 1], borderColor: [`${colors.accent}60`, `${colors.accent}90`, `${colors.accent}60`] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
               ?
@@ -303,6 +306,25 @@ export default function FloatingNumbers() {
         ))}
       </AnimatePresence>
     </div>
+  );
+}
+
+function OperatorBubble({ op, color, glow }) {
+  return (
+    <motion.div
+      className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black"
+      style={{
+        background: `radial-gradient(circle at 35% 35%, ${color}20, ${color}08)`,
+        color: color,
+        border: `2px solid ${color}35`,
+        boxShadow: `0 0 12px ${glow}15, inset 0 -2px 6px ${glow}10`,
+        textShadow: `0 0 8px ${glow}40`,
+      }}
+      animate={{ scale: [1, 1.08, 1] }}
+      transition={{ duration: 2.5, repeat: Infinity }}
+    >
+      {op}
+    </motion.div>
   );
 }
 

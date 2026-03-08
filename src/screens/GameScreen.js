@@ -38,13 +38,48 @@ function DragonCave({ dragon, progress, children }) {
           </radialGradient>
         </defs>
 
-        {/* Cave arch — wider and taller */}
+        {/* Cave arch — wider and taller with stone border */}
         <path
           d="M 15 520 Q 15 100 110 45 Q 200 5 270 5 Q 340 5 430 45 Q 525 100 525 520"
           fill="url(#cave-bg)"
           stroke="#1a1a2e"
-          strokeWidth="3"
+          strokeWidth="6"
         />
+        {/* Outer glow on cave edge */}
+        <path
+          d="M 15 520 Q 15 100 110 45 Q 200 5 270 5 Q 340 5 430 45 Q 525 100 525 520"
+          fill="none"
+          stroke={glow}
+          strokeWidth="1"
+          strokeOpacity="0.08"
+        />
+        {/* Inner edge highlight */}
+        <path
+          d="M 22 520 Q 22 108 115 50 Q 205 12 270 12 Q 335 12 425 50 Q 518 108 518 520"
+          fill="none"
+          stroke="#252545"
+          strokeWidth="2"
+        />
+
+        {/* Stone texture blocks along arch */}
+        {[
+          { d: 'M 20 480 L 30 478 L 32 500 L 18 502 Z', o: 0.15 },
+          { d: 'M 18 420 L 28 416 L 32 440 L 20 442 Z', o: 0.12 },
+          { d: 'M 22 360 L 34 354 L 38 378 L 24 380 Z', o: 0.1 },
+          { d: 'M 32 300 L 44 292 L 48 314 L 34 318 Z', o: 0.1 },
+          { d: 'M 50 240 L 62 230 L 66 250 L 52 256 Z', o: 0.08 },
+          { d: 'M 78 180 L 90 168 L 96 186 L 82 194 Z', o: 0.08 },
+          { d: 'M 115 120 L 128 108 L 134 124 L 120 132 Z', o: 0.06 },
+          { d: 'M 508 480 L 520 478 L 522 502 L 508 500 Z', o: 0.15 },
+          { d: 'M 510 420 L 522 416 L 520 440 L 508 442 Z', o: 0.12 },
+          { d: 'M 506 360 L 518 354 L 516 378 L 504 380 Z', o: 0.1 },
+          { d: 'M 496 300 L 508 292 L 506 314 L 494 318 Z', o: 0.1 },
+          { d: 'M 478 240 L 490 230 L 488 250 L 476 256 Z', o: 0.08 },
+          { d: 'M 450 180 L 462 168 L 458 186 L 446 194 Z', o: 0.08 },
+          { d: 'M 415 120 L 428 108 L 424 124 L 412 132 Z', o: 0.06 },
+        ].map((s, i) => (
+          <path key={`stone-${i}`} d={s.d} fill="#1a1a30" opacity={s.o} stroke="#222244" strokeWidth="0.5" />
+        ))}
 
         {/* Inner cave shadow for depth */}
         <path
@@ -804,7 +839,7 @@ export default function GameScreen() {
       </div>
 
       {/* Main game area — side by side on wide screens */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-4 lg:gap-12 w-full max-w-5xl mt-4 relative z-10">
+      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-4 lg:gap-6 w-full max-w-5xl mt-4 relative z-10">
 
         {/* Dragon display — fixed width prevents layout shift during chomp */}
         <div className="flex flex-col items-center" style={{ width: 540 }}>
@@ -834,17 +869,22 @@ export default function GameScreen() {
             )}
           </div>
 
-          {/* Stage name + description */}
+          {/* Stage name + description — overlaid at bottom of cave */}
           <motion.div
-            className="text-center mt-1"
+            className="text-center -mt-6 relative z-10"
             key={stageIndex}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-lg font-bold" style={{ color: dragon.colors.accent }}>
+            <p className="text-lg font-black tracking-wide" style={{
+              color: dragon.colors.accent,
+              textShadow: `0 0 12px ${dragon.colors.glow}60, 0 2px 4px rgba(0,0,0,0.5)`,
+            }}>
               {dragon.stages[stageIndex]?.name}
             </p>
-            <p className="text-sm text-gray-400 italic">
+            <p className="text-sm text-gray-400 italic" style={{
+              textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+            }}>
               {dragon.stages[stageIndex]?.description}
             </p>
           </motion.div>
@@ -856,7 +896,7 @@ export default function GameScreen() {
         </div>
 
         {/* Question + input area — fixed width prevents layout shift */}
-        <div ref={numbersRef} className="flex flex-col items-center justify-center lg:pt-12" style={{ width: 420 }}>
+        <div ref={numbersRef} className="flex flex-col items-center justify-center lg:pt-20" style={{ width: 420 }}>
           <FloatingNumbers />
           <AnswerInput />
         </div>

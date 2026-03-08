@@ -482,9 +482,9 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   const eyeRatio = 1.5 - t * 0.7;
   const bodyRound = 1.2 - t * 0.35;
   const neckLen = (0.5 + t * 0.35) * (mods.neckMul || 1);
-  const legLen = 0.4 + t * 0.6;
-  const legThick = (0.7 + t * 0.5) * (mods.legMul || 1);
-  const wingSpan = (0.15 + t * 0.85) * (mods.wingMul || 1);
+  const legLen = 0.55 + t * 0.45;           // was 0.4 — chunkier baby legs
+  const legThick = (0.85 + t * 0.45) * (mods.legMul || 1); // was 0.7 — thicker base
+  const wingSpan = (0.25 + t * 0.75) * (mods.wingMul || 1); // was 0.15 — visible baby wings
   const tailLen = (0.3 + t * 0.7) * (mods.tailMul || 1);
   const snoutLen = 0.4 + t * 0.6;
   const hornLen = 0.1 + t * 0.9;
@@ -500,8 +500,9 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   // Body anchor points (shift based on proportions + physiology)
   const bodyCx = 245;
   const bodyCy = 310;
-  const bodyRx = 48 * bodyRound * (0.85 + t * 0.15) * (mods.bodyW || 1);
-  const bodyRy = 58 * bodyRound * (0.85 + t * 0.15) * (mods.bodyH || 1);
+  // Baby: narrower horizontally (more pear-shaped), adult: fills out
+  const bodyRx = 48 * bodyRound * (0.75 + t * 0.25) * (mods.bodyW || 1);
+  const bodyRy = 58 * bodyRound * (0.88 + t * 0.12) * (mods.bodyH || 1);
 
   // Neck endpoint (head position moves up and forward as neck lengthens)
   const neckTopX = bodyCx - 75 - neckLen * 25;
@@ -1584,7 +1585,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
       <path d={`M ${ax - 30} ${ay + 8} Q ${ax - 75 - ws * 35} ${ay + 5 - ws * 8} ${lBottomX} ${lBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
       {/* Wing finger bones (veins across membrane) — with glow */}
-      {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
+      {[0.25, 0.5, 0.75].map((f, i) => {
         const bx1 = ax - 20 - f * (ax - 20 - lElbowX) - f * (lElbowX - lTipX) * 0.3;
         const by1 = ay - f * (ay - lElbowY) - f * (lElbowY - lTipY) * 0.3;
         const bx2 = ax - 30 - f * (ax - 30 - lBottomX);
@@ -1634,7 +1635,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
       <path d={`M ${ax + 40} ${ay + 8} Q ${ax + 85 + ws * 35} ${ay + 5 - ws * 8} ${rBottomX} ${rBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
       {/* Wing finger bones — with glow */}
-      {t > 0.15 && [0.2, 0.4, 0.6, 0.8].map((f, i) => {
+      {[0.25, 0.5, 0.75].map((f, i) => {
         const bx1 = ax + 30 + f * (rElbowX - (ax + 30)) + f * (rTipX - rElbowX) * 0.3;
         const by1 = ay - f * (ay - rElbowY) - f * (rElbowY - rTipY) * 0.3;
         const bx2 = ax + 40 + f * (rBottomX - (ax + 40));

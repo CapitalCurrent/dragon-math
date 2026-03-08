@@ -64,59 +64,73 @@ export default function AnswerInput() {
         animate={wrongAnswer ? { x: [-10, 10, -10, 10, 0] } : {}}
         transition={{ duration: 0.4 }}
       >
-        <input
-          ref={inputRef}
-          type="number"
-          inputMode="numeric"
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={showMerge}
-          placeholder="?"
-          className="w-24 h-16 md:w-28 md:h-18 text-center text-3xl md:text-4xl font-bold rounded-2xl border-4 outline-none transition-all"
-          style={{
-            background: '#0a0a2a',
-            color: colors.accent,
-            borderColor: wrongAnswer ? '#ef4444' : colors.primary,
-            boxShadow: wrongAnswer
-              ? '0 0 20px #ef444466'
-              : `0 0 15px ${colors.glow}40`,
-          }}
-        />
+        <div className="relative">
+          <input
+            ref={inputRef}
+            type="number"
+            inputMode="numeric"
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={showMerge}
+            placeholder="?"
+            className="w-28 h-18 md:w-32 md:h-20 text-center text-4xl md:text-5xl font-black rounded-2xl border-3 outline-none transition-all"
+            style={{
+              background: `linear-gradient(180deg, #0c0c2e 0%, #08081e 100%)`,
+              color: colors.accent,
+              borderColor: wrongAnswer ? '#ef4444' : colors.primary + '80',
+              boxShadow: wrongAnswer
+                ? '0 0 25px #ef444466, inset 0 2px 8px rgba(0,0,0,0.5)'
+                : `0 0 20px ${colors.glow}30, inset 0 2px 8px rgba(0,0,0,0.5), inset 0 -2px 6px ${colors.glow}10`,
+              caretColor: colors.accent,
+            }}
+          />
+          {/* Subtle inner glow ring */}
+          <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+            border: `1px solid ${colors.glow}15`,
+            borderTop: `1px solid ${colors.glow}25`,
+          }} />
+        </div>
         <motion.button
           onClick={handleSubmit}
           disabled={showMerge || value.trim() === ''}
-          className="h-16 px-6 md:px-8 text-xl md:text-2xl font-bold rounded-2xl text-white transition-all disabled:opacity-40"
+          className="h-18 md:h-20 px-8 md:px-10 text-2xl md:text-3xl font-black rounded-2xl text-white transition-all disabled:opacity-30"
           style={{
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.glow})`,
-            boxShadow: `0 0 20px ${colors.glow}50`,
+            background: `linear-gradient(180deg, ${colors.accent}dd 0%, ${colors.primary} 100%)`,
+            boxShadow: `0 4px 20px ${colors.glow}60, 0 0 40px ${colors.glow}20, inset 0 1px 0 rgba(255,255,255,0.2)`,
+            textShadow: `0 2px 6px rgba(0,0,0,0.4)`,
+            letterSpacing: '2px',
           }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.08, boxShadow: `0 6px 30px ${colors.glow}80, 0 0 50px ${colors.glow}30` }}
+          whileTap={{ scale: 0.92 }}
         >
           GO!
         </motion.button>
       </motion.div>
 
       {/* Number pad for mobile */}
-      <div className="grid grid-cols-3 gap-2 max-w-[280px] md:hidden">
+      <div className="grid grid-cols-3 gap-2.5 max-w-[280px] md:hidden">
         {numberPad.map((key) => (
           <motion.button
             key={key}
             onClick={() => handlePadPress(key)}
             disabled={showMerge}
-            className="h-14 rounded-xl text-2xl font-bold transition-all disabled:opacity-40"
+            className="h-14 rounded-xl text-2xl font-black transition-all disabled:opacity-30"
             style={{
               background: key === 'GO'
-                ? `linear-gradient(135deg, ${colors.primary}, ${colors.glow})`
+                ? `linear-gradient(180deg, ${colors.accent}dd, ${colors.primary})`
                 : key === 'C'
-                  ? '#333'
-                  : '#1a1a3a',
+                  ? 'linear-gradient(180deg, #3a2020, #2a1515)'
+                  : 'linear-gradient(180deg, #1e1e42, #14142e)',
               color: key === 'GO' ? '#fff' : key === 'C' ? '#ff6b6b' : colors.accent,
-              border: `2px solid ${key === 'GO' ? colors.primary : '#2a2a4a'}`,
+              border: `2px solid ${key === 'GO' ? colors.primary + '80' : '#2a2a5a'}`,
+              boxShadow: key === 'GO'
+                ? `0 3px 12px ${colors.glow}40`
+                : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              textShadow: key === 'GO' ? '0 2px 4px rgba(0,0,0,0.3)' : 'none',
             }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.88 }}
           >
             {key}
           </motion.button>

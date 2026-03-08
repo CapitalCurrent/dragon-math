@@ -647,7 +647,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             color={secondary} accent={accent} side="far" />
 
           {/* === WINGS === */}
-          <AnimatedWings dragon={dragon} ws={wingSpan} t={t}
+          <AnimatedWings dragon={dragon} ws={wingSpan} t={t} chomping={chomping}
             anchorX={bodyCx - 10} anchorY={bodyCy - 30} />
 
           {/* === BODY === */}
@@ -907,45 +907,74 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
         style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
       >
-        {/* Head shape — base */}
-        <ellipse cx={headCx} cy={headCy} rx={headRx} ry={headRy}
+        {/* Skull — angular polygon instead of ellipse (flatter crown, wider back) */}
+        <path d={`
+          M ${headCx + headRx * 0.8} ${headCy + headRy * 0.1}
+          Q ${headCx + headRx} ${headCy - headRy * 0.2} ${headCx + headRx * 0.7} ${headCy - headRy * 0.8}
+          Q ${headCx + headRx * 0.2} ${headCy - headRy * (1 + t * 0.1)} ${headCx - headRx * 0.3} ${headCy - headRy * 0.85}
+          Q ${headCx - headRx * 0.7} ${headCy - headRy * 0.7} ${headCx - headRx * 0.8} ${headCy - headRy * 0.3}
+          Q ${headCx - headRx * 0.7} ${headCy + headRy * 0.1} ${headCx + headRx * 0.8} ${headCy + headRy * 0.1}
+          Z`}
           fill={`url(#head-g-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
-        {/* Head 3D highlight */}
-        <ellipse cx={headCx - headRx * 0.15} cy={headCy - headRy * 0.2} rx={headRx * 0.55} ry={headRy * 0.45}
-          fill="#fff" opacity="0.08" />
-        {/* Head 3D shadow (underside) */}
-        <ellipse cx={headCx} cy={headCy + headRy * 0.3} rx={headRx * 0.7} ry={headRy * 0.35}
+        {/* Skull 3D highlight (top-front) */}
+        <path d={`
+          M ${headCx + headRx * 0.5} ${headCy - headRy * 0.6}
+          Q ${headCx} ${headCy - headRy * 0.8} ${headCx - headRx * 0.4} ${headCy - headRy * 0.65}
+          Q ${headCx - headRx * 0.1} ${headCy - headRy * 0.5} ${headCx + headRx * 0.5} ${headCy - headRy * 0.6}
+          Z`}
+          fill="#fff" opacity="0.07" />
+        {/* Skull underside shadow */}
+        <ellipse cx={headCx} cy={headCy + headRy * 0.05} rx={headRx * 0.65} ry={headRy * 0.2}
           fill="#000" opacity="0.1" />
         {/* Head scale texture */}
         {t > 0.3 && [0, 1, 2].map(i => (
           <path key={`hs${i}`}
-            d={`M ${headCx - headRx * 0.3 + i * headRx * 0.25} ${headCy - headRy * 0.2 + i * 3}
-                Q ${headCx - headRx * 0.15 + i * headRx * 0.25} ${headCy - headRy * 0.35 + i * 3}
-                  ${headCx + i * headRx * 0.25} ${headCy - headRy * 0.2 + i * 3}`}
+            d={`M ${headCx - headRx * 0.3 + i * headRx * 0.25} ${headCy - headRy * 0.3 + i * 3}
+                Q ${headCx - headRx * 0.15 + i * headRx * 0.25} ${headCy - headRy * 0.45 + i * 3}
+                  ${headCx + i * headRx * 0.25} ${headCy - headRy * 0.3 + i * 3}`}
             stroke={accent} strokeWidth="0.5" fill="none" opacity={0.06 + t * 0.06} />
         ))}
 
-        {/* Brow ridge (gets more prominent with age) */}
-        {browRidge > 0.1 && (
+        {/* Brow ridge — more defined overhang above eye */}
+        {browRidge > 0.05 && (
           <>
-            <path d={`M ${headCx - headRx * 0.7} ${headCy - headRy * 0.5}
-                       Q ${headCx} ${headCy - headRy * 0.5 - browRidge * 8} ${headCx + headRx * 0.7} ${headCy - headRy * 0.4}`}
-              stroke={primary} strokeWidth={1.5 + browRidge * 3} fill="none" strokeLinecap="round" opacity={0.3 + browRidge * 0.3} />
-            {/* Brow highlight */}
-            <path d={`M ${headCx - headRx * 0.6} ${headCy - headRy * 0.55}
-                       Q ${headCx} ${headCy - headRy * 0.55 - browRidge * 6} ${headCx + headRx * 0.6} ${headCy - headRy * 0.45}`}
-              stroke="#fff" strokeWidth={0.5 + browRidge} fill="none" strokeLinecap="round" opacity={0.05 + browRidge * 0.08} />
+            <path d={`M ${headCx - headRx * 0.75} ${headCy - headRy * 0.4}
+                       Q ${headCx - headRx * 0.2} ${headCy - headRy * 0.4 - browRidge * 10}
+                         ${headCx + headRx * 0.6} ${headCy - headRy * 0.35}`}
+              stroke={primary} strokeWidth={2 + browRidge * 4} fill="none" strokeLinecap="round" opacity={0.25 + browRidge * 0.35} />
+            {/* Brow ridge highlight */}
+            <path d={`M ${headCx - headRx * 0.65} ${headCy - headRy * 0.45}
+                       Q ${headCx - headRx * 0.15} ${headCy - headRy * 0.45 - browRidge * 8}
+                         ${headCx + headRx * 0.5} ${headCy - headRy * 0.4}`}
+              stroke="#fff" strokeWidth={0.5 + browRidge * 0.8} fill="none" strokeLinecap="round" opacity={0.04 + browRidge * 0.06} />
           </>
         )}
 
-        {/* Upper snout */}
-        <path d={`M ${headCx - headRx * 0.6} ${headCy}
-                   Q ${snoutTipX + 10} ${snoutTipY - 6 - jawAngularity * 3} ${snoutTipX} ${snoutTipY}`}
-          fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+        {/* Upper snout — longer, more defined with nasal ridge */}
+        <path d={`
+          M ${headCx - headRx * 0.7} ${headCy - headRy * 0.2}
+          Q ${headCx - headRx * 0.8} ${headCy - headRy * 0.1}
+            ${snoutTipX + 15} ${snoutTipY - 4 - jawAngularity * 4}
+          L ${snoutTipX} ${snoutTipY}
+          Q ${snoutTipX + 8} ${snoutTipY + 2}
+            ${headCx - headRx * 0.5} ${headCy + headRy * 0.1}
+          Z`}
+          fill={secondary} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
+        {/* Snout top ridge (nasal bone) */}
+        <path d={`M ${headCx - headRx * 0.5} ${headCy - headRy * 0.25}
+                   Q ${snoutTipX + 20} ${snoutTipY - 8 - jawAngularity * 3}
+                     ${snoutTipX + 2} ${snoutTipY - 1}`}
+          stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.15 + t * 0.15} />
         {/* Snout highlight */}
-        <path d={`M ${headCx - headRx * 0.5} ${headCy - 2}
-                   Q ${snoutTipX + 15} ${snoutTipY - 8 - jawAngularity * 3} ${snoutTipX + 3} ${snoutTipY - 2}`}
-          stroke="#fff" strokeWidth="0.8" fill="none" opacity="0.08" />
+        <path d={`M ${headCx - headRx * 0.55} ${headCy - headRy * 0.15}
+                   Q ${snoutTipX + 18} ${snoutTipY - 7 - jawAngularity * 3}
+                     ${snoutTipX + 4} ${snoutTipY - 2}`}
+          stroke="#fff" strokeWidth="0.7" fill="none" opacity="0.06" />
+        {/* Nostril (larger, more prominent) */}
+        <ellipse cx={snoutTipX + 5} cy={snoutTipY - 1} rx={2.5 + snoutLen * 1.2} ry={1.8 + snoutLen * 0.6}
+          fill="#050005" stroke={glow} strokeWidth="0.5" strokeOpacity="0.4" />
+        <ellipse cx={snoutTipX + 11} cy={snoutTipY - 2} rx={1.8 + snoutLen * 0.8} ry={1.3 + snoutLen * 0.4}
+          fill="#050005" stroke={glow} strokeWidth="0.4" strokeOpacity="0.3" />
 
         {/* Upper teeth row when chomping */}
         {chomping && (() => {
@@ -976,36 +1005,64 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
         )}
       </motion.g>
 
-      {/* === LOWER JAW (tilts down when chomping — Pac-Man style) === */}
+      {/* === LOWER JAW / MANDIBLE (tilts down when chomping) === */}
       <motion.g
         animate={{ rotate: chomping ? jawTilt : 0 }}
         transition={{ type: 'spring', stiffness: 250, damping: 12 }}
         style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
       >
-        {/* Jaw fill (visible when mouth is open) */}
+        {/* Mandible shape — defined jawbone with chin point */}
         {chomping ? (
-          <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.3}
-                     Q ${snoutTipX + 15} ${snoutTipY + baseJawDrop + 5} ${snoutTipX + 3} ${snoutTipY + baseJawDrop * 0.4}
-                     L ${headCx + headRx * 0.2} ${headCy + headRy * 0.4} Z`}
-            fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
+          <g>
+            {/* Open jaw — wider mandible */}
+            <path d={`
+              M ${headCx + headRx * 0.15} ${headCy + headRy * 0.35}
+              Q ${headCx - headRx * 0.3} ${headCy + headRy * 0.5 + baseJawDrop * 0.3}
+                ${snoutTipX + 15} ${snoutTipY + baseJawDrop * 0.6}
+              L ${snoutTipX + 3} ${snoutTipY + baseJawDrop * 0.35}
+              Q ${snoutTipX + 10} ${snoutTipY + baseJawDrop * 0.15}
+                ${headCx - headRx * 0.15} ${headCy + headRy * 0.2}
+              Z`}
+              fill={secondary} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
+            {/* Jaw underside shadow */}
+            <path d={`
+              M ${headCx - headRx * 0.1} ${headCy + headRy * 0.4 + baseJawDrop * 0.2}
+              Q ${snoutTipX + 18} ${snoutTipY + baseJawDrop * 0.5}
+                ${snoutTipX + 8} ${snoutTipY + baseJawDrop * 0.3}`}
+              stroke="#000" strokeWidth={1.5 + t} fill="none" opacity="0.08" />
+          </g>
         ) : (
-          <>
-            <path d={`M ${snoutTipX} ${snoutTipY}
-                       Q ${snoutTipX + 8} ${snoutTipY + baseJawDrop * 0.5} ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}`}
-              fill={secondary} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
-            <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.4}
-                       Q ${snoutTipX + 15} ${snoutTipY + baseJawDrop} ${snoutTipX + 3} ${snoutTipY + baseJawDrop * 0.6}`}
-              stroke={primary} strokeWidth={1.5 + jawAngularity * 2} fill="none" opacity={0.3 + jawAngularity * 0.25} />
-          </>
+          <g>
+            {/* Closed jaw — visible mandible with jawline */}
+            <path d={`
+              M ${headCx - headRx * 0.5} ${headCy + headRy * 0.15}
+              Q ${headCx - headRx * 0.6} ${headCy + headRy * 0.35}
+                ${snoutTipX + 12} ${snoutTipY + baseJawDrop * 0.5}
+              L ${snoutTipX + 2} ${snoutTipY + baseJawDrop * 0.3}
+              Q ${snoutTipX + 6} ${snoutTipY + 1}
+                ${headCx - headRx * 0.5} ${headCy + headRy * 0.05}
+              Z`}
+              fill={secondary} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
+            {/* Visible mouth line when closed */}
+            <path d={`M ${snoutTipX + 1} ${snoutTipY + 1}
+                       Q ${snoutTipX + 10} ${snoutTipY + baseJawDrop * 0.15}
+                         ${headCx - headRx * 0.5} ${headCy + headRy * 0.1}`}
+              stroke={primary} strokeWidth={1 + jawAngularity * 1.5} fill="none" opacity={0.2 + jawAngularity * 0.25} />
+            {/* Jawline ridge */}
+            <path d={`M ${snoutTipX + 10} ${snoutTipY + baseJawDrop * 0.4}
+                       Q ${headCx - headRx * 0.3} ${headCy + headRy * 0.4}
+                         ${headCx + headRx * 0.1} ${headCy + headRy * 0.3}`}
+              stroke={primary} strokeWidth={0.8 + t * 1.2} fill="none" opacity={0.1 + t * 0.12} />
+          </g>
         )}
 
         {/* Lower teeth when chomping */}
         {chomping && (() => {
           const teethCount = Math.floor(2 + t * 3);
-          const toothH = 3 + t * 4 + (1 - t) * 2;
+          const toothH = 3 + t * 5 + (1 - t) * 2;
           const teethStartX = snoutTipX + 5;
           const teethEndX = headCx - headRx * 0.15;
-          const jawLineY = snoutTipY + baseJawDrop * 0.3;
+          const jawLineY = snoutTipY + baseJawDrop * 0.25;
           return Array.from({ length: teethCount }, (_, i) => {
             const tx = teethStartX + (i / Math.max(1, teethCount - 1)) * (teethEndX - teethStartX);
             return (
@@ -1015,6 +1072,12 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
             );
           });
         })()}
+        {/* Lower fang (always visible — pokes up from jaw) */}
+        {!chomping && t > 0.1 && (
+          <polygon
+            points={`${snoutTipX + 4},${snoutTipY + baseJawDrop * 0.2} ${snoutTipX + 7},${snoutTipY + baseJawDrop * 0.2} ${snoutTipX + 5.5},${snoutTipY - 1 - t * 2}`}
+            fill="#e8e8d8" stroke="#ccc" strokeWidth="0.3" opacity="0.7" />
+        )}
       </motion.g>
 
       {/* === MOUTH INTERIOR (rendered between upper and lower jaw) === */}
@@ -1061,11 +1124,10 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
         );
       })()}
 
-      {/* Nostrils */}
-      <circle cx={snoutTipX + 6} cy={snoutTipY - 2} r={2 + snoutLen} fill={glow} opacity="0.7" />
-      <circle cx={snoutTipX + 12} cy={snoutTipY - 3} r={1.5 + snoutLen * 0.5} fill={glow} opacity="0.5" />
+      {/* Nostril glow (subtle element-colored light from within) */}
+      <circle cx={snoutTipX + 5} cy={snoutTipY - 1} r={3 + snoutLen * 0.8} fill={glow} opacity={0.15 + breathIntensity * 0.2} />
 
-      {/* Nostril wisps */}
+      {/* Nostril wisps / breath steam */}
       <motion.circle cx={snoutTipX} cy={snoutTipY - 3}
         r={1.5 + breathIntensity * 3} fill={primary}
         opacity={0.12 + breathIntensity * 0.3}
@@ -1475,7 +1537,7 @@ function DragonExtras({ dragon, t, bodyCx, bodyCy, bodyRx, bodyRy }) {
   }
 }
 
-function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
+function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY = 280 }) {
   const { primary, secondary, accent, glow } = dragon.colors;
   const ax = anchorX;
   const ay = anchorY;
@@ -1497,8 +1559,14 @@ function AnimatedWings({ dragon, ws, t, anchorX = 235, anchorY = 280 }) {
 
   return (
     <motion.g
-      animate={{ rotate: [0, 2, -2, 0] }}
-      transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+      animate={chomping
+        ? { rotate: [0, -15, 12, -10, 8, -5, 0], scale: [1, 1.12, 0.95, 1.08, 1] }
+        : { rotate: [0, 2, -2, 0] }
+      }
+      transition={chomping
+        ? { duration: 0.8, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
+        : { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
+      }
       style={{ transformOrigin: `${ax}px ${ay}px` }}
     >
       {/* Left wing — membrane */}

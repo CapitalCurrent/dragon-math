@@ -11,11 +11,13 @@ import DevPanel from '../components/DevPanel';
 
 const DragonPixi = lazy(() => import('../engine/DragonPixi'));
 
-function DragonCave({ dragon, progress, children }) {
+function DragonCave({ dragon, progress, caveSize, children }) {
   const { primary, accent, glow } = dragon.colors;
   const isEgg = progress <= 0.15;
+  const w = caveSize || 540;
+  const h = Math.round(w * (520 / 540));
   return (
-    <div className="relative" style={{ width: 540, height: 520, overflow: 'visible' }}>
+    <div className="relative" style={{ width: w, height: h, overflow: 'visible' }}>
       {/* Cave background */}
       <svg
         width="100%" height="100%" viewBox="0 0 540 520"
@@ -822,11 +824,16 @@ export default function GameScreen() {
   const dragonRef = useRef(null);
   const numbersRef = useRef(null);
 
+  // Responsive sizing — scale up dragon on desktop
+  const isWide = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const caveSize = isWide ? 680 : 540;
+  const dragonSize = isWide ? 560 : 440;
+
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-4 md:py-6 relative"
+    <div className="min-h-screen flex flex-col items-center px-4 py-2 md:py-4 relative"
       style={{
         background: 'linear-gradient(180deg, #050510 0%, #0a0a20 40%, #0d0d28 100%)',
       }}
@@ -835,27 +842,27 @@ export default function GameScreen() {
       <AmbientParticles color={dragon.colors.glow + '40'} count={15} />
 
       {/* Progress bar at top */}
-      <div className="w-full max-w-2xl relative z-10">
+      <div className="w-full max-w-3xl relative z-10">
         <ProgressBar />
       </div>
 
-      {/* Main game area — side by side on wide screens */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-4 lg:gap-6 w-full max-w-5xl mt-4 relative z-10">
+      {/* Main game area — side by side on wide screens, vertically centered */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-center justify-center gap-4 lg:gap-10 w-full max-w-6xl flex-1 relative z-10">
 
-        {/* Dragon display — fixed width prevents layout shift during chomp */}
-        <div className="flex flex-col items-center" style={{ width: 540 }}>
+        {/* Dragon display — scales up on desktop */}
+        <div className="flex flex-col items-center" style={{ width: caveSize }}>
           <div className="flex-shrink-0" ref={dragonRef}>
             {isPixi ? (
               <Suspense fallback={
-                <DragonCave dragon={dragon} progress={progress}>
-                  <DragonSVG dragon={dragon} progress={progress} size={440} chomping={mouthOpen} />
+                <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
+                  <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
                 </DragonCave>
               }>
-                <DragonCave dragon={dragon} progress={progress}>
+                <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
                   <DragonPixi
                     dragon={dragon}
                     progress={progress}
-                    size={440}
+                    size={dragonSize}
                     chomping={mouthOpen}
                     streak={streak}
                     wrongAnswer={wrongAnswer}
@@ -864,8 +871,8 @@ export default function GameScreen() {
                 </DragonCave>
               </Suspense>
             ) : (
-              <DragonCave dragon={dragon} progress={progress}>
-                <DragonSVG dragon={dragon} progress={progress} size={440} chomping={mouthOpen} />
+              <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
+                <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
               </DragonCave>
             )}
           </div>
@@ -877,13 +884,13 @@ export default function GameScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-lg font-black tracking-wide" style={{
+            <p className="text-xl lg:text-2xl font-black tracking-wide" style={{
               color: dragon.colors.accent,
               textShadow: `0 0 12px ${dragon.colors.glow}60, 0 2px 4px rgba(0,0,0,0.5)`,
             }}>
               {dragon.stages[stageIndex]?.name}
             </p>
-            <p className="text-sm text-gray-400 italic" style={{
+            <p className="text-sm lg:text-base text-gray-400 italic" style={{
               textShadow: '0 1px 3px rgba(0,0,0,0.5)',
             }}>
               {dragon.stages[stageIndex]?.description}
@@ -896,8 +903,8 @@ export default function GameScreen() {
           </div>
         </div>
 
-        {/* Question + input area — fixed width prevents layout shift */}
-        <div ref={numbersRef} className="flex flex-col items-center justify-center lg:pt-20" style={{ width: 420 }}>
+        {/* Question + input area — vertically centered alongside dragon */}
+        <div ref={numbersRef} className="flex flex-col items-center justify-center" style={{ width: 420 }}>
           <FloatingNumbers />
           <AnswerInput />
         </div>

@@ -129,9 +129,9 @@ function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
 
     const startX = numRect.left + numRect.width / 2;
     const startY = numRect.top + numRect.height * 0.3;
-    // Target the dragon's mouth area (upper-left quadrant since dragon faces left, but SVG is scaleX(-1))
-    const endX = dragRect.left + dragRect.width * 0.35;
-    const endY = dragRect.top + dragRect.height * 0.25;
+    // Dragon SVG is scaleX(-1) so head/mouth is on the RIGHT side visually
+    const endX = dragRect.left + dragRect.width * 0.68;
+    const endY = dragRect.top + dragRect.height * 0.22;
 
     setCoords({ startX, startY, endX, endY, dx: endX - startX, dy: endY - startY });
   }, [dragonRef, numbersRef]);

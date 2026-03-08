@@ -524,7 +524,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
         : { y: [0, -5, 0] }
       }
       transition={chomping
-        ? { duration: 0.8, ease: 'easeOut' }
+        ? { duration: 0.7, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
         : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
       }
     >
@@ -747,7 +747,11 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
   return (
     <g>
       {/* === UPPER HEAD (tilts up when chomping) === */}
-      <g transform={chomping ? `rotate(${skullTilt} ${pivotX} ${pivotY})` : ''}>
+      <motion.g
+        animate={{ rotate: chomping ? skullTilt : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+        style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
+      >
         {/* Head shape */}
         <ellipse cx={headCx} cy={headCy} rx={headRx} ry={headRy}
           fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
@@ -787,10 +791,14 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
             points={`${snoutTipX + 1},${snoutTipY - 1} ${snoutTipX + 5},${snoutTipY - 1} ${snoutTipX + 3},${snoutTipY + 6 + t * 5}`}
             fill="#fffff0" stroke="#ddd" strokeWidth="0.5" />
         )}
-      </g>
+      </motion.g>
 
       {/* === LOWER JAW (tilts down when chomping — Pac-Man style) === */}
-      <g transform={chomping ? `rotate(${jawTilt} ${pivotX} ${pivotY})` : ''}>
+      <motion.g
+        animate={{ rotate: chomping ? jawTilt : 0 }}
+        transition={{ type: 'spring', stiffness: 250, damping: 12 }}
+        style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
+      >
         {/* Jaw fill (visible when mouth is open) */}
         {chomping ? (
           <path d={`M ${headCx - headRx * 0.5} ${headCy + headRy * 0.3}
@@ -824,7 +832,7 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
             );
           });
         })()}
-      </g>
+      </motion.g>
 
       {/* === MOUTH INTERIOR (rendered between upper and lower jaw) === */}
       {chomping && (() => {

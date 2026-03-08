@@ -11,151 +11,169 @@ import DevPanel from '../components/DevPanel';
 
 const DragonPixi = lazy(() => import('../engine/DragonPixi'));
 
-function DragonCave({ dragon, progress, caveSize, children }) {
+// Full-bleed side-view cave — fills entire screen as cross-section
+function CaveBackground({ dragon, progress }) {
   const { primary, accent, glow } = dragon.colors;
   const isEgg = progress <= 0.15;
-  const w = caveSize || 540;
-  const h = Math.round(w * (520 / 540));
+
   return (
-    <div className="relative" style={{ width: w, height: h, overflow: 'visible' }}>
-      {/* Cave background */}
-      <svg
-        width="100%" height="100%" viewBox="0 0 540 520"
-        style={{ position: 'absolute', inset: 0 }}
-      >
-        <defs>
-          <radialGradient id="cave-bg" cx="50%" cy="55%">
-            <stop offset="0%" stopColor={primary} stopOpacity="0.08" />
-            <stop offset="40%" stopColor="#0a0a1a" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#050510" stopOpacity="0.65" />
-          </radialGradient>
-          <radialGradient id="cave-glow" cx="50%" cy="90%">
-            <stop offset="0%" stopColor={glow} stopOpacity="0.18" />
-            <stop offset="100%" stopColor={glow} stopOpacity="0" />
-          </radialGradient>
-          {/* Ambient light from dragon */}
-          <radialGradient id="cave-ambient" cx="50%" cy="60%">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.04" />
-            <stop offset="60%" stopColor={glow} stopOpacity="0.02" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-        </defs>
+    <svg
+      viewBox="0 0 1600 900"
+      preserveAspectRatio="xMidYMid slice"
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+    >
+      <defs>
+        {/* Deep cave darkness on left */}
+        <linearGradient id="cave-depth" x1="0%" y1="0%" x2="60%" y2="0%">
+          <stop offset="0%" stopColor="#020208" />
+          <stop offset="40%" stopColor="#060612" />
+          <stop offset="70%" stopColor="#0a0a1a" />
+          <stop offset="100%" stopColor="#0d0d28" />
+        </linearGradient>
+        {/* Floor gradient */}
+        <linearGradient id="floor-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#0a0a18" />
+          <stop offset="60%" stopColor="#111125" />
+          <stop offset="100%" stopColor="#161630" />
+        </linearGradient>
+        {/* Dragon glow on floor */}
+        <radialGradient id="dragon-floor-glow" cx="30%" cy="50%">
+          <stop offset="0%" stopColor={glow} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={glow} stopOpacity="0" />
+        </radialGradient>
+        {/* Dragon ambient light on walls */}
+        <radialGradient id="dragon-ambient" cx="30%" cy="55%">
+          <stop offset="0%" stopColor={primary} stopOpacity="0.06" />
+          <stop offset="50%" stopColor={glow} stopOpacity="0.02" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+        {/* Light from cave mouth (right side) */}
+        <linearGradient id="mouth-light" x1="100%" y1="50%" x2="40%" y2="50%">
+          <stop offset="0%" stopColor="#1a1a3a" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="transparent" />
+        </linearGradient>
+      </defs>
 
-        {/* Cave arch — wider and taller with stone border */}
-        <path
-          d="M 15 520 Q 15 100 110 45 Q 200 5 270 5 Q 340 5 430 45 Q 525 100 525 520"
-          fill="url(#cave-bg)"
-          stroke="#1a1a2e"
-          strokeWidth="6"
-        />
-        {/* Outer glow on cave edge */}
-        <path
-          d="M 15 520 Q 15 100 110 45 Q 200 5 270 5 Q 340 5 430 45 Q 525 100 525 520"
-          fill="none"
-          stroke={glow}
-          strokeWidth="1"
-          strokeOpacity="0.08"
-        />
-        {/* Inner edge highlight */}
-        <path
-          d="M 22 520 Q 22 108 115 50 Q 205 12 270 12 Q 335 12 425 50 Q 518 108 518 520"
-          fill="none"
-          stroke="#252545"
-          strokeWidth="2"
-        />
+      {/* Cave interior fill */}
+      <rect width="1600" height="900" fill="url(#cave-depth)" />
 
-        {/* Stone texture blocks along arch */}
-        {[
-          { d: 'M 20 480 L 30 478 L 32 500 L 18 502 Z', o: 0.15 },
-          { d: 'M 18 420 L 28 416 L 32 440 L 20 442 Z', o: 0.12 },
-          { d: 'M 22 360 L 34 354 L 38 378 L 24 380 Z', o: 0.1 },
-          { d: 'M 32 300 L 44 292 L 48 314 L 34 318 Z', o: 0.1 },
-          { d: 'M 50 240 L 62 230 L 66 250 L 52 256 Z', o: 0.08 },
-          { d: 'M 78 180 L 90 168 L 96 186 L 82 194 Z', o: 0.08 },
-          { d: 'M 115 120 L 128 108 L 134 124 L 120 132 Z', o: 0.06 },
-          { d: 'M 508 480 L 520 478 L 522 502 L 508 500 Z', o: 0.15 },
-          { d: 'M 510 420 L 522 416 L 520 440 L 508 442 Z', o: 0.12 },
-          { d: 'M 506 360 L 518 354 L 516 378 L 504 380 Z', o: 0.1 },
-          { d: 'M 496 300 L 508 292 L 506 314 L 494 318 Z', o: 0.1 },
-          { d: 'M 478 240 L 490 230 L 488 250 L 476 256 Z', o: 0.08 },
-          { d: 'M 450 180 L 462 168 L 458 186 L 446 194 Z', o: 0.08 },
-          { d: 'M 415 120 L 428 108 L 424 124 L 412 132 Z', o: 0.06 },
-        ].map((s, i) => (
-          <path key={`stone-${i}`} d={s.d} fill="#1a1a30" opacity={s.o} stroke="#222244" strokeWidth="0.5" />
-        ))}
+      {/* Ceiling — rocky curve from left wall down to cave mouth on right */}
+      <path
+        d="M 0 0 L 0 80 Q 100 120 250 140 Q 500 170 750 130 Q 1000 90 1200 60 Q 1400 40 1600 80 L 1600 0 Z"
+        fill="#08080f"
+      />
+      {/* Ceiling inner edge — stone lip */}
+      <path
+        d="M 0 80 Q 100 120 250 140 Q 500 170 750 130 Q 1000 90 1200 60 Q 1400 40 1600 80"
+        fill="none" stroke="#1a1a30" strokeWidth="4"
+      />
+      {/* Ceiling edge glow */}
+      <path
+        d="M 0 82 Q 100 122 250 142 Q 500 172 750 132 Q 1000 92 1200 62 Q 1400 42 1600 82"
+        fill="none" stroke={glow} strokeWidth="1" strokeOpacity="0.06"
+      />
 
-        {/* Inner cave shadow for depth */}
-        <path
-          d="M 40 520 Q 40 130 125 65 Q 210 28 270 28 Q 330 28 415 65 Q 500 130 500 520"
-          fill="none"
-          stroke={primary}
-          strokeWidth="1"
-          strokeOpacity="0.06"
-        />
+      {/* Stalactites hanging from ceiling */}
+      <path d="M 120 130 L 130 190 L 115 132" fill="#0c0c18" opacity="0.8" />
+      <path d="M 280 145 L 288 220 L 274 148" fill="#0c0c18" opacity="0.7" />
+      <path d="M 450 165 L 456 230 L 443 167" fill="#0c0c18" opacity="0.6" />
+      <path d="M 600 150 L 608 200 L 594 152" fill="#0c0c18" opacity="0.5" />
+      <path d="M 780 125 L 786 175 L 773 127" fill="#0c0c18" opacity="0.5" />
+      <path d="M 950 100 L 958 145 L 944 102" fill="#0c0c18" opacity="0.4" />
+      <path d="M 1100 75 L 1106 115 L 1094 77" fill="#0c0c18" opacity="0.35" />
+      <path d="M 1300 55 L 1305 85 L 1295 57" fill="#0c0c18" opacity="0.3" />
+      {/* Small stalactites */}
+      <path d="M 200 138 L 205 165 L 196 139" fill="#0e0e1a" opacity="0.5" />
+      <path d="M 370 158 L 374 185 L 366 160" fill="#0e0e1a" opacity="0.4" />
+      <path d="M 680 138 L 684 162 L 676 140" fill="#0e0e1a" opacity="0.4" />
+      <path d="M 860 112 L 864 135 L 856 114" fill="#0e0e1a" opacity="0.35" />
+      <path d="M 1050 82 L 1053 105 L 1046 84" fill="#0e0e1a" opacity="0.3" />
 
-        {/* Ambient fill */}
-        <path
-          d="M 40 520 Q 40 130 125 65 Q 210 28 270 28 Q 330 28 415 65 Q 500 130 500 520"
-          fill="url(#cave-ambient)"
-        />
+      {/* Stone texture blocks on ceiling */}
+      {[
+        { d: 'M 80 95 L 100 90 L 105 108 L 82 110', o: 0.12 },
+        { d: 'M 320 148 L 342 142 L 345 160 L 322 164', o: 0.1 },
+        { d: 'M 550 160 L 570 155 L 572 170 L 552 173', o: 0.08 },
+        { d: 'M 850 110 L 870 104 L 873 120 L 852 124', o: 0.07 },
+        { d: 'M 1150 65 L 1170 60 L 1172 75 L 1152 78', o: 0.06 },
+      ].map((s, i) => (
+        <path key={`ceil-stone-${i}`} d={s.d} fill="#14142a" opacity={s.o} stroke="#1e1e3a" strokeWidth="0.5" />
+      ))}
 
-        {/* Rocky texture — stalactites */}
-        <path d="M 55 140 L 64 180 L 48 142" fill="#12121f" opacity="0.6" />
-        <path d="M 100 70 L 106 105 L 92 73" fill="#12121f" opacity="0.5" />
-        <path d="M 440 70 L 447 103 L 433 73" fill="#12121f" opacity="0.5" />
-        <path d="M 480 135 L 474 175 L 488 138" fill="#12121f" opacity="0.6" />
-        <path d="M 160 32 L 166 58 L 154 35" fill="#12121f" opacity="0.4" />
-        <path d="M 380 32 L 386 56 L 374 35" fill="#12121f" opacity="0.4" />
-        <path d="M 210 15 L 214 35 L 206 17" fill="#12121f" opacity="0.3" />
-        <path d="M 330 15 L 334 33 L 326 17" fill="#12121f" opacity="0.3" />
+      {/* Floor — rocky ground with gentle undulation */}
+      <path
+        d="M 0 900 L 0 740 Q 150 730 300 735 Q 500 740 700 730 Q 900 720 1100 715 Q 1300 710 1600 720 L 1600 900 Z"
+        fill="url(#floor-grad)"
+      />
+      {/* Floor surface line */}
+      <path
+        d="M 0 740 Q 150 730 300 735 Q 500 740 700 730 Q 900 720 1100 715 Q 1300 710 1600 720"
+        fill="none" stroke="#1e1e38" strokeWidth="3"
+      />
+      {/* Floor edge glow */}
+      <path
+        d="M 0 738 Q 150 728 300 733 Q 500 738 700 728 Q 900 718 1100 713 Q 1300 708 1600 718"
+        fill="none" stroke={glow} strokeWidth="1" strokeOpacity="0.05"
+      />
 
-        {/* Ground / cave floor */}
-        <ellipse cx="270" cy="495" rx="220" ry="22" fill="#0e0e1c" />
-        <ellipse cx="270" cy="492" rx="200" ry="15" fill="#141428" />
-        <ellipse cx="270" cy="489" rx="175" ry="8" fill="#1a1a35" />
+      {/* Floor rocks and pebbles */}
+      <ellipse cx="100" cy="750" rx="18" ry="8" fill="#12122a" />
+      <ellipse cx="250" cy="745" rx="14" ry="6" fill="#141430" />
+      <ellipse cx="420" cy="742" rx="20" ry="9" fill="#111128" />
+      <ellipse cx="600" cy="738" rx="12" ry="5" fill="#131330" />
+      <ellipse cx="800" cy="730" rx="16" ry="7" fill="#121228" />
+      <ellipse cx="1000" cy="724" rx="22" ry="8" fill="#111126" />
+      <ellipse cx="1200" cy="720" rx="15" ry="6" fill="#131330" />
+      <ellipse cx="1400" cy="722" rx="18" ry="7" fill="#121228" />
 
-        {/* Floor glow from dragon */}
-        <ellipse cx="270" cy="488" rx="140" ry="18" fill="url(#cave-glow)" />
+      {/* Stalagmites rising from floor */}
+      <path d="M 160 735 L 170 690 L 178 736" fill="#10102a" opacity="0.5" />
+      <path d="M 500 740 L 512 700 L 520 741" fill="#10102a" opacity="0.4" />
+      <path d="M 850 725 L 860 688 L 868 726" fill="#10102a" opacity="0.35" />
+      <path d="M 1350 718 L 1358 685 L 1365 719" fill="#10102a" opacity="0.3" />
 
-        {/* Scattered floor rocks */}
-        <ellipse cx="75" cy="502" rx="14" ry="7" fill="#161625" />
-        <ellipse cx="465" cy="504" rx="12" ry="6" fill="#161625" />
-        <ellipse cx="150" cy="506" rx="9" ry="5" fill="#141422" />
-        <ellipse cx="400" cy="505" rx="10" ry="5" fill="#141422" />
+      {/* Back wall depth (left side — cave goes deeper) */}
+      <path
+        d="M 0 80 L 0 740"
+        stroke="#0e0e1c" strokeWidth="40" opacity="0.6"
+      />
+      <path
+        d="M 0 80 Q 30 400 0 740"
+        fill="none" stroke="#18182e" strokeWidth="2" opacity="0.4"
+      />
 
-        {/* Accent glow on cave walls */}
-        <ellipse cx="42" cy="320" rx="10" ry="50" fill={accent} opacity="0.04" />
-        <ellipse cx="498" cy="320" rx="10" ry="50" fill={accent} opacity="0.04" />
+      {/* Ambient dragon light on cave interior */}
+      <rect x="0" y="80" width="1200" height="660" fill="url(#dragon-ambient)" />
 
-        {/* Nest rocks — only visible during egg phase */}
-        {isEgg && (
-          <g>
-            <ellipse cx="210" cy="458" rx="24" ry="30" fill="#1a1a2e" stroke="#282845" strokeWidth="1" />
-            <ellipse cx="330" cy="458" rx="22" ry="28" fill="#1a1a2e" stroke="#282845" strokeWidth="1" />
-            <ellipse cx="235" cy="452" rx="20" ry="26" fill="#1e1e34" stroke="#2a2a48" strokeWidth="0.8" />
-            <ellipse cx="305" cy="453" rx="19" ry="25" fill="#1e1e34" stroke="#2a2a48" strokeWidth="0.8" />
-            <ellipse cx="220" cy="476" rx="22" ry="18" fill="#222238" stroke="#2e2e4a" strokeWidth="1" />
-            <ellipse cx="320" cy="477" rx="21" ry="17" fill="#222238" stroke="#2e2e4a" strokeWidth="1" />
-            <ellipse cx="245" cy="482" rx="18" ry="14" fill="#282842" stroke="#32325a" strokeWidth="0.8" />
-            <ellipse cx="295" cy="483" rx="17" ry="13" fill="#282842" stroke="#32325a" strokeWidth="0.8" />
-            <ellipse cx="270" cy="486" rx="24" ry="12" fill="#252540" stroke="#30305a" strokeWidth="0.8" />
-            <ellipse cx="195" cy="486" rx="8" ry="5" fill="#1c1c2e" />
-            <ellipse cx="345" cy="487" rx="7" ry="4" fill="#1c1c2e" />
-            <ellipse cx="270" cy="472" rx="40" ry="14" fill={accent} opacity="0.06" />
-            <ellipse cx="270" cy="468" rx="28" ry="10" fill={glow} opacity="0.04" />
-          </g>
-        )}
-      </svg>
+      {/* Dragon glow on floor */}
+      <ellipse cx="480" cy="735" rx="280" ry="40" fill="url(#dragon-floor-glow)" />
 
-      {/* Dragon content — anchored to cave floor, can overflow out the top */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 24,
-        display: 'flex', justifyContent: 'center',
-        overflow: 'visible',
-      }}>
-        {children}
-      </div>
-    </div>
+      {/* Light spill from cave mouth (right side) */}
+      <rect x="0" y="0" width="1600" height="900" fill="url(#mouth-light)" />
+
+      {/* Nest rocks — egg phase only, positioned in dragon area */}
+      {isEgg && (
+        <g>
+          <ellipse cx="400" cy="720" rx="35" ry="18" fill="#1a1a2e" stroke="#282845" strokeWidth="1.5" />
+          <ellipse cx="540" cy="718" rx="30" ry="16" fill="#1a1a2e" stroke="#282845" strokeWidth="1.5" />
+          <ellipse cx="430" cy="728" rx="25" ry="14" fill="#1e1e34" stroke="#2a2a48" strokeWidth="1" />
+          <ellipse cx="510" cy="727" rx="22" ry="13" fill="#1e1e34" stroke="#2a2a48" strokeWidth="1" />
+          <ellipse cx="460" cy="732" rx="30" ry="12" fill="#222238" stroke="#2e2e4a" strokeWidth="1" />
+          <ellipse cx="470" cy="715" rx="50" ry="16" fill={accent} opacity="0.05" />
+          <ellipse cx="470" cy="712" rx="35" ry="12" fill={glow} opacity="0.04" />
+        </g>
+      )}
+
+      {/* Subtle stone texture on left wall */}
+      {[
+        { d: 'M 5 200 L 20 195 L 22 220 L 7 222', o: 0.1 },
+        { d: 'M 8 350 L 25 345 L 27 370 L 10 372', o: 0.08 },
+        { d: 'M 4 500 L 18 496 L 20 518 L 6 520', o: 0.08 },
+        { d: 'M 6 620 L 22 615 L 24 638 L 8 640', o: 0.06 },
+      ].map((s, i) => (
+        <path key={`wall-stone-${i}`} d={s.d} fill="#14142a" opacity={s.o} stroke="#1e1e3a" strokeWidth="0.5" />
+      ))}
+    </svg>
   );
 }
 
@@ -824,62 +842,59 @@ export default function GameScreen() {
   const dragonRef = useRef(null);
   const numbersRef = useRef(null);
 
-  // Responsive sizing — scale up dragon on desktop
+  // Responsive sizing
   const isWide = typeof window !== 'undefined' && window.innerWidth >= 1024;
-  const caveSize = isWide ? 680 : 540;
-  const dragonSize = isWide ? 560 : 440;
+  const dragonSize = isWide ? 520 : 380;
 
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-2 md:py-4 relative"
-      style={{
-        background: 'linear-gradient(180deg, #050510 0%, #0a0a20 40%, #0d0d28 100%)',
-      }}
+    <div className="h-screen flex flex-col relative overflow-hidden"
+      style={{ background: '#050510' }}
     >
-      {/* Ambient background particles */}
-      <AmbientParticles color={dragon.colors.glow + '40'} count={15} />
+      {/* Full-bleed cave background */}
+      <CaveBackground dragon={dragon} progress={progress} />
 
-      {/* Progress bar at top */}
-      <div className="w-full max-w-3xl relative z-10">
+      {/* Ambient background particles */}
+      <AmbientParticles color={dragon.colors.glow + '40'} count={20} />
+
+      {/* Progress bar at top — overlaid on cave ceiling */}
+      <div className="w-full max-w-3xl mx-auto px-4 pt-3 relative z-10">
         <ProgressBar />
       </div>
 
-      {/* Main game area — side by side on wide screens, vertically centered */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-center justify-center gap-4 lg:gap-10 w-full max-w-6xl flex-1 relative z-10">
+      {/* Main game area — dragon on left in cave, numbers at cave mouth on right */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-end justify-center gap-4 lg:gap-0 w-full flex-1 relative z-10 px-4">
 
-        {/* Dragon display — scales up on desktop */}
-        <div className="flex flex-col items-center" style={{ width: caveSize }}>
-          <div className="flex-shrink-0" ref={dragonRef}>
+        {/* Dragon area — sits on cave floor, left ~45% */}
+        <div className="flex flex-col items-center lg:items-center lg:flex-1" style={{ maxWidth: 600 }}>
+          {/* Dragon on the floor */}
+          <div className="flex-shrink-0 flex items-end justify-center" ref={dragonRef}
+            style={{ marginBottom: isWide ? -20 : 0 }}
+          >
             {isPixi ? (
               <Suspense fallback={
-                <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
-                  <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
-                </DragonCave>
+                <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
               }>
-                <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
-                  <DragonPixi
-                    dragon={dragon}
-                    progress={progress}
-                    size={dragonSize}
-                    chomping={mouthOpen}
-                    streak={streak}
-                    wrongAnswer={wrongAnswer}
-                    DragonSVGComponent={DragonSVG}
-                  />
-                </DragonCave>
+                <DragonPixi
+                  dragon={dragon}
+                  progress={progress}
+                  size={dragonSize}
+                  chomping={mouthOpen}
+                  streak={streak}
+                  wrongAnswer={wrongAnswer}
+                  DragonSVGComponent={DragonSVG}
+                />
               </Suspense>
             ) : (
-              <DragonCave dragon={dragon} progress={progress} caveSize={caveSize}>
-                <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
-              </DragonCave>
+              <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} />
             )}
           </div>
 
-          {/* Stage name + description — overlaid at bottom of cave */}
+          {/* Stage name + skill bar — below dragon, above cave floor */}
           <motion.div
-            className="text-center -mt-6 relative z-10"
+            className="text-center relative z-10"
             key={stageIndex}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -897,14 +912,13 @@ export default function GameScreen() {
             </p>
           </motion.div>
 
-          {/* Skill bar below dragon */}
-          <div className="mt-3">
+          <div className="mt-2 mb-4">
             <SkillBar />
           </div>
         </div>
 
-        {/* Question + input area — vertically centered alongside dragon */}
-        <div ref={numbersRef} className="flex flex-col items-center justify-center" style={{ width: 420 }}>
+        {/* Question + input — at cave mouth, right side */}
+        <div ref={numbersRef} className="flex flex-col items-center justify-center lg:flex-1 lg:pb-20" style={{ maxWidth: 480 }}>
           <FloatingNumbers />
           <AnswerInput />
         </div>

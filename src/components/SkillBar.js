@@ -4,6 +4,89 @@ import { useGame } from '../context/GameContext';
 
 const CHARGE_NEEDED = 3;
 
+// SVG ring gauge that fills around the skill button
+function ChargeRing({ charge, maxCharge, colors, isCharged, size = 64 }) {
+  const radius = (size - 6) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (charge / maxCharge) * circumference;
+  const gap = circumference - filled;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+    >
+      {/* Background track */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="#1a1a2e"
+        strokeWidth="3"
+      />
+      {/* Filled arc */}
+      {charge > 0 && (
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={isCharged ? colors.accent : colors.primary}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray={`${filled} ${gap}`}
+          strokeDashoffset={circumference * 0.25}
+          initial={{ strokeDasharray: `0 ${circumference}` }}
+          animate={{ strokeDasharray: `${filled} ${gap}` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          style={{
+            filter: isCharged ? `drop-shadow(0 0 4px ${colors.glow})` : 'none',
+          }}
+        />
+      )}
+      {/* Charged glow overlay */}
+      {isCharged && (
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={colors.glow}
+          strokeWidth="2"
+          opacity="0.4"
+          animate={{ opacity: [0.2, 0.6, 0.2] }}
+          transition={{ duration: 1.2, repeat: Infinity }}
+        />
+      )}
+    </svg>
+  );
+}
+
+// Individual pip indicators below the ring (subtle secondary indicator)
+function ChargePips({ charge, maxCharge, colors }) {
+  return (
+    <div className="flex gap-1 justify-center mt-0.5">
+      {Array.from({ length: maxCharge }, (_, i) => (
+        <motion.div
+          key={i}
+          style={{
+            width: 8,
+            height: 3,
+            borderRadius: 2,
+            background: i < charge ? colors.accent : '#222',
+            boxShadow: i < charge ? `0 0 6px ${colors.glow}` : 'none',
+          }}
+          initial={false}
+          animate={i === charge - 1 && charge > 0 ? { scale: [1, 1.5, 1] } : {}}
+          transition={{ duration: 0.3 }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function SkillBar() {
   const { dragon, unlockedSkills, progress, skillCharges, activeSkill, showMerge, dispatch } = useGame();
   if (!dragon) return null;
@@ -16,7 +99,7 @@ export default function SkillBar() {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 px-4">
+    <div className="flex flex-wrap items-start justify-center gap-3 px-4">
       {dragon.skills.map((skill) => {
         const unlocked = unlockedSkills.includes(skill.name);
         const upcoming = !unlocked && progress >= skill.unlocksAt - 0.15;
@@ -26,50 +109,114 @@ export default function SkillBar() {
 
         if (!unlocked && !upcoming) return null;
 
+        const btnSize = 64;
+
         return (
-          <motion.button
-            key={skill.name}
-            className="relative flex items-center gap-1.5 px-3 py-2 rounded-2xl text-sm font-bold"
-            style={{
-              background: isActive
-                ? `linear-gradient(135deg, ${dragon.colors.primary}, ${dragon.colors.glow})`
-                : isCharged
-                  ? `${dragon.colors.primary}40`
-                  : unlocked ? '#1a1a2e' : '#111',
-              border: `2px solid ${isCharged ? dragon.colors.accent : unlocked ? dragon.colors.primary + '60' : '#2a2a4a'}`,
-              color: unlocked ? (isCharged ? '#fff' : dragon.colors.accent) : '#555',
-              opacity: unlocked ? 1 : 0.35,
-              cursor: isCharged && !showMerge ? 'pointer' : 'default',
-              boxShadow: isCharged ? `0 0 15px ${dragon.colors.glow}40` : 'none',
-            }}
-            disabled={!isCharged || !!activeSkill || showMerge || !unlocked}
-            onClick={() => handleSkillClick(skill)}
-            animate={isCharged && !isActive ? {
-              boxShadow: [`0 0 10px ${dragon.colors.glow}30`, `0 0 25px ${dragon.colors.glow}60`, `0 0 10px ${dragon.colors.glow}30`],
-            } : isActive ? { scale: [1, 1.1, 1] } : {}}
-            transition={isCharged ? { duration: 1.5, repeat: Infinity } : { duration: 0.3 }}
-            whileTap={isCharged ? { scale: 0.9 } : {}}
-          >
-            <span className="text-xl">{skill.icon}</span>
-            <span className="hidden md:inline">{skill.name}</span>
-            {/* Charge pips */}
-            {unlocked && !isActive && (
-              <div className="flex gap-0.5 ml-1">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="rounded-full"
+          <div key={skill.name} className="flex flex-col items-center">
+            {/* Ring + button container */}
+            <motion.button
+              className="relative flex items-center justify-center"
+              style={{
+                width: btnSize,
+                height: btnSize,
+                borderRadius: '50%',
+                background: isActive
+                  ? `linear-gradient(135deg, ${dragon.colors.primary}, ${dragon.colors.glow})`
+                  : isCharged
+                    ? `radial-gradient(circle at 40% 40%, ${dragon.colors.primary}50, ${dragon.colors.primary}20)`
+                    : unlocked ? '#0e0e1e' : '#0a0a14',
+                border: 'none',
+                color: unlocked ? (isCharged ? '#fff' : dragon.colors.accent) : '#444',
+                opacity: unlocked ? 1 : 0.3,
+                cursor: isCharged && !showMerge ? 'pointer' : 'default',
+                outline: 'none',
+              }}
+              disabled={!isCharged || !!activeSkill || showMerge || !unlocked}
+              onClick={() => handleSkillClick(skill)}
+              animate={
+                isCharged && !isActive
+                  ? {
+                      boxShadow: [
+                        `0 0 8px ${dragon.colors.glow}30, 0 0 16px ${dragon.colors.glow}10`,
+                        `0 0 16px ${dragon.colors.glow}60, 0 0 32px ${dragon.colors.glow}20`,
+                        `0 0 8px ${dragon.colors.glow}30, 0 0 16px ${dragon.colors.glow}10`,
+                      ],
+                    }
+                  : isActive
+                    ? { scale: [1, 1.15, 1] }
+                    : {}
+              }
+              transition={isCharged ? { duration: 1.5, repeat: Infinity } : { duration: 0.3 }}
+              whileTap={isCharged ? { scale: 0.85 } : {}}
+            >
+              {/* Ring gauge */}
+              {unlocked && !isActive && (
+                <ChargeRing
+                  charge={charge}
+                  maxCharge={CHARGE_NEEDED}
+                  colors={dragon.colors}
+                  isCharged={isCharged}
+                  size={btnSize}
+                />
+              )}
+
+              {/* Skill icon */}
+              <motion.span
+                style={{ fontSize: 28, position: 'relative', zIndex: 1 }}
+                animate={isCharged && !isActive ? { scale: [1, 1.12, 1] } : {}}
+                transition={isCharged ? { duration: 1.5, repeat: Infinity } : {}}
+              >
+                {skill.icon}
+              </motion.span>
+
+              {/* "TAP!" label when charged */}
+              <AnimatePresence>
+                {isCharged && !isActive && (
+                  <motion.span
                     style={{
-                      width: 6,
-                      height: 6,
-                      background: i < charge ? dragon.colors.accent : '#333',
-                      boxShadow: i < charge ? `0 0 4px ${dragon.colors.glow}` : 'none',
+                      position: 'absolute',
+                      bottom: -2,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      fontSize: 9,
+                      fontWeight: 900,
+                      color: dragon.colors.accent,
+                      textShadow: `0 0 6px ${dragon.colors.glow}`,
+                      letterSpacing: 1,
+                      whiteSpace: 'nowrap',
+                      zIndex: 2,
                     }}
-                  />
-                ))}
-              </div>
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: [0.7, 1, 0.7], y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                  >
+                    TAP!
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+
+            {/* Charge pips below */}
+            {unlocked && !isActive && (
+              <ChargePips charge={charge} maxCharge={CHARGE_NEEDED} colors={dragon.colors} />
             )}
-          </motion.button>
+
+            {/* Skill name */}
+            <span
+              style={{
+                fontSize: 10,
+                color: unlocked ? dragon.colors.accent + 'aa' : '#444',
+                marginTop: 2,
+                fontWeight: 600,
+                maxWidth: btnSize + 10,
+                textAlign: 'center',
+                lineHeight: 1.1,
+              }}
+            >
+              {skill.name}
+            </span>
+          </div>
         );
       })}
     </div>

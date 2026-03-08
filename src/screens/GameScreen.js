@@ -7,6 +7,7 @@ import FloatingNumbers from '../components/FloatingNumbers';
 import AnswerInput from '../components/AnswerInput';
 import ProgressBar from '../components/ProgressBar';
 import SkillBar from '../components/SkillBar';
+import DevPanel from '../components/DevPanel';
 
 const DragonPixi = lazy(() => import('../engine/DragonPixi'));
 
@@ -926,6 +927,9 @@ export default function GameScreen() {
           />
         )}
       </AnimatePresence>
+
+      {/* Developer tools — growth stage scrubber */}
+      <DevPanel />
     </div>
   );
 }

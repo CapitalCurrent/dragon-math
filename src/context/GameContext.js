@@ -153,6 +153,31 @@ function reducer(state, action) {
     case 'SET_LEVEL':
       return { ...state, level: action.level };
 
+    // === DEV TOOLS ===
+    case 'DEV_SET_PROGRESS': {
+      const p = Math.max(0, Math.min(1, action.progress));
+      // Recalculate unlocked skills for this progress
+      const skills = state.dragon?.skills || [];
+      const unlocked = skills.filter(s => p >= s.unlocksAt).map(s => s.name);
+      const charges = {};
+      for (const sn of unlocked) charges[sn] = 3;
+      return {
+        ...state,
+        progress: p,
+        correctAnswers: Math.round(p * QUESTIONS_PER_ROUND),
+        unlockedSkills: unlocked,
+        skillCharges: charges,
+        screen: SCREENS.PLAYING,
+      };
+    }
+
+    case 'DEV_SET_DRAGON':
+      return {
+        ...state,
+        dragon: DRAGONS[action.dragonId],
+        screen: SCREENS.PLAYING,
+      };
+
     default:
       return state;
   }

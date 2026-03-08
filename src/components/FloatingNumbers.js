@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
@@ -24,14 +24,6 @@ export default function FloatingNumbers() {
   const colors = useMemo(() => dragon?.colors || DEFAULT_COLORS, [dragon]);
   const hasSkill = unlockedSkills && unlockedSkills.length > 0;
   const latestSkill = dragon?.skills?.filter(s => unlockedSkills?.includes(s.name)).pop();
-
-  // Detect layout: on lg+ screens dragon is LEFT, otherwise ABOVE
-  const getEatTarget = useCallback(() => {
-    const isWide = window.matchMedia('(min-width: 1024px)').matches;
-    // Wide: fly far left toward dragon column, slightly up
-    // Narrow: fly up toward dragon above
-    return isWide ? { x: -450, y: -80 } : { x: -60, y: -350 };
-  }, []);
 
   // Sequence: numbers join → skill attack → eat
   useEffect(() => {
@@ -280,59 +272,10 @@ export default function FloatingNumbers() {
           </motion.div>
         )}
 
-        {/* === EAT PHASE: answer flies toward dragon === */}
-        {phase === 'eat' && (() => {
-          const target = getEatTarget();
-          return (
-            <motion.div
-              key="eat"
-              className="flex items-center justify-center"
-              style={{ position: 'relative' }}
-            >
-              {/* Glowing trail particles */}
-              {[0, 1, 2, 3, 4].map(i => (
-                <motion.div
-                  key={`trail-${i}`}
-                  className="absolute rounded-full"
-                  style={{
-                    width: 12 - i * 2,
-                    height: 12 - i * 2,
-                    background: i % 2 === 0 ? colors.accent : colors.glow,
-                    boxShadow: `0 0 8px ${colors.glow}`,
-                  }}
-                  initial={{ x: 0, y: 0, opacity: 0 }}
-                  animate={{
-                    x: target.x * (0.5 + i * 0.1),
-                    y: target.y * (0.5 + i * 0.1),
-                    opacity: [0, 0.8, 0],
-                    scale: [1, 0.5, 0],
-                  }}
-                  transition={{ duration: 0.6, delay: i * 0.06, ease: 'easeIn' }}
-                />
-              ))}
-              {/* Main answer bubble — flies toward dragon */}
-              <motion.div
-                className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
-                style={{
-                  background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
-                  color: '#fff',
-                  textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                  boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
-                }}
-                initial={{ scale: 1, x: 0, y: 0, opacity: 1 }}
-                animate={{
-                  x: target.x,
-                  y: target.y,
-                  scale: [1, 1.2, 0.4],
-                  opacity: [1, 1, 0],
-                }}
-                transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-              >
-                {currentQuestion.answer}
-              </motion.div>
-            </motion.div>
-          );
-        })()}
+        {/* EAT PHASE: answer disappears here, flies via GameScreen overlay */}
+        {phase === 'eat' && (
+          <motion.div key="eat" initial={{ opacity: 0 }} animate={{ opacity: 0 }} />
+        )}
       </AnimatePresence>
 
       {/* Celebration particles */}

@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import React, { lazy, Suspense, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { useVersion } from '../App';
 import DragonSVG from '../components/DragonSVG';
@@ -114,10 +114,103 @@ function DragonCave({ dragon, progress, children }) {
   );
 }
 
+// Flying answer overlay — renders at fixed position so it can cross layout boundaries
+function FlyingAnswer({ dragon, answer, dragonRef, numbersRef }) {
+  const colors = dragon?.colors || {};
+  const startRef = useRef(null);
+  const [coords, setCoords] = React.useState(null);
+
+  React.useEffect(() => {
+    // Calculate start (numbers area center) and end (dragon head area)
+    const numEl = numbersRef?.current;
+    const dragEl = dragonRef?.current;
+    if (!numEl || !dragEl) return;
+
+    const numRect = numEl.getBoundingClientRect();
+    const dragRect = dragEl.getBoundingClientRect();
+
+    // Start: center of numbers area
+    const startX = numRect.left + numRect.width / 2;
+    const startY = numRect.top + numRect.height / 2;
+
+    // End: upper-center of dragon cave (where the head roughly is)
+    const endX = dragRect.left + dragRect.width / 2;
+    const endY = dragRect.top + dragRect.height * 0.35;
+
+    setCoords({ startX, startY, endX, endY, dx: endX - startX, dy: endY - startY });
+  }, [dragonRef, numbersRef]);
+
+  if (!coords) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 50 }}>
+      {/* Trail particles */}
+      {[0, 1, 2, 3, 4].map(i => (
+        <motion.div
+          key={`trail-${i}`}
+          style={{
+            position: 'absolute',
+            left: coords.startX,
+            top: coords.startY,
+            width: 12 - i * 2,
+            height: 12 - i * 2,
+            borderRadius: '50%',
+            background: i % 2 === 0 ? colors.accent : colors.glow,
+            boxShadow: `0 0 10px ${colors.glow}`,
+            transform: 'translate(-50%, -50%)',
+          }}
+          initial={{ x: 0, y: 0, opacity: 0 }}
+          animate={{
+            x: coords.dx * (0.5 + i * 0.08),
+            y: coords.dy * (0.5 + i * 0.08),
+            opacity: [0, 0.9, 0],
+            scale: [1, 0.5, 0],
+          }}
+          transition={{ duration: 0.6, delay: i * 0.05, ease: 'easeIn' }}
+        />
+      ))}
+      {/* Main answer bubble */}
+      <motion.div
+        ref={startRef}
+        style={{
+          position: 'absolute',
+          left: coords.startX,
+          top: coords.startY,
+          width: 80,
+          height: 80,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 36,
+          fontWeight: 900,
+          color: '#fff',
+          textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+          background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+          boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
+          transform: 'translate(-50%, -50%)',
+        }}
+        initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+        animate={{
+          x: coords.dx,
+          y: coords.dy,
+          scale: [1, 1.15, 0.3],
+          opacity: [1, 1, 0],
+        }}
+        transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {answer}
+      </motion.div>
+    </div>
+  );
+}
+
 export default function GameScreen() {
-  const { dragon, progress, eating, streak, wrongAnswer } = useGame();
+  const { dragon, progress, eating, streak, wrongAnswer, currentQuestion } = useGame();
   const version = useVersion();
   const isPixi = version === 'v2';
+  const dragonRef = useRef(null);
+  const numbersRef = useRef(null);
 
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
@@ -134,7 +227,7 @@ export default function GameScreen() {
 
         {/* Dragon display — fixed width prevents layout shift during chomp */}
         <div className="flex flex-col items-center" style={{ width: 540 }}>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" ref={dragonRef}>
             {isPixi ? (
               <Suspense fallback={
                 <DragonCave dragon={dragon} progress={progress}>
@@ -182,11 +275,24 @@ export default function GameScreen() {
         </div>
 
         {/* Question + input area — fixed width prevents layout shift */}
-        <div className="flex flex-col items-center justify-center lg:pt-12" style={{ width: 420 }}>
+        <div ref={numbersRef} className="flex flex-col items-center justify-center lg:pt-12" style={{ width: 420 }}>
           <FloatingNumbers />
           <AnswerInput />
         </div>
       </div>
+
+      {/* Flying answer overlay — uses fixed positioning to cross layout boundaries */}
+      <AnimatePresence>
+        {eating && currentQuestion && (
+          <FlyingAnswer
+            key={`fly-${currentQuestion.display}`}
+            dragon={dragon}
+            answer={currentQuestion.answer}
+            dragonRef={dragonRef}
+            numbersRef={numbersRef}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

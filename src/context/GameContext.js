@@ -30,6 +30,7 @@ const initialState = {
   mouthOpen: false, // true when dragon's mouth is open (starts before eating)
   skillCharges: {}, // { skillName: charge (0-3) } — 3 correct answers to charge
   activeSkill: null, // set when player activates a skill (skill object)
+  skillBoost: false, // true = next correct answer gives 2x progress
   totalCorrect: 0, // lifetime
   totalPlayed: 0,  // lifetime
 };
@@ -68,9 +69,11 @@ function reducer(state, action) {
     }
 
     case 'CORRECT_ANSWER': {
-      const newCorrect = state.correctAnswers + 1;
+      // 2x progress when skill boost is active
+      const progressIncrement = state.skillBoost ? 2 : 1;
+      const newCorrect = state.correctAnswers + progressIncrement;
       const newAnswered = state.questionsAnswered + 1;
-      const newProgress = newCorrect / QUESTIONS_PER_ROUND;
+      const newProgress = Math.min(1, newCorrect / QUESTIONS_PER_ROUND);
       const newStreak = state.streak + 1;
 
       // Check for new skill unlocks
@@ -101,6 +104,7 @@ function reducer(state, action) {
         bestStreak: Math.max(state.bestStreak, newStreak),
         progress: Math.min(1, newProgress),
         showMerge: true,
+        skillBoost: false, // consume boost on correct answer
         totalCorrect: state.totalCorrect + 1,
         totalPlayed: state.totalPlayed + 1,
         newSkill,
@@ -128,7 +132,7 @@ function reducer(state, action) {
     case 'USE_SKILL': {
       const skill = action.skill;
       const charges = { ...state.skillCharges, [skill.name]: 0 };
-      return { ...state, activeSkill: skill, skillCharges: charges };
+      return { ...state, activeSkill: skill, skillCharges: charges, skillBoost: true };
     }
 
     case 'CLEAR_ACTIVE_SKILL':
@@ -167,8 +171,8 @@ export function GameProvider({ children }) {
     if (!state.currentQuestion) return;
     if (parseInt(answer) === state.currentQuestion.answer) {
       dispatch({ type: 'CORRECT_ANSWER' });
-      // Next question after animation (join 800 + skill 900 + eat/fly 1400 + buffer 300)
-      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 3400);
+      // Next question after animation (join 700 + skill 800 + eat/fly 1100 + buffer 200)
+      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 2800);
     } else {
       dispatch({ type: 'WRONG_ANSWER' });
     }

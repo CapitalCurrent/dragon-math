@@ -32,7 +32,7 @@ export default function FloatingNumbers() {
       setPhase('joining');
       spawnParticles();
 
-      const joinDuration = 800;
+      const joinDuration = 700; // Tighter join
       const t1 = setTimeout(() => {
         if (hasSkill && dragon) {
           // Phase 2: Dragon skill attacks the answer
@@ -41,12 +41,12 @@ export default function FloatingNumbers() {
           // Open mouth while skill plays, then start eating
           const t2 = setTimeout(() => {
             dispatch({ type: 'OPEN_MOUTH' });
-          }, 500);
+          }, 400);
           const t3 = setTimeout(() => {
             setPhase('eat');
             setSkillEffect(null);
             dispatch({ type: 'START_EATING' });
-          }, 900);
+          }, 800);
           return () => { clearTimeout(t2); clearTimeout(t3); };
         } else {
           // No skills yet — open mouth first, then answer flies in
@@ -55,7 +55,7 @@ export default function FloatingNumbers() {
           const t2 = setTimeout(() => {
             setPhase('eat');
             dispatch({ type: 'START_EATING' });
-          }, 600);
+          }, 500);
           return () => clearTimeout(t2);
         }
       }, joinDuration);
@@ -69,12 +69,12 @@ export default function FloatingNumbers() {
   }, [showMerge]);
 
   function spawnParticles() {
-    const newParticles = Array.from({ length: 10 }, (_, i) => ({
+    const newParticles = Array.from({ length: 12 }, (_, i) => ({
       id: Date.now() + i,
-      dx: (Math.random() - 0.5) * 140,
-      dy: (Math.random() - 0.5) * 140 - 30,
+      dx: (Math.random() - 0.5) * 160,
+      dy: (Math.random() - 0.5) * 160 - 30,
       color: [colors.primary, colors.accent, colors.secondary, '#fff'][i % 4],
-      size: 4 + Math.random() * 6,
+      size: 3 + Math.random() * 7,
     }));
     setParticles(newParticles);
     setTimeout(() => setParticles([]), 1000);
@@ -121,18 +121,18 @@ export default function FloatingNumbers() {
             style={{ width: 300, height: 120 }}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
           >
             {/* Left number slides right */}
             <motion.div
               className="absolute w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-xl"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${colors.primary}88, ${colors.primary})`,
-                boxShadow: `0 0 15px ${colors.glow}60`,
+                background: `radial-gradient(circle at 35% 35%, ${colors.primary}88, ${colors.primary})`,
+                boxShadow: `0 0 15px ${colors.glow}60, inset 0 -3px 8px ${colors.glow}20`,
               }}
               initial={{ x: -80, scale: 1, opacity: 1 }}
               animate={{ x: 0, scale: 0, opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeIn' }}
+              transition={{ duration: 0.5, ease: 'easeIn' }}
             >
               {currentQuestion.a}
             </motion.div>
@@ -143,7 +143,7 @@ export default function FloatingNumbers() {
               style={{ color: colors.accent }}
               initial={{ opacity: 1, scale: 1 }}
               animate={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25 }}
             >
               {currentQuestion.op}
             </motion.span>
@@ -152,12 +152,12 @@ export default function FloatingNumbers() {
             <motion.div
               className="absolute w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black text-white shadow-xl"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${colors.secondary}88, ${colors.secondary})`,
-                boxShadow: `0 0 15px ${colors.glow}60`,
+                background: `radial-gradient(circle at 35% 35%, ${colors.secondary}88, ${colors.secondary})`,
+                boxShadow: `0 0 15px ${colors.glow}60, inset 0 -3px 8px ${colors.glow}20`,
               }}
               initial={{ x: 80, scale: 1, opacity: 1 }}
               animate={{ x: 0, scale: 0, opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeIn' }}
+              transition={{ duration: 0.5, ease: 'easeIn' }}
             >
               {currentQuestion.b}
             </motion.div>
@@ -166,28 +166,28 @@ export default function FloatingNumbers() {
             <motion.div
               className="absolute w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+                background: `radial-gradient(circle at 35% 35%, ${colors.accent}, ${colors.primary})`,
                 color: '#fff',
                 textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40`,
+                boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}40, inset 0 -6px 16px ${colors.glow}30`,
               }}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: [0, 1.3, 1], opacity: [0, 1, 1] }}
-              transition={{ delay: 0.35, duration: 0.45, ease: 'easeOut' }}
+              transition={{ delay: 0.3, duration: 0.4, ease: 'easeOut' }}
             >
               {currentQuestion.answer}
             </motion.div>
 
             {/* Flash burst when they merge */}
             <motion.div
-              className="absolute w-32 h-32 rounded-full"
+              className="absolute w-36 h-36 rounded-full"
               style={{
-                background: `radial-gradient(circle, ${colors.glow}80, ${colors.accent}40, transparent 70%)`,
+                background: `radial-gradient(circle, ${colors.glow}90, ${colors.accent}50, transparent 70%)`,
                 pointerEvents: 'none',
               }}
               initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 2, 2.5], opacity: [0, 0.8, 0] }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              animate={{ scale: [0, 2, 2.5], opacity: [0, 0.9, 0] }}
+              transition={{ delay: 0.25, duration: 0.5 }}
             />
           </motion.div>
         )}
@@ -199,16 +199,16 @@ export default function FloatingNumbers() {
             className="flex flex-col items-center gap-2"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
           >
             {/* Answer bubble being hit by skill */}
             <motion.div
               className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+                background: `radial-gradient(circle at 35% 35%, ${colors.accent}, ${colors.primary})`,
                 color: '#fff',
                 textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                boxShadow: `0 0 30px ${skillEffect.bg}`,
+                boxShadow: `0 0 30px ${skillEffect.bg}, inset 0 -6px 16px ${colors.glow}30`,
               }}
               animate={{
                 scale: [1, 0.85, 1.15, 0.95, 1],
@@ -221,7 +221,7 @@ export default function FloatingNumbers() {
                   'brightness(1)',
                 ],
               }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.6 }}
             >
               {currentQuestion.answer}
             </motion.div>
@@ -231,7 +231,7 @@ export default function FloatingNumbers() {
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: [0, 1, 0.8, 0], scale: [0.5, 1.5, 1.2, 0.8] }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.7 }}
             >
               <span className="text-6xl">{skillEffect.emoji}</span>
             </motion.div>
@@ -254,15 +254,15 @@ export default function FloatingNumbers() {
             key="chomp"
             className="flex items-center justify-center"
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.1 }}
           >
             <motion.div
               className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${colors.accent}, ${colors.primary})`,
+                background: `radial-gradient(circle at 35% 35%, ${colors.accent}, ${colors.primary})`,
                 color: '#fff',
                 textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                boxShadow: `0 0 30px ${colors.glow}`,
+                boxShadow: `0 0 30px ${colors.glow}, inset 0 -6px 16px ${colors.glow}30`,
               }}
               animate={{
                 scale: [1, 1.15, 0.9, 1.1, 1],
@@ -270,7 +270,7 @@ export default function FloatingNumbers() {
                 y: [0, 5, -20, -10, -30],
                 rotate: [0, -5, 5, -3, 0],
               }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
             >
               {currentQuestion.answer}
             </motion.div>
@@ -289,7 +289,12 @@ export default function FloatingNumbers() {
           <motion.div
             key={p.id}
             className="absolute rounded-full"
-            style={{ background: p.color, width: p.size, height: p.size }}
+            style={{
+              background: p.color,
+              width: p.size,
+              height: p.size,
+              boxShadow: `0 0 4px ${p.color}`,
+            }}
             initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
             animate={{ x: p.dx, y: p.dy, scale: 0, opacity: 0 }}
             exit={{ opacity: 0 }}
@@ -306,10 +311,10 @@ function NumberBubble({ value, color, glow, delay }) {
     <motion.div
       className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl md:text-4xl font-black shadow-xl"
       style={{
-        background: `radial-gradient(circle at 30% 30%, ${color}88, ${color})`,
+        background: `radial-gradient(circle at 35% 35%, ${color}aa, ${color})`,
         color: '#fff',
         textShadow: '0 2px 4px rgba(0,0,0,0.4)',
-        boxShadow: `0 0 20px ${glow}60`,
+        boxShadow: `0 0 20px ${glow}60, inset 0 -4px 12px ${glow}25, inset 0 2px 6px rgba(255,255,255,0.15)`,
       }}
       initial={{ scale: 0, y: 40 }}
       animate={{ scale: 1, y: [0, -8, 0] }}

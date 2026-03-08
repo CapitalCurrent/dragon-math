@@ -721,6 +721,25 @@ function GrowingDragon({ dragon, t, size, chomping }) {
 function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, hornLen, eyeRatio, jawAngularity, browRidge, breathIntensity }) {
   const { primary, secondary, accent, glow } = dragon.colors;
 
+  // Eye blink state
+  const [blinking, setBlinking] = React.useState(false);
+  React.useEffect(() => {
+    const blink = () => {
+      setBlinking(true);
+      setTimeout(() => setBlinking(false), 120);
+    };
+    // Random blink every 2-5 seconds
+    const schedule = () => {
+      const delay = 2000 + Math.random() * 3000;
+      return setTimeout(() => {
+        blink();
+        timerId = schedule();
+      }, delay);
+    };
+    let timerId = schedule();
+    return () => clearTimeout(timerId);
+  }, []);
+
   // Eye size decreases with maturity (baby=big cute, adult=narrow fierce)
   const eyeW = 7 * eyeRatio;
   const eyeH = 6 * eyeRatio;
@@ -735,7 +754,6 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
   // Even baby dragon gets a huge mouth opening
   const baseJawDrop = 4 + jawAngularity * 10;
   const chompGap = 30 + headRy * 0.8 + t * 15; // massive opening regardless of maturity
-  const jawDrop = chomping ? chompGap : baseJawDrop;
   // Upper skull tilts up when chomping
   const skullTilt = chomping ? -(12 + (1 - t) * 8) : 0; // babies tilt MORE (cuter)
   // Lower jaw tilts down
@@ -897,17 +915,28 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
       {/* Eye (proportional — baby=big round, adult=narrow fierce) */}
       <ellipse cx={headCx + 2} cy={headCy - headRy * 0.15}
         rx={eyeW + 3} ry={eyeH + 2} fill="#080818" />
-      <ellipse cx={headCx} cy={headCy - headRy * 0.15}
-        rx={eyeW} ry={eyeH}
-        fill={`url(#eg-${dragon.id})`} opacity={0.5 + t * 0.5} />
-      {/* Pupil — rounder when baby, slitted when adult */}
-      <ellipse cx={headCx} cy={headCy - headRy * 0.15}
-        rx={pupilW} ry={pupilH} fill="#080818" />
-      {/* Eye highlights */}
-      <circle cx={headCx + eyeW * 0.3} cy={headCy - headRy * 0.15 - eyeH * 0.25}
-        r={1.5 + (1 - t) * 1} fill="white" opacity="0.9" />
-      <circle cx={headCx - eyeW * 0.2} cy={headCy - headRy * 0.15 + eyeH * 0.2}
-        r={0.8 + (1 - t) * 0.5} fill="white" opacity="0.35" />
+      {blinking ? (
+        /* Eyelid closed — simple line */
+        <line
+          x1={headCx - eyeW} y1={headCy - headRy * 0.15}
+          x2={headCx + eyeW} y2={headCy - headRy * 0.15}
+          stroke={primary} strokeWidth={2 + t} strokeLinecap="round"
+        />
+      ) : (
+        <>
+          <ellipse cx={headCx} cy={headCy - headRy * 0.15}
+            rx={eyeW} ry={eyeH}
+            fill={`url(#eg-${dragon.id})`} opacity={0.5 + t * 0.5} />
+          {/* Pupil — rounder when baby, slitted when adult */}
+          <ellipse cx={headCx} cy={headCy - headRy * 0.15}
+            rx={pupilW} ry={pupilH} fill="#080818" />
+          {/* Eye highlights */}
+          <circle cx={headCx + eyeW * 0.3} cy={headCy - headRy * 0.15 - eyeH * 0.25}
+            r={1.5 + (1 - t) * 1} fill="white" opacity="0.9" />
+          <circle cx={headCx - eyeW * 0.2} cy={headCy - headRy * 0.15 + eyeH * 0.2}
+            r={0.8 + (1 - t) * 0.5} fill="white" opacity="0.35" />
+        </>
+      )}
 
       {/* Ear / frill (grows with maturity) */}
       <path d={`M ${headCx + headRx * 0.6} ${headCy - headRy * 0.2}

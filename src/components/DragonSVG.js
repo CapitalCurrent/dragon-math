@@ -561,9 +561,9 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             <stop offset="100%" stopColor={primary} stopOpacity="0.2" />
           </radialGradient>
           <linearGradient id={`wg-${dragon.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={primary} stopOpacity="0.45" />
-            <stop offset="50%" stopColor={secondary} stopOpacity="0.2" />
-            <stop offset="100%" stopColor={secondary} stopOpacity="0.08" />
+            <stop offset="0%" stopColor={primary} stopOpacity="0.75" />
+            <stop offset="40%" stopColor={secondary} stopOpacity="0.55" />
+            <stop offset="100%" stopColor={secondary} stopOpacity="0.35" />
           </linearGradient>
           {/* Wing vein glow */}
           <linearGradient id={`wv-${dragon.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1571,10 +1571,13 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
           Q ${lElbowX} ${lElbowY} ${lTipX} ${lTipY}
           Q ${lTipX - 18 - ws * 10} ${lTipY + 25 + ws * 15} ${lBottomX} ${lBottomY}
           Q ${ax - 90 - ws * 42} ${ay + 15} ${ax - 30} ${ay + 15}`}
-        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.4" />
-      {/* Leading edge bone (thick) */}
+        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth={2 + ws * 1.5} strokeOpacity="0.5" />
+      {/* Leading edge bone (thick — the arm of the wing) */}
       <path d={`M ${ax - 20} ${ay} Q ${lElbowX + 5} ${lElbowY + 5} ${lTipX} ${lTipY}`}
-        stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
+        stroke={primary} strokeWidth={4 + ws * 5} fill="none" strokeLinecap="round" opacity="0.7" />
+      {/* Bone highlight */}
+      <path d={`M ${ax - 18} ${ay - 2} Q ${lElbowX + 6} ${lElbowY + 3} ${lTipX + 1} ${lTipY - 1}`}
+        stroke="#fff" strokeWidth={1 + ws * 0.8} fill="none" strokeLinecap="round" opacity="0.08" />
       {/* Elbow joint */}
       <circle cx={lElbowX} cy={lElbowY} r={2.5 + ws * 2.5} fill={secondary} opacity="0.5" />
       {/* Wing talon at elbow (bat-like thumb claw) */}
@@ -1587,7 +1590,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
         r={1 + ws * 1.2} fill={accent} opacity={0.6 + t * 0.3} />
       {/* Trailing edge bone */}
       <path d={`M ${ax - 30} ${ay + 8} Q ${ax - 75 - ws * 35} ${ay + 5 - ws * 8} ${lBottomX} ${lBottomY}`}
-        stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
+        stroke={primary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
       {/* Wing finger bones (veins across membrane) — with glow */}
       {[0.25, 0.5, 0.75].map((f, i) => {
         const bx1 = ax - 20 - f * (ax - 20 - lElbowX) - f * (lElbowX - lTipX) * 0.3;
@@ -1601,7 +1604,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
               stroke={glow} strokeWidth={2 + t * 1.5} opacity={0.03 + t * 0.04} />
             {/* Vein line */}
             <line x1={bx1} y1={by1} x2={bx2} y2={by2}
-              stroke={accent} strokeWidth={0.6 + t * 0.8} opacity={0.1 + t * 0.15} />
+              stroke={primary} strokeWidth={1.5 + ws * 2 + t * 1} opacity={0.25 + t * 0.2} />
           </g>
         );
       })}
@@ -1629,10 +1632,13 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
           Q ${rElbowX} ${rElbowY} ${rTipX} ${rTipY}
           Q ${rTipX + 18 + ws * 10} ${rTipY + 25 + ws * 15} ${rBottomX} ${rBottomY}
           Q ${ax + 100 + ws * 42} ${ay + 15} ${ax + 40} ${ay + 15}`}
-        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.4" />
-      {/* Leading edge bone */}
+        fill={`url(#wg-${dragon.id})`} stroke={primary} strokeWidth={2 + ws * 1.5} strokeOpacity="0.5" />
+      {/* Leading edge bone (the arm) */}
       <path d={`M ${ax + 30} ${ay} Q ${rElbowX - 5} ${rElbowY + 5} ${rTipX} ${rTipY}`}
-        stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
+        stroke={primary} strokeWidth={4 + ws * 5} fill="none" strokeLinecap="round" opacity="0.7" />
+      {/* Bone highlight */}
+      <path d={`M ${ax + 32} ${ay - 2} Q ${rElbowX - 6} ${rElbowY + 3} ${rTipX - 1} ${rTipY - 1}`}
+        stroke="#fff" strokeWidth={1 + ws * 0.8} fill="none" strokeLinecap="round" opacity="0.08" />
       {/* Elbow joint */}
       <circle cx={rElbowX} cy={rElbowY} r={2.5 + ws * 2.5} fill={secondary} opacity="0.5" />
       {/* Wing talon at elbow (bat-like thumb claw) */}
@@ -1645,7 +1651,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
         r={1 + ws * 1.2} fill={accent} opacity={0.6 + t * 0.3} />
       {/* Trailing edge bone */}
       <path d={`M ${ax + 40} ${ay + 8} Q ${ax + 85 + ws * 35} ${ay + 5 - ws * 8} ${rBottomX} ${rBottomY}`}
-        stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
+        stroke={primary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
       {/* Wing finger bones — with glow */}
       {[0.25, 0.5, 0.75].map((f, i) => {
         const bx1 = ax + 30 + f * (rElbowX - (ax + 30)) + f * (rTipX - rElbowX) * 0.3;
@@ -1657,7 +1663,7 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
             <line x1={bx1} y1={by1} x2={bx2} y2={by2}
               stroke={glow} strokeWidth={2 + t * 1.5} opacity={0.03 + t * 0.04} />
             <line x1={bx1} y1={by1} x2={bx2} y2={by2}
-              stroke={accent} strokeWidth={0.6 + t * 0.8} opacity={0.1 + t * 0.15} />
+              stroke={primary} strokeWidth={1.5 + ws * 2 + t * 1} opacity={0.25 + t * 0.2} />
           </g>
         );
       })}

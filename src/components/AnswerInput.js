@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
 export default function AnswerInput() {
-  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge, newSkill } = useGame();
+  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge, newSkill, dispatch } = useGame();
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
   const colors = dragon?.colors || { primary: '#fff', accent: '#fff', glow: '#fff' };
@@ -29,6 +29,41 @@ export default function AnswerInput() {
       setTimeout(() => setValue(''), 500);
     }
   }, [wrongAnswer]);
+
+  // Global keyboard listener — capture number keys even when input isn't focused,
+  // and Enter to dismiss notifications
+  useEffect(() => {
+    const handleGlobalKey = (e) => {
+      // Dismiss skill popup with Enter
+      if (e.key === 'Enter' && newSkill) {
+        dispatch({ type: 'CLEAR_SKILL_POPUP' });
+        return;
+      }
+
+      // Don't capture if already focused on our input
+      if (document.activeElement === inputRef.current) return;
+
+      // Number keys → focus input and append digit
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setValue(prev => prev + e.key);
+      }
+
+      // Enter → submit if we have a value
+      if (e.key === 'Enter' && !showMerge) {
+        inputRef.current?.focus();
+      }
+
+      // Backspace → focus and let browser handle deletion
+      if (e.key === 'Backspace') {
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [newSkill, showMerge, dispatch]);
 
   const handleSubmit = (e) => {
     e?.preventDefault();

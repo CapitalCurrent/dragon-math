@@ -326,16 +326,16 @@ function CaveBackground({ dragon, progress }) {
       {/* Secondary glow halo around dragon position */}
       <ellipse cx="560" cy="520" rx="200" ry="150" fill={glow} opacity="0.04" />
 
-      {/* === NEST ROCKS — egg phase, centered at x:640 to align with egg HTML element === */}
+      {/* === NEST ROCKS — egg phase === */}
       {isEgg && (
-        <g>
-          <ellipse cx="580" cy="672" rx="32" ry="14" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
-          <ellipse cx="700" cy="670" rx="28" ry="12" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
-          <ellipse cx="610" cy="678" rx="22" ry="10" fill="#18181e" stroke="#222228" strokeWidth="1" />
-          <ellipse cx="670" cy="676" rx="20" ry="9" fill="#18181e" stroke="#222228" strokeWidth="1" />
-          <ellipse cx="640" cy="681" rx="28" ry="10" fill="#1a1a20" stroke="#26262e" strokeWidth="1" />
-          <ellipse cx="640" cy="666" rx="48" ry="15" fill={accent} opacity="0.06" />
-          <ellipse cx="640" cy="662" rx="32" ry="10" fill={glow} opacity="0.05" />
+        <g id="nest-rocks">
+          <ellipse cx="500" cy="672" rx="32" ry="14" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
+          <ellipse cx="620" cy="670" rx="28" ry="12" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
+          <ellipse cx="530" cy="678" rx="22" ry="10" fill="#18181e" stroke="#222228" strokeWidth="1" />
+          <ellipse cx="590" cy="676" rx="20" ry="9" fill="#18181e" stroke="#222228" strokeWidth="1" />
+          <ellipse cx="560" cy="681" rx="28" ry="10" fill="#1a1a20" stroke="#26262e" strokeWidth="1" />
+          <ellipse cx="560" cy="666" rx="48" ry="15" fill={accent} opacity="0.06" />
+          <ellipse cx="560" cy="662" rx="32" ry="10" fill={glow} opacity="0.05" />
         </g>
       )}
     </svg>

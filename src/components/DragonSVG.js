@@ -478,13 +478,13 @@ function GrowingDragon({ dragon, t, size, chomping }) {
 
   // === PROPORTIONAL GROWTH CURVES ===
   // Each part grows at its own rate to create real maturity
-  const headRatio = 1.3 - t * 0.3;
+  const headRatio = 1.4 - t * 0.3;          // baby=1.4, adult=1.1 (bigger heads overall)
   const eyeRatio = 1.5 - t * 0.7;
-  const bodyRound = 1.2 - t * 0.35;
+  const bodyRound = 1.1 - t * 0.25;          // less round overall
   const neckLen = (0.5 + t * 0.35) * (mods.neckMul || 1);
-  const legLen = 0.55 + t * 0.45;           // was 0.4 — chunkier baby legs
-  const legThick = (0.85 + t * 0.45) * (mods.legMul || 1); // was 0.7 — thicker base
-  const wingSpan = (0.25 + t * 0.75) * (mods.wingMul || 1); // was 0.15 — visible baby wings
+  const legLen = 0.55 + t * 0.45;
+  const legThick = (1.0 + t * 0.5) * (mods.legMul || 1);  // thicker legs
+  const wingSpan = (0.25 + t * 0.75) * (mods.wingMul || 1);
   const tailLen = (0.3 + t * 0.7) * (mods.tailMul || 1);
   const snoutLen = 0.5 + t * 0.5;
   const hornLen = 0.1 + t * 0.9;
@@ -497,23 +497,22 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   const scaleDetail = t;
   const overallSize = 0.55 + t * 0.45;
 
-  // Body anchor points (shift based on proportions + physiology)
-  const bodyCx = 245;
-  const bodyCy = 310;
-  // Baby: narrower horizontally (more pear-shaped), adult: fills out
-  const bodyRx = 48 * bodyRound * (0.75 + t * 0.25) * (mods.bodyW || 1);
-  const bodyRy = 58 * bodyRound * (0.88 + t * 0.12) * (mods.bodyH || 1);
+  // Body anchor points — horizontally wider, vertically shorter (not egg-shaped)
+  const bodyCx = 250;
+  const bodyCy = 320;
+  const bodyRx = 55 * bodyRound * (0.8 + t * 0.2) * (mods.bodyW || 1);  // wider
+  const bodyRy = 45 * bodyRound * (0.85 + t * 0.15) * (mods.bodyH || 1); // shorter (horizontal body)
 
-  // Neck endpoint (head position moves up and forward as neck lengthens)
-  const neckTopX = bodyCx - 75 - neckLen * 25;
-  const neckTopY = bodyCy - 80 - neckLen * 60;
+  // Neck endpoint — wider neck, head closer to body
+  const neckTopX = bodyCx - 70 - neckLen * 20;
+  const neckTopY = bodyCy - 75 - neckLen * 50;
 
-  // Head size (shrinks proportionally as body grows)
-  // Baby heads are wider/rounder, adult heads more angular
-  const headRx = (32 + (1 - t) * 12) * headRatio;
-  const headRy = (26 + (1 - t) * 10) * headRatio;
-  const headCx = neckTopX - 8;
-  const headCy = neckTopY - 8;
+  // Head size — MUCH bigger, proportional to a real dragon
+  // Dragon head should be ~50-60% of body width
+  const headRx = (38 + (1 - t) * 14) * headRatio;  // baby=72, adult=42
+  const headRy = (30 + (1 - t) * 12) * headRatio;   // baby=59, adult=33
+  const headCx = neckTopX - 12;
+  const headCy = neckTopY - 10;
 
   const displaySize = size * overallSize;
 
@@ -652,11 +651,11 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           {/* === UNIFIED BODY + NECK SILHOUETTE === */}
           {/* One continuous path: tail base → dorsal → neck → head junction → throat → belly → tail base */}
           {(() => {
-            // Neck dimensions
-            const nW_base = 10 + (1 - t) * 4 + t * 6;
-            const nW_top = 5 + (1 - t) * 3 + t * 2;
-            const nMidX = bodyCx - 50 - neckLen * 15;
-            const nMidY = bodyCy - 60 - neckLen * 30;
+            // Neck dimensions — much thicker for dragon proportions
+            const nW_base = 16 + (1 - t) * 6 + t * 10;
+            const nW_top = 10 + (1 - t) * 5 + t * 4;
+            const nMidX = bodyCx - 45 - neckLen * 12;
+            const nMidY = bodyCy - 55 - neckLen * 25;
 
             // Key anchor points on the body perimeter
             const tailTopX = bodyCx + bodyRx * 0.85;
@@ -906,9 +905,9 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
   const pupilW = 2 + (1 - t) * 1.5;   // Baby: round pupil, Adult: narrow slit
   const pupilH = eyeH * 0.85;
 
-  // Snout extends forward with age
-  const snoutTipX = headCx - 30 - snoutLen * 25;
-  const snoutTipY = headCy + 3;
+  // Snout extends forward with age — wider, more crocodilian
+  const snoutTipX = headCx - headRx * 0.9 - snoutLen * 20;
+  const snoutTipY = headCy + headRy * 0.1;
 
   // Pac-Man chomp: head splits open WIDE
   // Even baby dragon gets a huge mouth opening
@@ -974,31 +973,31 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
           </>
         )}
 
-        {/* Upper snout — longer, more defined with nasal ridge */}
+        {/* Upper snout — wide, solid, reptilian */}
         <path d={`
-          M ${headCx - headRx * 0.7} ${headCy - headRy * 0.2}
-          Q ${headCx - headRx * 0.8} ${headCy - headRy * 0.1}
-            ${snoutTipX + 15} ${snoutTipY - 4 - jawAngularity * 4}
+          M ${headCx - headRx * 0.65} ${headCy - headRy * 0.3}
+          Q ${headCx - headRx * 0.85} ${headCy - headRy * 0.2}
+            ${snoutTipX + 10} ${snoutTipY - 6 - jawAngularity * 5}
           L ${snoutTipX} ${snoutTipY}
-          Q ${snoutTipX + 8} ${snoutTipY + 2}
-            ${headCx - headRx * 0.5} ${headCy + headRy * 0.1}
+          Q ${snoutTipX + 5} ${snoutTipY + 4}
+            ${headCx - headRx * 0.45} ${headCy + headRy * 0.15}
           Z`}
-          fill={secondary} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
+          fill={`url(#head-g-${dragon.id})`} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
         {/* Snout top ridge (nasal bone) */}
-        <path d={`M ${headCx - headRx * 0.5} ${headCy - headRy * 0.25}
-                   Q ${snoutTipX + 20} ${snoutTipY - 8 - jawAngularity * 3}
-                     ${snoutTipX + 2} ${snoutTipY - 1}`}
-          stroke={primary} strokeWidth={1 + t * 1.5} fill="none" opacity={0.15 + t * 0.15} />
+        <path d={`M ${headCx - headRx * 0.45} ${headCy - headRy * 0.3}
+                   Q ${snoutTipX + 15} ${snoutTipY - 8 - jawAngularity * 4}
+                     ${snoutTipX + 2} ${snoutTipY - 2}`}
+          stroke={primary} strokeWidth={1.5 + t * 2} fill="none" opacity={0.2 + t * 0.15} />
         {/* Snout highlight */}
-        <path d={`M ${headCx - headRx * 0.55} ${headCy - headRy * 0.15}
-                   Q ${snoutTipX + 18} ${snoutTipY - 7 - jawAngularity * 3}
-                     ${snoutTipX + 4} ${snoutTipY - 2}`}
-          stroke="#fff" strokeWidth="0.7" fill="none" opacity="0.06" />
-        {/* Nostril (larger, more prominent) */}
-        <ellipse cx={snoutTipX + 5} cy={snoutTipY - 1} rx={2.5 + snoutLen * 1.2} ry={1.8 + snoutLen * 0.6}
-          fill="#050005" stroke={glow} strokeWidth="0.5" strokeOpacity="0.4" />
-        <ellipse cx={snoutTipX + 11} cy={snoutTipY - 2} rx={1.8 + snoutLen * 0.8} ry={1.3 + snoutLen * 0.4}
-          fill="#050005" stroke={glow} strokeWidth="0.4" strokeOpacity="0.3" />
+        <path d={`M ${headCx - headRx * 0.5} ${headCy - headRy * 0.25}
+                   Q ${snoutTipX + 14} ${snoutTipY - 7 - jawAngularity * 3}
+                     ${snoutTipX + 4} ${snoutTipY - 3}`}
+          stroke="#fff" strokeWidth="1" fill="none" opacity="0.07" />
+        {/* Nostrils — larger, spaced wider on broad snout */}
+        <ellipse cx={snoutTipX + 4} cy={snoutTipY - 3} rx={3 + snoutLen * 1.5} ry={2 + snoutLen * 0.8}
+          fill="#050005" stroke={glow} strokeWidth="0.6" strokeOpacity="0.4" />
+        <ellipse cx={snoutTipX + 4} cy={snoutTipY + 1} rx={2.5 + snoutLen * 1.2} ry={1.5 + snoutLen * 0.6}
+          fill="#050005" stroke={glow} strokeWidth="0.5" strokeOpacity="0.3" />
 
         {/* Upper teeth row when chomping */}
         {chomping && (() => {
@@ -1057,14 +1056,14 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
           </g>
         ) : (
           <g>
-            {/* Closed jaw — visible mandible with jawline */}
+            {/* Closed jaw — wide mandible matching snout width */}
             <path d={`
-              M ${headCx - headRx * 0.5} ${headCy + headRy * 0.15}
-              Q ${headCx - headRx * 0.6} ${headCy + headRy * 0.35}
-                ${snoutTipX + 12} ${snoutTipY + baseJawDrop * 0.5}
-              L ${snoutTipX + 2} ${snoutTipY + baseJawDrop * 0.3}
-              Q ${snoutTipX + 6} ${snoutTipY + 1}
-                ${headCx - headRx * 0.5} ${headCy + headRy * 0.05}
+              M ${headCx - headRx * 0.4} ${headCy + headRy * 0.2}
+              Q ${headCx - headRx * 0.6} ${headCy + headRy * 0.45}
+                ${snoutTipX + 8} ${snoutTipY + baseJawDrop * 0.6}
+              L ${snoutTipX + 1} ${snoutTipY + baseJawDrop * 0.35}
+              Q ${snoutTipX + 4} ${snoutTipY + 2}
+                ${headCx - headRx * 0.4} ${headCy + headRy * 0.1}
               Z`}
               fill={secondary} stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
             {/* Visible mouth line when closed */}
@@ -1706,8 +1705,8 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
 }
 
 function TailSpade({ tailLen, accent, t, dragon }) {
-  const tx = 350 + tailLen * 70;
-  const ty = 245 - tailLen * 40;
+  const tx = 355 + tailLen * 70;
+  const ty = 255 - tailLen * 40;
   const s = 1 + t * 0.6;
   const style = dragon?.physiology?.tailStyle || 'flame';
   const primary = dragon?.colors?.primary || accent;
@@ -1823,8 +1822,8 @@ function BreathFX({ dragon, intensity, x = 82, y = 172 }) {
 
 // Tail path helpers
 function tailPath(tl) {
-  return `M 290 315 Q ${320 + tl * 42} ${332 - tl * 12} ${342 + tl * 62} ${292 - tl * 32} Q ${362 + tl * 52} ${262 - tl * 42} ${350 + tl * 70} ${245 - tl * 40}`;
+  return `M 295 325 Q ${325 + tl * 42} ${342 - tl * 12} ${347 + tl * 62} ${302 - tl * 32} Q ${367 + tl * 52} ${272 - tl * 42} ${355 + tl * 70} ${255 - tl * 40}`;
 }
 function tailPath2(tl) {
-  return `M 290 315 Q ${332 + tl * 42} ${322 - tl * 12} ${352 + tl * 62} ${287 - tl * 32} Q ${372 + tl * 52} ${257 - tl * 42} ${356 + tl * 70} ${238 - tl * 40}`;
+  return `M 295 325 Q ${337 + tl * 42} ${332 - tl * 12} ${357 + tl * 62} ${297 - tl * 32} Q ${377 + tl * 52} ${267 - tl * 42} ${361 + tl * 70} ${248 - tl * 40}`;
 }

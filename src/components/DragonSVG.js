@@ -1576,7 +1576,15 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
       <path d={`M ${ax - 20} ${ay} Q ${lElbowX + 5} ${lElbowY + 5} ${lTipX} ${lTipY}`}
         stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
       {/* Elbow joint */}
-      <circle cx={lElbowX} cy={lElbowY} r={2 + ws * 2} fill={secondary} opacity="0.4" />
+      <circle cx={lElbowX} cy={lElbowY} r={2.5 + ws * 2.5} fill={secondary} opacity="0.5" />
+      {/* Wing talon at elbow (bat-like thumb claw) */}
+      <path d={`M ${lElbowX + 2} ${lElbowY - 1}
+                Q ${lElbowX - 4 - ws * 5} ${lElbowY - 8 - ws * 6}
+                  ${lElbowX - 6 - ws * 8} ${lElbowY - 14 - ws * 10}`}
+        stroke={accent} strokeWidth={1.5 + ws * 1.5} fill="none" strokeLinecap="round" opacity={0.5 + t * 0.3} />
+      {/* Talon tip */}
+      <circle cx={lElbowX - 6 - ws * 8} cy={lElbowY - 14 - ws * 10}
+        r={1 + ws * 1.2} fill={accent} opacity={0.6 + t * 0.3} />
       {/* Trailing edge bone */}
       <path d={`M ${ax - 30} ${ay + 8} Q ${ax - 75 - ws * 35} ${ay + 5 - ws * 8} ${lBottomX} ${lBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />
@@ -1626,7 +1634,15 @@ function AnimatedWings({ dragon, ws, t, chomping = false, anchorX = 235, anchorY
       <path d={`M ${ax + 30} ${ay} Q ${rElbowX - 5} ${rElbowY + 5} ${rTipX} ${rTipY}`}
         stroke={secondary} strokeWidth={3 + ws * 3} fill="none" strokeLinecap="round" opacity="0.5" />
       {/* Elbow joint */}
-      <circle cx={rElbowX} cy={rElbowY} r={2 + ws * 2} fill={secondary} opacity="0.4" />
+      <circle cx={rElbowX} cy={rElbowY} r={2.5 + ws * 2.5} fill={secondary} opacity="0.5" />
+      {/* Wing talon at elbow (bat-like thumb claw) */}
+      <path d={`M ${rElbowX - 2} ${rElbowY - 1}
+                Q ${rElbowX + 4 + ws * 5} ${rElbowY - 8 - ws * 6}
+                  ${rElbowX + 6 + ws * 8} ${rElbowY - 14 - ws * 10}`}
+        stroke={accent} strokeWidth={1.5 + ws * 1.5} fill="none" strokeLinecap="round" opacity={0.5 + t * 0.3} />
+      {/* Talon tip */}
+      <circle cx={rElbowX + 6 + ws * 8} cy={rElbowY - 14 - ws * 10}
+        r={1 + ws * 1.2} fill={accent} opacity={0.6 + t * 0.3} />
       {/* Trailing edge bone */}
       <path d={`M ${ax + 40} ${ay + 8} Q ${ax + 85 + ws * 35} ${ay + 5 - ws * 8} ${rBottomX} ${rBottomY}`}
         stroke={secondary} strokeWidth={2 + ws * 2} fill="none" strokeLinecap="round" opacity="0.35" />

@@ -23,224 +23,169 @@ function CaveBackground({ dragon, progress }) {
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
     >
       <defs>
-        {/* Cave interior — very dark, warm-tinted */}
-        <radialGradient id="cave-dark" cx="40%" cy="50%" r="55%">
-          <stop offset="0%" stopColor="#0a0808" />
-          <stop offset="50%" stopColor="#080606" />
-          <stop offset="100%" stopColor="#050404" />
+        {/* Night sky */}
+        <linearGradient id="sky-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%" stopColor="#050a18" />
+          <stop offset="50%" stopColor="#081020" />
+          <stop offset="100%" stopColor="#040810" />
+        </linearGradient>
+        {/* Back wall — concave rock face, grey tones */}
+        <radialGradient id="back-wall-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#1a1a1e" />
+          <stop offset="60%" stopColor="#141416" />
+          <stop offset="100%" stopColor="#0a0a0c" />
         </radialGradient>
-        {/* Back wall rock face — warm dark stone */}
-        <linearGradient id="back-wall" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#0c0a0a" />
-          <stop offset="50%" stopColor="#100e0e" />
-          <stop offset="100%" stopColor="#080606" />
-        </linearGradient>
-        {/* Floor gradient — very dark, subtly lighter at mouth */}
-        <linearGradient id="floor-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#080707" />
-          <stop offset="70%" stopColor="#0a0909" />
-          <stop offset="100%" stopColor="#0e0c0c" />
-        </linearGradient>
+        {/* Dragon glow on back wall */}
+        <radialGradient id="wall-glow" cx="50%" cy="55%" r="45%">
+          <stop offset="0%" stopColor={glow} stopOpacity="0.12" />
+          <stop offset="60%" stopColor={primary} stopOpacity="0.04" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
         {/* Dragon glow on floor */}
-        <radialGradient id="dragon-floor-glow" cx="35%" cy="50%">
-          <stop offset="0%" stopColor={glow} stopOpacity="0.2" />
+        <radialGradient id="floor-glow" cx="35%" cy="30%">
+          <stop offset="0%" stopColor={glow} stopOpacity="0.18" />
           <stop offset="100%" stopColor={glow} stopOpacity="0" />
         </radialGradient>
-        {/* Dragon ambient light — warm glow in cave */}
-        <radialGradient id="dragon-ambient" cx="35%" cy="55%" r="35%">
-          <stop offset="0%" stopColor={primary} stopOpacity="0.1" />
-          <stop offset="50%" stopColor={glow} stopOpacity="0.04" />
+        {/* Dragon glow on ceiling */}
+        <radialGradient id="ceil-glow" cx="35%" cy="80%">
+          <stop offset="0%" stopColor={glow} stopOpacity="0.06" />
           <stop offset="100%" stopColor="transparent" />
         </radialGradient>
-        {/* Moonlight through entrance */}
-        <linearGradient id="mouth-light" x1="100%" y1="50%" x2="50%" y2="50%">
-          <stop offset="0%" stopColor="#182040" stopOpacity="0.3" />
-          <stop offset="50%" stopColor="#0a0e1a" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="transparent" />
-        </linearGradient>
-        {/* Night sky through entrance */}
-        <linearGradient id="sky-grad" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor="#060c1a" />
-          <stop offset="50%" stopColor="#0a1225" />
-          <stop offset="100%" stopColor="#060a14" />
-        </linearGradient>
-        {/* Ceiling — darkest */}
-        <linearGradient id="ceil-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stopColor="#080606" />
-          <stop offset="100%" stopColor="#040303" />
-        </linearGradient>
       </defs>
 
-      {/* === NIGHT SKY visible through cave mouth (right side) === */}
-      <rect width="1600" height="900" fill="#030308" />
-      {/* Sky only visible through entrance area */}
-      <path
-        d="M 1250 0 L 1600 0 L 1600 900 L 1250 900 Z"
-        fill="url(#sky-grad)"
-      />
-
-      {/* === CAVE INTERIOR — very dark enclosed space === */}
-      <path
-        d="M 0 0 L 1250 0 Q 1300 200 1320 450 Q 1300 700 1250 900 L 0 900 Z"
-        fill="url(#cave-dark)"
-      />
-
-      {/* === BACK WALL — solid rock face, left side === */}
-      <path
-        d="M 0 0 L 240 0 Q 270 150 260 300 Q 250 450 255 600 Q 265 750 240 900 L 0 900 Z"
-        fill="url(#back-wall)"
-      />
-      {/* Back wall stone blocks — larger, more visible */}
+      {/* === NIGHT SKY — full background, visible where cave doesn't cover === */}
+      <rect width="1600" height="900" fill="url(#sky-grad)" />
+      {/* Moon glow */}
+      <ellipse cx="1400" cy="200" rx="150" ry="150" fill="#0c1628" opacity="0.5" />
+      {/* Stars */}
       {[
-        { d: 'M 20 100 L 160 90 L 165 150 L 15 155', o: 0.25 },
-        { d: 'M 30 180 L 180 170 L 185 230 L 25 235', o: 0.2 },
-        { d: 'M 10 260 L 170 250 L 175 320 L 8 325', o: 0.22 },
-        { d: 'M 25 350 L 190 340 L 195 400 L 20 405', o: 0.18 },
-        { d: 'M 15 430 L 175 420 L 180 480 L 10 485', o: 0.2 },
-        { d: 'M 30 510 L 165 502 L 170 560 L 25 565', o: 0.17 },
-        { d: 'M 10 590 L 180 582 L 185 640 L 8 645', o: 0.2 },
-        { d: 'M 25 670 L 160 664 L 165 720 L 20 724', o: 0.15 },
-        { d: 'M 15 750 L 170 745 L 175 800 L 10 803', o: 0.12 },
+        [1180,80,1.5], [1250,150,1], [1350,100,2], [1420,60,1.2], [1500,130,1.8],
+        [1300,200,1], [1450,250,1.5], [1550,180,1], [1200,300,1.2], [1400,350,1],
+        [1500,300,1.5], [1350,400,1], [1480,420,1.2], [1250,450,1], [1550,380,1.5],
+        [1200,500,1], [1400,520,1.2], [1500,480,1], [1300,550,1.5], [1450,580,1],
+      ].map(([x,y,r], i) => (
+        <circle key={`star-${i}`} cx={x} cy={y} r={r} fill="#aabbdd" opacity={0.2 + Math.random() * 0.3} />
+      ))}
+      {/* Distant treeline silhouette */}
+      <path
+        d="M 1100 700 Q 1150 665 1200 675 Q 1250 650 1300 660 Q 1350 640 1400 650 Q 1450 630 1500 645 Q 1550 625 1600 640 L 1600 720 L 1100 720 Z"
+        fill="#030610" opacity="0.8"
+      />
+
+      {/* === CAVE SHELL — one continuous shape: ceiling curves into back wall curves into floor === */}
+      {/* The cave is a U-shape / bowl viewed from the side */}
+
+      {/* CEILING mass — curves down from right, thickens at back wall */}
+      <path
+        d="M 1600 0 L 0 0 L 0 350 Q 80 220 200 200 Q 400 220 600 210 Q 800 195 1000 175 Q 1150 160 1250 150 L 1600 0 Z"
+        fill="#0c0c0e"
+      />
+      {/* Ceiling underside — the visible rock surface */}
+      <path
+        d="M 200 200 Q 400 220 600 210 Q 800 195 1000 175 Q 1150 160 1250 150"
+        fill="none" stroke="#222228" strokeWidth="4"
+      />
+      {/* Ceiling rock strata lines */}
+      <path d="M 220 190 Q 500 205 800 185 Q 1050 168 1240 145" fill="none" stroke="#1a1a1e" strokeWidth="2" opacity="0.5" />
+      <path d="M 250 178 Q 550 190 850 172 Q 1080 158 1230 138" fill="none" stroke="#161618" strokeWidth="1.5" opacity="0.4" />
+
+      {/* BACK WALL — concave rounded surface on left */}
+      <path
+        d="M 0 0 L 0 900 L 200 900 Q 160 780 140 650 Q 120 500 125 400 Q 130 280 150 200 Q 170 130 200 0 Z"
+        fill="url(#back-wall-grad)"
+      />
+      {/* Back wall rock strata — horizontal bands in greys */}
+      {[
+        { y: 180, w: 140, o: 0.3, c: '#1e1e22' },
+        { y: 250, w: 130, o: 0.25, c: '#1c1c20' },
+        { y: 320, w: 135, o: 0.3, c: '#202024' },
+        { y: 400, w: 128, o: 0.25, c: '#1a1a1e' },
+        { y: 470, w: 132, o: 0.28, c: '#1e1e22' },
+        { y: 540, w: 125, o: 0.25, c: '#1c1c20' },
+        { y: 610, w: 138, o: 0.3, c: '#202026' },
+        { y: 680, w: 145, o: 0.22, c: '#1a1a1e' },
       ].map((s, i) => (
-        <path key={`bw-${i}`} d={s.d} fill="#14110f" opacity={s.o} stroke="#1c1816" strokeWidth="1.5" />
+        <path key={`strata-${i}`}
+          d={`M 5 ${s.y} Q ${s.w-10} ${s.y-3} ${s.w} ${s.y+2} Q ${s.w+5} ${s.y+12} ${s.w-8} ${s.y+15} Q 40 ${s.y+18} 5 ${s.y+14} Z`}
+          fill={s.c} opacity={s.o}
+        />
       ))}
-      {/* Mortar lines between blocks */}
-      {[155, 235, 325, 405, 485, 565, 645, 724].map((y, i) => (
-        <line key={`mortar-${i}`} x1="5" y1={y} x2="200" y2={y-2} stroke="#0a0808" strokeWidth="2" opacity="0.4" />
-      ))}
-      {/* Back wall edge — where wall meets interior, subtle ridge */}
+      {/* Crystal/mineral veins on back wall */}
+      <path d="M 60 280 Q 90 290 80 310 Q 65 315 55 300 Z" fill="#2a2a40" opacity="0.3" />
+      <path d="M 30 420 Q 55 415 65 435 Q 50 445 25 438 Z" fill="#2a3040" opacity="0.25" />
+      <path d="M 80 550 Q 110 545 105 570 Q 85 578 75 565 Z" fill="#282840" opacity="0.3" />
+      {/* Crystal glints — small bright spots that catch dragon glow */}
+      <circle cx="70" cy="295" r="2" fill={accent} opacity="0.15" />
+      <circle cx="45" cy="430" r="1.5" fill={accent} opacity="0.12" />
+      <circle cx="95" cy="560" r="2" fill={accent} opacity="0.1" />
+      <circle cx="35" cy="350" r="1" fill="#6666aa" opacity="0.2" />
+      <circle cx="100" cy="480" r="1.5" fill="#6666aa" opacity="0.15" />
+
+      {/* Dragon glow reflecting on back wall */}
       <path
-        d="M 240 0 Q 270 150 260 300 Q 250 450 255 600 Q 265 750 240 900"
-        fill="none" stroke="#1a1510" strokeWidth="5" opacity="0.6"
-      />
-      <path
-        d="M 242 0 Q 272 150 262 300 Q 252 450 257 600 Q 267 750 242 900"
-        fill="none" stroke={glow} strokeWidth="1.5" opacity="0.04"
+        d="M 0 200 L 0 700 Q 80 680 140 600 Q 130 450 135 350 Q 140 250 120 200 Z"
+        fill="url(#wall-glow)"
       />
 
-      {/* === CEILING — thick, low, oppressive === */}
+      {/* Back wall edge — where it curves into the cave interior */}
       <path
-        d="M 0 0 L 1600 0 L 1600 120 Q 1350 100 1250 130 Q 1000 170 800 200 Q 600 220 400 230 Q 280 235 240 200 L 240 0 Z"
-        fill="url(#ceil-grad)"
-      />
-      {/* Ceiling underside edge */}
-      <path
-        d="M 260 210 Q 400 235 600 225 Q 800 205 1000 175 Q 1200 145 1250 135"
-        fill="none" stroke="#181412" strokeWidth="5"
-      />
-      <path
-        d="M 260 212 Q 400 237 600 227 Q 800 207 1000 177 Q 1200 147 1250 137"
-        fill="none" stroke={glow} strokeWidth="1" strokeOpacity="0.04"
+        d="M 200 0 Q 170 130 150 200 Q 130 280 125 400 Q 120 500 140 650 Q 160 780 200 900"
+        fill="none" stroke="#28282e" strokeWidth="3" opacity="0.5"
       />
 
-      {/* Stalactites — thicker, more dramatic */}
-      <path d="M 350 232 L 365 310 L 340 234" fill="#080605" opacity="0.8" />
-      <path d="M 500 226 L 512 300 L 492 228" fill="#080605" opacity="0.7" />
-      <path d="M 680 212 L 692 275 L 672 214" fill="#080605" opacity="0.6" />
-      <path d="M 850 195 L 860 255 L 842 197" fill="#080605" opacity="0.55" />
-      <path d="M 1020 172 L 1028 225 L 1012 174" fill="#080605" opacity="0.45" />
-      <path d="M 1160 150 L 1168 195 L 1153 152" fill="#080605" opacity="0.35" />
+      {/* FLOOR mass — curves up from right, thickens into back wall */}
+      <path
+        d="M 1600 900 L 0 900 L 0 650 Q 80 780 200 720 Q 400 700 600 695 Q 800 685 1000 675 Q 1150 668 1250 665 L 1600 900 Z"
+        fill="#0e0e10"
+      />
+      {/* Floor top surface */}
+      <path
+        d="M 200 720 Q 400 700 600 695 Q 800 685 1000 675 Q 1150 668 1250 665"
+        fill="none" stroke="#222228" strokeWidth="4"
+      />
+      {/* Floor rock strata */}
+      <path d="M 220 728 Q 500 710 800 695 Q 1050 680 1240 672" fill="none" stroke="#1a1a1e" strokeWidth="2" opacity="0.4" />
+
+      {/* Stalactites hanging from ceiling */}
+      <path d="M 350 218 L 365 295 L 340 220" fill="#101014" opacity="0.8" />
+      <path d="M 520 212 L 534 280 L 512 214" fill="#101014" opacity="0.7" />
+      <path d="M 700 198 L 712 260 L 692 200" fill="#101014" opacity="0.6" />
+      <path d="M 880 185 L 890 240 L 872 187" fill="#101014" opacity="0.5" />
+      <path d="M 1050 172 L 1058 218 L 1042 174" fill="#101014" opacity="0.4" />
       {/* Small stalactites */}
-      <path d="M 420 230 L 426 262 L 415 231" fill="#0a0806" opacity="0.5" />
-      <path d="M 590 222 L 596 250 L 585 223" fill="#0a0806" opacity="0.45" />
-      <path d="M 760 205 L 765 230 L 755 206" fill="#0a0806" opacity="0.4" />
-      <path d="M 940 182 L 945 205 L 935 183" fill="#0a0806" opacity="0.3" />
+      <path d="M 430 216 L 436 245 L 425 217" fill="#121216" opacity="0.55" />
+      <path d="M 610 208 L 616 235 L 605 209" fill="#121216" opacity="0.45" />
+      <path d="M 790 193 L 795 215 L 785 194" fill="#121216" opacity="0.4" />
+      <path d="M 970 178 L 975 198 L 965 179" fill="#121216" opacity="0.3" />
 
-      {/* === FLOOR — higher up, rocky === */}
-      <path
-        d="M 0 900 L 0 680 Q 240 675 400 680 Q 600 685 800 675 Q 1000 665 1200 660 Q 1280 660 1320 680 L 1600 900 Z"
-        fill="url(#floor-grad)"
-      />
-      {/* Floor surface edge */}
-      <path
-        d="M 240 678 Q 400 682 600 678 Q 800 670 1000 662 Q 1200 658 1320 678"
-        fill="none" stroke="#1a1510" strokeWidth="4"
-      />
-      <path
-        d="M 240 676 Q 400 680 600 676 Q 800 668 1000 660 Q 1200 656 1320 676"
-        fill="none" stroke={glow} strokeWidth="1" strokeOpacity="0.04"
-      />
+      {/* Stalagmites rising from floor */}
+      <path d="M 400 698 L 412 655 L 420 699" fill="#121216" opacity="0.5" />
+      <path d="M 650 690 L 660 650 L 668 691" fill="#121216" opacity="0.4" />
+      <path d="M 900 678 L 908 645 L 915 679" fill="#121216" opacity="0.35" />
+      <path d="M 1100 670 L 1108 640 L 1115 671" fill="#121216" opacity="0.3" />
 
-      {/* Floor rocks and rubble */}
-      <ellipse cx="350" cy="690" rx="20" ry="8" fill="#0e0c0a" />
-      <ellipse cx="550" cy="686" rx="16" ry="7" fill="#100e0c" />
-      <ellipse cx="750" cy="678" rx="22" ry="9" fill="#0e0c0a" />
-      <ellipse cx="950" cy="670" rx="14" ry="6" fill="#0f0d0b" />
-      <ellipse cx="1150" cy="664" rx="18" ry="7" fill="#0e0c0a" />
-
-      {/* Stalagmites — subtle */}
-      <path d="M 420 682 L 430 645 L 438 683" fill="#0c0a08" opacity="0.5" />
-      <path d="M 700 675 L 710 640 L 718 676" fill="#0c0a08" opacity="0.4" />
-      <path d="M 1080 662 L 1088 630 L 1095 663" fill="#0c0a08" opacity="0.3" />
-
-      {/* === CAVE ENTRANCE — right side, arched opening === */}
-      {/* Entrance arch — top frame */}
-      <path
-        d="M 1250 130 Q 1290 120 1320 160 Q 1360 250 1380 400"
-        fill="none" stroke="#0c0a08" strokeWidth="60" strokeLinecap="round"
-      />
-      {/* Entrance arch — bottom frame */}
-      <path
-        d="M 1320 680 Q 1360 600 1380 500 Q 1385 440 1380 400"
-        fill="none" stroke="#0c0a08" strokeWidth="60" strokeLinecap="round"
-      />
-      {/* Inner rock edge of entrance */}
-      <path
-        d="M 1250 130 Q 1290 120 1320 160 Q 1360 250 1380 400 Q 1385 440 1380 500 Q 1360 600 1320 680"
-        fill="none" stroke="#1a1612" strokeWidth="6"
-      />
-      {/* Moonlight rim on entrance edge */}
-      <path
-        d="M 1250 130 Q 1290 120 1320 160 Q 1360 250 1380 400 Q 1385 440 1380 500 Q 1360 600 1320 680"
-        fill="none" stroke="#3040608" strokeWidth="2" opacity="0.15"
-      />
-
-      {/* Night sky visible through entrance */}
-      <path
-        d="M 1380 160 Q 1420 200 1440 400 Q 1420 600 1380 660 L 1600 900 L 1600 0 Z"
-        fill="url(#sky-grad)" opacity="0.8"
-      />
-      {/* Moonlight glow through entrance */}
-      <ellipse cx="1450" cy="300" rx="120" ry="200" fill="#1a2540" opacity="0.2" />
-
-      {/* Stars through entrance */}
-      <circle cx="1450" cy="220" r="2" fill="#aabbdd" opacity="0.5" />
-      <circle cx="1500" cy="180" r="1.5" fill="#aabbdd" opacity="0.4" />
-      <circle cx="1520" cy="300" r="1.8" fill="#aabbdd" opacity="0.45" />
-      <circle cx="1470" cy="380" r="1.2" fill="#aabbdd" opacity="0.35" />
-      <circle cx="1540" cy="260" r="1" fill="#aabbdd" opacity="0.3" />
-      <circle cx="1490" cy="450" r="1.5" fill="#aabbdd" opacity="0.35" />
-      <circle cx="1460" cy="520" r="1.2" fill="#aabbdd" opacity="0.3" />
-
-      {/* Distant treeline/hills through entrance */}
-      <path
-        d="M 1380 620 Q 1420 590 1460 600 Q 1500 580 1540 590 Q 1580 570 1600 580 L 1600 660 L 1380 660 Z"
-        fill="#060c14" opacity="0.7"
-      />
-
-      {/* Light rays fanning into cave from entrance */}
-      <path d="M 1380 280 L 1100 250 L 1100 280 L 1380 320 Z" fill="#101820" opacity="0.06" />
-      <path d="M 1380 380 L 1050 360 L 1050 390 L 1380 420 Z" fill="#101820" opacity="0.05" />
-      <path d="M 1380 480 L 1100 470 L 1100 500 L 1380 510 Z" fill="#101820" opacity="0.04" />
+      {/* Floor rocks/rubble */}
+      <ellipse cx="330" cy="708" rx="18" ry="7" fill="#141418" />
+      <ellipse cx="550" cy="698" rx="14" ry="6" fill="#161618" />
+      <ellipse cx="780" cy="690" rx="20" ry="8" fill="#141418" />
+      <ellipse cx="1000" cy="680" rx="16" ry="6" fill="#151518" />
 
       {/* === LIGHTING === */}
-      {/* Dragon ambient glow on walls/ceiling */}
-      <rect x="200" y="200" width="900" height="480" fill="url(#dragon-ambient)" />
       {/* Dragon glow pool on floor */}
-      <ellipse cx="520" cy="678" rx="280" ry="40" fill="url(#dragon-floor-glow)" />
-      {/* Subtle moonlight from entrance */}
-      <rect x="0" y="0" width="1600" height="900" fill="url(#mouth-light)" />
+      <ellipse cx="500" cy="695" rx="300" ry="40" fill="url(#floor-glow)" />
+      {/* Dragon glow on ceiling */}
+      <ellipse cx="480" cy="210" rx="350" ry="60" fill="url(#ceil-glow)" />
 
-      {/* === NEST ROCKS — egg phase === */}
+      {/* === NEST ROCKS — egg phase, grey stone === */}
       {isEgg && (
         <g>
-          <ellipse cx="440" cy="668" rx="32" ry="16" fill="#14110e" stroke="#1c1814" strokeWidth="1.5" />
-          <ellipse cx="570" cy="666" rx="28" ry="14" fill="#14110e" stroke="#1c1814" strokeWidth="1.5" />
-          <ellipse cx="470" cy="674" rx="22" ry="12" fill="#181512" stroke="#201c18" strokeWidth="1" />
-          <ellipse cx="540" cy="673" rx="20" ry="11" fill="#181512" stroke="#201c18" strokeWidth="1" />
-          <ellipse cx="505" cy="678" rx="28" ry="10" fill="#1a1714" stroke="#221e1a" strokeWidth="1" />
-          <ellipse cx="505" cy="662" rx="45" ry="14" fill={accent} opacity="0.06" />
-          <ellipse cx="505" cy="658" rx="30" ry="10" fill={glow} opacity="0.05" />
+          <ellipse cx="430" cy="688" rx="30" ry="14" fill="#18181c" stroke="#222228" strokeWidth="1.5" />
+          <ellipse cx="560" cy="686" rx="26" ry="12" fill="#18181c" stroke="#222228" strokeWidth="1.5" />
+          <ellipse cx="460" cy="694" rx="20" ry="10" fill="#1c1c20" stroke="#262628" strokeWidth="1" />
+          <ellipse cx="530" cy="693" rx="18" ry="9" fill="#1c1c20" stroke="#262628" strokeWidth="1" />
+          <ellipse cx="495" cy="698" rx="26" ry="9" fill="#1e1e22" stroke="#282830" strokeWidth="1" />
+          <ellipse cx="495" cy="682" rx="42" ry="12" fill={accent} opacity="0.06" />
+          <ellipse cx="495" cy="678" rx="28" ry="8" fill={glow} opacity="0.05" />
         </g>
       )}
     </svg>

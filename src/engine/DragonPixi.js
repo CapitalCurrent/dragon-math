@@ -622,8 +622,21 @@ export default function DragonPixi({
   }, [size]);
 
   useEffect(() => {
-    const timer = setTimeout(captureSVG, 150);
-    return () => clearTimeout(timer);
+    // Pixi app init is async — sprite may not exist yet at 150ms.
+    // Retry until sprite is ready (handles race condition).
+    let cancelled = false;
+    function attempt(delay, retries) {
+      setTimeout(() => {
+        if (cancelled) return;
+        if (!spriteRef.current && retries > 0) {
+          attempt(200, retries - 1);
+        } else {
+          captureSVG();
+        }
+      }, delay);
+    }
+    attempt(150, 5);
+    return () => { cancelled = true; };
   }, [dragon?.id, progress, captureSVG]);
 
   return (

@@ -584,8 +584,10 @@ export default function DragonPixi({
 
     // Get the SVG's actual rendered size (handles both percentage and pixel widths)
     const rect = svgEl.getBoundingClientRect();
-    const innerW = rect.width || size;
-    const innerH = rect.height || size;
+    // Use viewBox dimensions as fallback if getBoundingClientRect returns 0 (e.g. offscreen)
+    const vb = svgEl.getAttribute('viewBox')?.split(/\s+/).map(Number);
+    const innerW = rect.width || (vb && vb[2]) || size;
+    const innerH = rect.height || (vb && vb[3]) || size;
 
     // Clone and set explicit pixel dimensions (some SVGs use width="100%")
     const clone = svgEl.cloneNode(true);
@@ -629,7 +631,7 @@ export default function DragonPixi({
       {/* Hidden SVG renderer */}
       <div
         ref={svgContainerRef}
-        style={{ position: 'absolute', left: -9999, top: -9999, pointerEvents: 'none' }}
+        style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}
         aria-hidden
       >
         <DragonSVGComponent dragon={dragon} progress={progress} size={size} chomping={false} />

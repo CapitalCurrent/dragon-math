@@ -12,6 +12,15 @@ const SCREENS = {
   LEVEL_UP: 'level_up',
 };
 
+function getLevelData(levelId) {
+  return MATH_LEVELS.find(l => l.id === levelId) || MATH_LEVELS[0];
+}
+
+function getQuestionsForLevel(levelId) {
+  const lvl = getLevelData(levelId);
+  return lvl.questionsPerRound || QUESTIONS_PER_ROUND;
+}
+
 const initialState = {
   screen: SCREENS.TITLE,
   dragon: null,
@@ -56,7 +65,7 @@ function reducer(state, action) {
       };
 
     case 'NEW_QUESTION': {
-      const levelData = MATH_LEVELS[state.level - 1] || MATH_LEVELS[0];
+      const levelData = getLevelData(state.level);
       return {
         ...state,
         currentQuestion: levelData.generate(),
@@ -69,11 +78,12 @@ function reducer(state, action) {
     }
 
     case 'CORRECT_ANSWER': {
+      const roundSize = getQuestionsForLevel(state.level);
       // 2x progress when skill boost is active
       const progressIncrement = state.skillBoost ? 2 : 1;
       const newCorrect = state.correctAnswers + progressIncrement;
       const newAnswered = state.questionsAnswered + 1;
-      const newProgress = Math.min(1, newCorrect / QUESTIONS_PER_ROUND);
+      const newProgress = Math.min(1, newCorrect / roundSize);
       const newStreak = state.streak + 1;
 
       // Check for new skill unlocks
@@ -85,7 +95,7 @@ function reducer(state, action) {
         if (justUnlocked) newSkill = justUnlocked;
       }
 
-      const isComplete = newCorrect >= QUESTIONS_PER_ROUND;
+      const isComplete = newCorrect >= roundSize;
 
       // Charge all unlocked skills (+1 per correct answer, max 3)
       const allUnlocked = newSkill
@@ -164,7 +174,7 @@ function reducer(state, action) {
       return {
         ...state,
         progress: p,
-        correctAnswers: Math.round(p * QUESTIONS_PER_ROUND),
+        correctAnswers: Math.round(p * getQuestionsForLevel(state.level)),
         unlockedSkills: unlocked,
         skillCharges: charges,
         screen: SCREENS.PLAYING,
@@ -196,8 +206,10 @@ export function GameProvider({ children }) {
     if (!state.currentQuestion) return;
     if (parseInt(answer) === state.currentQuestion.answer) {
       dispatch({ type: 'CORRECT_ANSWER' });
-      // Next question after animation (join 700 + skill 800 + eat/fly 1100 + buffer 200)
-      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), 2800);
+      // Counting mode: shorter celebration, then next question
+      // Math mode: longer animation (join 700 + skill 800 + eat/fly 1100 + buffer 200)
+      const isCounting = state.currentQuestion.type === 'counting';
+      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), isCounting ? 1800 : 2800);
     } else {
       dispatch({ type: 'WRONG_ANSWER' });
     }

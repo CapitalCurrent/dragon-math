@@ -1,12 +1,74 @@
 // Math levels matching SC College and Career Ready Standards progression
-// Level 1 is what she's working on now: addition facts 0-9
+// Counting levels (0A-0C) for pre-readers learning number identification
+// Math levels (1-7) for addition/subtraction facts
+
+// Vehicle types for counting levels — rotates randomly each question
+const VEHICLES = [
+  { emoji: '🚜', name: 'tractors' },
+  { emoji: '🚒', name: 'fire trucks' },
+  { emoji: '🚛', name: 'dump trucks' },
+  { emoji: '🏗️', name: 'cranes' },
+  { emoji: '🚙', name: 'trucks' },
+  { emoji: '🚂', name: 'trains' },
+  { emoji: '🚁', name: 'helicopters' },
+  { emoji: '🏎️', name: 'race cars' },
+  { emoji: '🚀', name: 'rockets' },
+  { emoji: '🚜', name: 'bulldozers' },
+];
+
+function countingGenerator(min, max) {
+  // Track last vehicle to avoid repeats
+  let lastVehicleIdx = -1;
+  return () => {
+    const count = min + Math.floor(Math.random() * (max - min + 1));
+    let vIdx;
+    do {
+      vIdx = Math.floor(Math.random() * VEHICLES.length);
+    } while (vIdx === lastVehicleIdx && VEHICLES.length > 1);
+    lastVehicleIdx = vIdx;
+    const vehicle = VEHICLES[vIdx];
+    return {
+      type: 'counting',
+      answer: count,
+      count,
+      vehicle,
+      display: `${count}`,
+    };
+  };
+}
 
 export const MATH_LEVELS = [
+  // === COUNTING LEVELS (for pre-readers) ===
+  {
+    id: '0a',
+    name: '🚛 1-5',
+    description: 'Count 1 to 5',
+    questionsPerRound: 10,
+    passThreshold: 0.8,
+    generate: countingGenerator(1, 5),
+  },
+  {
+    id: '0b',
+    name: '🚛 6-10',
+    description: 'Count 6 to 10',
+    questionsPerRound: 10,
+    passThreshold: 0.8,
+    generate: countingGenerator(6, 10),
+  },
+  {
+    id: '0c',
+    name: '🚛 1-10',
+    description: 'Count 1 to 10',
+    questionsPerRound: 10,
+    passThreshold: 0.8,
+    generate: countingGenerator(1, 10),
+  },
+  // === MATH LEVELS ===
   {
     id: 1,
     name: 'Addition 0-9',
     description: 'Add numbers from 0 to 9',
-    passThreshold: 0.95, // 95% to advance (matches school)
+    passThreshold: 0.95,
     generate: () => {
       const a = Math.floor(Math.random() * 10);
       const b = Math.floor(Math.random() * 10);
@@ -34,7 +96,6 @@ export const MATH_LEVELS = [
     generate: () => {
       const a = Math.floor(Math.random() * 11);
       const b = 10 - a;
-      // Mix in some non-10 pairs too
       if (Math.random() < 0.3) {
         const c = Math.floor(Math.random() * 10);
         const d = Math.floor(Math.random() * 10);
@@ -72,8 +133,7 @@ export const MATH_LEVELS = [
     description: 'Subtract with sums up to 18',
     passThreshold: 0.95,
     generate: () => {
-      // a ranges 0-18, b ≤ a, answer = a - b ≥ 0
-      const a = Math.floor(Math.random() * 19); // 0-18
+      const a = Math.floor(Math.random() * 19);
       const b = Math.floor(Math.random() * (a + 1));
       return { a, b, op: '-', answer: a - b, display: `${a} − ${b}` };
     },
@@ -86,10 +146,10 @@ export const MATH_LEVELS = [
     generate: () => {
       if (Math.random() < 0.5) {
         const a = Math.floor(Math.random() * 10);
-        const b = Math.floor(Math.random() * (19 - a)); // sum ≤ 18
+        const b = Math.floor(Math.random() * (19 - a));
         return { a, b, op: '+', answer: a + b, display: `${a} + ${b}` };
       } else {
-        const a = Math.floor(Math.random() * 19); // 0-18
+        const a = Math.floor(Math.random() * 19);
         const b = Math.floor(Math.random() * (a + 1));
         return { a, b, op: '-', answer: a - b, display: `${a} − ${b}` };
       }

@@ -40,8 +40,10 @@ export default function TitleScreen() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        Answer math facts to hatch and grow your dragon!
-        Unlock awesome dragon powers along the way!
+        {typeof level === 'string' && level.startsWith('0')
+          ? 'Count the trucks to hatch and grow your dragon!'
+          : 'Answer math facts to hatch and grow your dragon!'}
+        {' '}Unlock awesome dragon powers along the way!
       </motion.p>
 
       <motion.button

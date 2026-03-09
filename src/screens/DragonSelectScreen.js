@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { DRAGON_LIST } from '../data/dragons';
+
 import DragonSVG from '../components/DragonSVG';
 
 export default function DragonSelectScreen() {
-  const { selectDragon } = useGame();
+  const { selectDragon, level } = useGame();
+  const isCounting = typeof level === 'string' && level.startsWith('0');
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">
@@ -22,7 +24,7 @@ export default function DragonSelectScreen() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        Answer math facts to hatch your dragon and help it grow!
+        {isCounting ? 'Count the trucks to hatch your dragon!' : 'Answer math facts to hatch your dragon and help it grow!'}
       </motion.p>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl w-full">

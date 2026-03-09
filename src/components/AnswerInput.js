@@ -2,65 +2,111 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
-export default function AnswerInput() {
-  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge, newSkill, dispatch } = useGame();
+// Counting mode: big auto-submit number buttons, no text input
+function CountingInput({ onSubmit, showMerge, wrongAnswer, colors, level }) {
+  // Determine which numbers to show based on level
+  const maxNum = level === '0a' ? 5 : 10;
+  const numbers = Array.from({ length: maxNum }, (_, i) => i + 1);
+  // For 0b (6-10), still show 1-10 since they need all options
+
+  const handleTap = (num) => {
+    if (showMerge) return;
+    onSubmit(String(num));
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Number buttons — large, toddler-friendly */}
+      <motion.div
+        className="grid gap-3"
+        style={{
+          gridTemplateColumns: `repeat(${Math.min(5, numbers.length)}, 1fr)`,
+          maxWidth: 400,
+          width: '100%',
+        }}
+        animate={wrongAnswer ? { x: [-8, 8, -8, 8, 0] } : {}}
+        transition={{ duration: 0.4 }}
+      >
+        {numbers.map((num) => (
+          <motion.button
+            key={num}
+            onClick={() => handleTap(num)}
+            disabled={showMerge}
+            className="aspect-square rounded-2xl text-3xl md:text-4xl font-black transition-all disabled:opacity-40"
+            style={{
+              background: `linear-gradient(180deg, #1e1e42 0%, #14142e 100%)`,
+              color: colors.accent,
+              border: `3px solid ${colors.primary}50`,
+              boxShadow: `0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)`,
+              minWidth: 56,
+              minHeight: 56,
+            }}
+            whileHover={{ scale: 1.1, borderColor: colors.primary }}
+            whileTap={{ scale: 0.85, background: colors.primary }}
+          >
+            {num}
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Feedback text */}
+      <motion.div
+        className="text-xl md:text-2xl font-bold h-8"
+        animate={wrongAnswer ? { scale: [1, 1.2, 1] } : {}}
+      >
+        {wrongAnswer && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-400"
+          >
+            Try again!
+          </motion.span>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+// Standard math mode: text input + number pad + GO button
+function MathInput({ onSubmit, showMerge, wrongAnswer, colors, newSkill, dispatch }) {
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
-  const colors = dragon?.colors || { primary: '#fff', accent: '#fff', glow: '#fff' };
 
-  // Focus input whenever a new question appears
   useEffect(() => {
-    if (currentQuestion && !showMerge) {
+    if (!showMerge) {
       setValue('');
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [currentQuestion, showMerge]);
+  }, [showMerge]);
 
-  // Re-focus input when skill unlock popup closes
   useEffect(() => {
-    if (newSkill === null && currentQuestion && !showMerge) {
+    if (newSkill === null && !showMerge) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [newSkill, currentQuestion, showMerge]);
+  }, [newSkill, showMerge]);
 
-  // Clear value after wrong answer shake
   useEffect(() => {
     if (wrongAnswer) {
       setTimeout(() => setValue(''), 500);
     }
   }, [wrongAnswer]);
 
-  // Global keyboard listener — capture number keys even when input isn't focused,
-  // and Enter to dismiss notifications
   useEffect(() => {
     const handleGlobalKey = (e) => {
-      // Dismiss skill popup with Enter
       if (e.key === 'Enter' && newSkill) {
         dispatch({ type: 'CLEAR_SKILL_POPUP' });
         return;
       }
-
-      // Don't capture if already focused on our input
       if (document.activeElement === inputRef.current) return;
-
-      // Number keys → focus input and append digit
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
         inputRef.current?.focus();
         setValue(prev => prev + e.key);
       }
-
-      // Enter → submit if we have a value
-      if (e.key === 'Enter' && !showMerge) {
-        inputRef.current?.focus();
-      }
-
-      // Backspace → focus and let browser handle deletion
-      if (e.key === 'Backspace') {
-        inputRef.current?.focus();
-      }
+      if (e.key === 'Enter' && !showMerge) inputRef.current?.focus();
+      if (e.key === 'Backspace') inputRef.current?.focus();
     };
-
     window.addEventListener('keydown', handleGlobalKey);
     return () => window.removeEventListener('keydown', handleGlobalKey);
   }, [newSkill, showMerge, dispatch]);
@@ -68,18 +114,14 @@ export default function AnswerInput() {
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (value.trim() === '' || showMerge) return;
-    submitAnswer(value.trim());
+    onSubmit(value.trim());
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
+    if (e.key === 'Enter') handleSubmit();
   };
 
-  // Number pad buttons for touch/mobile
   const numberPad = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, 'GO'];
-
   const handlePadPress = (key) => {
     if (key === 'C') {
       setValue('');
@@ -93,7 +135,6 @@ export default function AnswerInput() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Text input */}
       <motion.div
         className="flex items-center gap-3"
         animate={wrongAnswer ? { x: [-10, 10, -10, 10, 0] } : {}}
@@ -120,7 +161,6 @@ export default function AnswerInput() {
               caretColor: colors.accent,
             }}
           />
-          {/* Subtle inner glow ring */}
           <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
             border: `1px solid ${colors.glow}15`,
             borderTop: `1px solid ${colors.glow}25`,
@@ -143,7 +183,6 @@ export default function AnswerInput() {
         </motion.button>
       </motion.div>
 
-      {/* Number pad for mobile */}
       <div className="grid grid-cols-3 gap-2.5 max-w-[280px] md:hidden">
         {numberPad.map((key) => (
           <motion.button
@@ -172,7 +211,6 @@ export default function AnswerInput() {
         ))}
       </div>
 
-      {/* Feedback text */}
       <motion.div
         className="text-xl md:text-2xl font-bold h-8"
         animate={wrongAnswer ? { scale: [1, 1.2, 1] } : {}}
@@ -199,5 +237,34 @@ export default function AnswerInput() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function AnswerInput() {
+  const { submitAnswer, wrongAnswer, currentQuestion, dragon, showMerge, newSkill, dispatch, level } = useGame();
+  const colors = dragon?.colors || { primary: '#fff', accent: '#fff', glow: '#fff' };
+  const isCounting = currentQuestion?.type === 'counting';
+
+  if (isCounting) {
+    return (
+      <CountingInput
+        onSubmit={submitAnswer}
+        showMerge={showMerge}
+        wrongAnswer={wrongAnswer}
+        colors={colors}
+        level={level}
+      />
+    );
+  }
+
+  return (
+    <MathInput
+      onSubmit={submitAnswer}
+      showMerge={showMerge}
+      wrongAnswer={wrongAnswer}
+      colors={colors}
+      newSkill={newSkill}
+      dispatch={dispatch}
+    />
   );
 }

@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { useVersion } from '../App';
 import DragonSVG from '../components/DragonSVG';
 import FloatingNumbers from '../components/FloatingNumbers';
+import TruckCounting from '../components/TruckCounting';
 import AnswerInput from '../components/AnswerInput';
 import ProgressBar from '../components/ProgressBar';
 import SkillBar from '../components/SkillBar';
@@ -1078,7 +1079,7 @@ export default function GameScreen() {
 
         {/* Question + input — at cave mouth, right side */}
         <div ref={numbersRef} className="flex flex-col items-center justify-center lg:flex-1 lg:pb-20" style={{ maxWidth: 480 }}>
-          <FloatingNumbers />
+          {currentQuestion?.type === 'counting' ? <TruckCounting /> : <FloatingNumbers />}
           <AnswerInput />
         </div>
       </div>

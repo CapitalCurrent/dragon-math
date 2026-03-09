@@ -486,7 +486,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   const legThick = (0.85 + t * 0.45) * (mods.legMul || 1); // was 0.7 — thicker base
   const wingSpan = (0.25 + t * 0.75) * (mods.wingMul || 1); // was 0.15 — visible baby wings
   const tailLen = (0.3 + t * 0.7) * (mods.tailMul || 1);
-  const snoutLen = 0.4 + t * 0.6;
+  const snoutLen = 0.5 + t * 0.5;
   const hornLen = 0.1 + t * 0.9;
   const jawAngularity = t;
   const spineCount = Math.floor(2 + t * 6);
@@ -509,10 +509,11 @@ function GrowingDragon({ dragon, t, size, chomping }) {
   const neckTopY = bodyCy - 80 - neckLen * 60;
 
   // Head size (shrinks proportionally as body grows)
-  const headRx = (28 + (1 - t) * 10) * headRatio;
-  const headRy = (22 + (1 - t) * 8) * headRatio;
-  const headCx = neckTopX - 5;
-  const headCy = neckTopY - 5;
+  // Baby heads are wider/rounder, adult heads more angular
+  const headRx = (32 + (1 - t) * 12) * headRatio;
+  const headRy = (26 + (1 - t) * 10) * headRatio;
+  const headCx = neckTopX - 8;
+  const headCy = neckTopY - 8;
 
   const displaySize = size * overallSize;
 
@@ -642,10 +643,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             legLen={legLen} legThick={legThick} claw={clawSize}
             color={secondary} accent={accent} t={t} side="far" />
 
-          {/* === FAR ARM (behind body) === */}
-          <Arm x={bodyCx - 28} y={bodyCy - 14}
-            legThick={legThick * 0.85} clawSize={clawSize * 0.85} t={t}
-            color={secondary} accent={accent} side="far" />
+          {/* Arms removed — traditional dragons have 4 legs + 2 wings, no separate arms */}
 
           {/* === WINGS === */}
           <AnimatedWings dragon={dragon} ws={wingSpan} t={t} chomping={chomping}
@@ -763,10 +761,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             legLen={legLen} legThick={legThick * 1.1} claw={clawSize * 1.1}
             color={primary} accent={accent} t={t} side="near" />
 
-          {/* === NEAR ARM (in front of legs) === */}
-          <Arm x={bodyCx - 35} y={bodyCy - 10}
-            legThick={legThick} clawSize={clawSize} t={t}
-            color={primary} accent={accent} side="near" />
+          {/* Arms removed — front legs serve as forelegs */}
 
           {/* === SPINES along dorsal ridge (back → neck → head) === */}
           <Spines dragon={dragon} t={t} bodyCx={bodyCx} bodyCy={bodyCy}
@@ -890,7 +885,7 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
 
   // Pac-Man chomp: head splits open WIDE
   // Even baby dragon gets a huge mouth opening
-  const baseJawDrop = 4 + jawAngularity * 10;
+  const baseJawDrop = 6 + jawAngularity * 10;
   const chompGap = 30 + headRy * 0.8 + t * 15; // massive opening regardless of maturity
   // Upper skull tilts up when chomping
   const skullTilt = chomping ? -(12 + (1 - t) * 8) : 0; // babies tilt MORE (cuter)
@@ -908,13 +903,14 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
         transition={{ type: 'spring', stiffness: 300, damping: 15 }}
         style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}
       >
-        {/* Skull — angular polygon instead of ellipse (flatter crown, wider back) */}
+        {/* Skull — rounder for baby, more angular for adult */}
         <path d={`
-          M ${headCx + headRx * 0.8} ${headCy + headRy * 0.1}
-          Q ${headCx + headRx} ${headCy - headRy * 0.2} ${headCx + headRx * 0.7} ${headCy - headRy * 0.8}
-          Q ${headCx + headRx * 0.2} ${headCy - headRy * (1 + t * 0.1)} ${headCx - headRx * 0.3} ${headCy - headRy * 0.85}
-          Q ${headCx - headRx * 0.7} ${headCy - headRy * 0.7} ${headCx - headRx * 0.8} ${headCy - headRy * 0.3}
-          Q ${headCx - headRx * 0.7} ${headCy + headRy * 0.1} ${headCx + headRx * 0.8} ${headCy + headRy * 0.1}
+          M ${headCx + headRx * 0.85} ${headCy + headRy * 0.15}
+          Q ${headCx + headRx * 1.05} ${headCy - headRy * 0.3} ${headCx + headRx * 0.75} ${headCy - headRy * 0.85}
+          Q ${headCx + headRx * 0.3} ${headCy - headRy * (1.05 + (1 - t) * 0.15)} ${headCx - headRx * 0.2} ${headCy - headRy * 0.95}
+          Q ${headCx - headRx * 0.65} ${headCy - headRy * 0.85} ${headCx - headRx * 0.8} ${headCy - headRy * 0.4}
+          Q ${headCx - headRx * 0.85} ${headCy} ${headCx - headRx * 0.6} ${headCy + headRy * 0.15}
+          Q ${headCx} ${headCy + headRy * 0.25} ${headCx + headRx * 0.85} ${headCy + headRy * 0.15}
           Z`}
           fill={`url(#head-g-${dragon.id})`} stroke={primary} strokeWidth="1.2" strokeOpacity="0.3" />
         {/* Skull 3D highlight (top-front) */}
@@ -1048,7 +1044,7 @@ function Head({ dragon, t, chomping, headCx, headCy, headRx, headRy, snoutLen, h
             <path d={`M ${snoutTipX + 1} ${snoutTipY + 1}
                        Q ${snoutTipX + 10} ${snoutTipY + baseJawDrop * 0.15}
                          ${headCx - headRx * 0.5} ${headCy + headRy * 0.1}`}
-              stroke={primary} strokeWidth={1 + jawAngularity * 1.5} fill="none" opacity={0.2 + jawAngularity * 0.25} />
+              stroke={primary} strokeWidth={1.5 + jawAngularity * 1.5} fill="none" opacity={0.35 + jawAngularity * 0.25} />
             {/* Jawline ridge */}
             <path d={`M ${snoutTipX + 10} ${snoutTipY + baseJawDrop * 0.4}
                        Q ${headCx - headRx * 0.3} ${headCy + headRy * 0.4}

@@ -2,17 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
-// Counting mode: big auto-submit number buttons, no text input
+// Counting mode: big auto-submit number buttons + keyboard number keys
 function CountingInput({ onSubmit, showMerge, wrongAnswer, colors, level }) {
   // Determine which numbers to show based on level
   const maxNum = level === '0a' ? 5 : 10;
   const numbers = Array.from({ length: maxNum }, (_, i) => i + 1);
-  // For 0b (6-10), still show 1-10 since they need all options
 
   const handleTap = (num) => {
     if (showMerge) return;
     onSubmit(String(num));
   };
+
+  // Keyboard support — number keys auto-submit immediately
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (showMerge) return;
+      const num = parseInt(e.key);
+      if (!isNaN(num) && num >= 1 && num <= maxNum) {
+        e.preventDefault();
+        onSubmit(String(num));
+      }
+      // Also support "0" key for 10 (shift+0 or just 0 when maxNum is 10)
+      if (e.key === '0' && maxNum === 10) {
+        e.preventDefault();
+        onSubmit('10');
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [showMerge, maxNum, onSubmit]);
 
   return (
     <div className="flex flex-col items-center gap-4">

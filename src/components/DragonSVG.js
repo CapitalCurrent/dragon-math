@@ -649,19 +649,81 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           <AnimatedWings dragon={dragon} ws={wingSpan} t={t} chomping={chomping}
             anchorX={bodyCx - 10} anchorY={bodyCy - 30} />
 
-          {/* === BODY === */}
-          {/* Main body fill */}
-          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
-            fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.25" />
-          {/* 3D highlight (top-left light) */}
-          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
-            fill={`url(#body-hi-${dragon.id})`} />
-          {/* 3D shadow (bottom) */}
-          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
-            fill={`url(#body-sh-${dragon.id})`} />
-          {/* Rim light (edge catch from ambient) */}
-          <ellipse cx={bodyCx} cy={bodyCy} rx={bodyRx} ry={bodyRy}
-            fill={`url(#rim-${dragon.id})`} />
+          {/* === UNIFIED BODY + NECK SILHOUETTE === */}
+          {/* One continuous path: tail base → dorsal → neck → head junction → throat → belly → tail base */}
+          {(() => {
+            // Neck dimensions
+            const nW_base = 10 + (1 - t) * 4 + t * 6;
+            const nW_top = 5 + (1 - t) * 3 + t * 2;
+            const nMidX = bodyCx - 50 - neckLen * 15;
+            const nMidY = bodyCy - 60 - neckLen * 30;
+
+            // Key anchor points on the body perimeter
+            const tailTopX = bodyCx + bodyRx * 0.85;
+            const tailTopY = bodyCy - bodyRy * 0.25;
+            const dorsalX = bodyCx - bodyRx * 0.1;
+            const dorsalY = bodyCy - bodyRy * 1.02;
+            const shoulderX = bodyCx - bodyRx * 0.75;
+            const shoulderY = bodyCy - bodyRy * 0.7;
+            const chestX = bodyCx - bodyRx * 0.6;
+            const chestY = bodyCy + bodyRy * 0.4;
+            const bellyX = bodyCx + bodyRx * 0.1;
+            const bellyY = bodyCy + bodyRy * 1.02;
+            const hipX = bodyCx + bodyRx * 0.8;
+            const hipY = bodyCy + bodyRy * 0.35;
+
+            const d = `
+              M ${tailTopX} ${tailTopY}
+              Q ${bodyCx + bodyRx * 0.5} ${bodyCy - bodyRy * 0.85}
+                ${dorsalX} ${dorsalY}
+              Q ${bodyCx - bodyRx * 0.5} ${bodyCy - bodyRy * 0.95}
+                ${shoulderX} ${shoulderY}
+              Q ${bodyCx - bodyRx * 0.85 - nW_base * 0.1} ${bodyCy - bodyRy * 0.55}
+                ${bodyCx - 25 - nW_base * 0.3} ${bodyCy - 35 - nW_base * 0.8}
+              Q ${nMidX - nW_base * 0.2} ${nMidY - nW_base * 0.6}
+                ${neckTopX - nW_top * 0.3} ${neckTopY - nW_top * 0.6}
+              L ${neckTopX + nW_top * 0.5} ${neckTopY + nW_top * 0.8}
+              Q ${nMidX + nW_base * 0.5} ${nMidY + nW_base * 0.8}
+                ${bodyCx - 25 + nW_base * 0.5} ${bodyCy - 35 + nW_base * 0.6}
+              Q ${bodyCx - bodyRx * 0.65} ${bodyCy + bodyRy * 0.15}
+                ${chestX} ${chestY}
+              Q ${bodyCx - bodyRx * 0.3} ${bodyCy + bodyRy * 0.9}
+                ${bellyX} ${bellyY}
+              Q ${bodyCx + bodyRx * 0.5} ${bodyCy + bodyRy * 0.95}
+                ${hipX} ${hipY}
+              Q ${bodyCx + bodyRx * 1.0} ${bodyCy}
+                ${tailTopX} ${tailTopY}
+              Z`;
+
+            return (
+              <g>
+                {/* Shadow under body */}
+                <path d={d} fill="#000" opacity="0.1" transform="translate(3, 4)" />
+                {/* Main fill */}
+                <path d={d} fill={`url(#bg-${dragon.id})`} stroke={primary} strokeWidth="1.5" strokeOpacity="0.25" />
+                {/* 3D highlight (top-left light) */}
+                <path d={d} fill={`url(#body-hi-${dragon.id})`} />
+                {/* 3D shadow (bottom) */}
+                <path d={d} fill={`url(#body-sh-${dragon.id})`} />
+                {/* Rim light */}
+                <path d={d} fill={`url(#rim-${dragon.id})`} />
+                {/* Neck dorsal highlight */}
+                <path d={`M ${shoulderX} ${shoulderY}
+                  Q ${bodyCx - bodyRx * 0.85 - nW_base * 0.1} ${bodyCy - bodyRy * 0.55}
+                    ${bodyCx - 25 - nW_base * 0.3} ${bodyCy - 35 - nW_base * 0.8}
+                  Q ${nMidX - nW_base * 0.2} ${nMidY - nW_base * 0.6}
+                    ${neckTopX - nW_top * 0.3} ${neckTopY - nW_top * 0.6}`}
+                  stroke="#fff" strokeWidth={1.5 + t * 0.5}
+                  fill="none" strokeLinecap="round" opacity={0.05 + t * 0.05} />
+                {/* Neck underside (ventral) lighter tint */}
+                <path d={`M ${neckTopX + nW_top * 0.3} ${neckTopY + nW_top * 0.5}
+                  Q ${nMidX + nW_base * 0.3} ${nMidY + nW_base * 0.5}
+                    ${bodyCx - 25 + nW_base * 0.3} ${bodyCy - 35 + nW_base * 0.3}`}
+                  stroke={accent} strokeWidth={2 + t}
+                  fill="none" strokeLinecap="round" opacity="0.1" />
+              </g>
+            );
+          })()}
 
           {/* Shoulder muscle contour (grows with maturity) */}
           {t > 0.15 && (
@@ -769,43 +831,8 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             neckTopX={neckTopX} neckTopY={neckTopY} neckLen={neckLen}
             headCx={headCx} headCy={headCy} headRy={headRy} />
 
-          {/* === NECK (tapered polygon — thick at body, narrow at head) === */}
-          {(() => {
-            // Neck as a filled tapered shape instead of a uniform stroke
-            const neckW_base = 10 + (1 - t) * 4 + t * 6; // half-width at body end
-            const neckW_top = 5 + (1 - t) * 3 + t * 2;   // half-width at head end
-            const midX = bodyCx - 50 - neckLen * 15;
-            const midY = bodyCy - 60 - neckLen * 30;
-            // Top edge (dorsal) — slightly higher
-            const topPath = `M ${bodyCx - 25 - neckW_base * 0.3} ${bodyCy - 35 - neckW_base * 0.8}
-                             Q ${midX - neckW_base * 0.2} ${midY - neckW_base * 0.6}
-                               ${neckTopX - neckW_top * 0.3} ${neckTopY - neckW_top * 0.6}`;
-            // Bottom edge (ventral) — lower
-            const botPath = `L ${neckTopX + neckW_top * 0.5} ${neckTopY + neckW_top * 0.8}
-                             Q ${midX + neckW_base * 0.5} ${midY + neckW_base * 0.8}
-                               ${bodyCx - 25 + neckW_base * 0.5} ${bodyCy - 35 + neckW_base * 0.6} Z`;
-            return (
-              <g>
-                {/* Neck shadow */}
-                <path d={`${topPath} ${botPath}`}
-                  fill="#000" opacity="0.1" transform="translate(2, 3)" />
-                {/* Neck fill */}
-                <path d={`${topPath} ${botPath}`}
-                  fill={primary} stroke={primary} strokeWidth="0.8" strokeOpacity="0.3" />
-                {/* Neck highlight (dorsal edge) */}
-                <path d={topPath}
-                  stroke="#fff" strokeWidth={1.5 + t * 0.5}
-                  fill="none" strokeLinecap="round" opacity={0.06 + t * 0.06} />
-                {/* Neck underside (ventral) lighter */}
-                <path d={`M ${neckTopX + neckW_top * 0.3} ${neckTopY + neckW_top * 0.5}
-                           Q ${midX + neckW_base * 0.3} ${midY + neckW_base * 0.5}
-                             ${bodyCx - 25 + neckW_base * 0.3} ${bodyCy - 35 + neckW_base * 0.3}`}
-                  stroke={accent} strokeWidth={2 + t}
-                  fill="none" strokeLinecap="round" opacity="0.1" />
-              </g>
-            );
-          })()}
-          {/* Neck scale marks (horizontal bands along tapered neck) */}
+          {/* Neck is now part of unified body silhouette above */}
+          {/* Neck scale marks (horizontal bands along the neck portion) */}
           {t > 0.2 && Array.from({ length: Math.floor(3 + t * 5) }, (_, i) => {
             const frac = 0.1 + (i / Math.floor(3 + t * 5)) * 0.75;
             const midX = bodyCx - 25 + frac * (neckTopX - (bodyCx - 25));

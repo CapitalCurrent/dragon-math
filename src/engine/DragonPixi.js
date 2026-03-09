@@ -167,6 +167,7 @@ export default function DragonPixi({
   const wrongRef = useRef(false);
   const wrongTimeRef = useRef(0);
   const skillActiveRef = useRef(false);
+  const progressRef = useRef(progress);
   const skillTimeRef = useRef(0);
   const fidgetTimerRef = useRef(0);
   const blinkTimerRef = useRef(0);
@@ -193,6 +194,7 @@ export default function DragonPixi({
     }
   }, [chomping]);
 
+  useEffect(() => { progressRef.current = progress; }, [progress]);
   useEffect(() => { streakRef.current = streak; }, [streak]);
   useEffect(() => {
     if (wrongAnswer) {
@@ -350,6 +352,31 @@ export default function DragonPixi({
               color: parseInt(dragonColors.glow.replace('#', ''), 16),
               alpha: 0.08 * glowPulse,
             });
+
+            // Nest rocks (egg phase only) — drawn in same coordinate system as egg
+            if (progressRef.current <= 0.15) {
+              const nc = parseInt(dragonColors.accent.replace('#', ''), 16);
+              // Outer rocks
+              glowGfxRef.current.ellipse(cx - 60, cy + 5, 32, 14);
+              glowGfxRef.current.fill({ color: 0x14141a, alpha: 0.9 });
+              glowGfxRef.current.ellipse(cx - 60, cy + 5, 32, 14);
+              glowGfxRef.current.stroke({ color: 0x1e1e26, width: 1.5, alpha: 0.8 });
+              glowGfxRef.current.ellipse(cx + 60, cy + 3, 28, 12);
+              glowGfxRef.current.fill({ color: 0x14141a, alpha: 0.9 });
+              glowGfxRef.current.ellipse(cx + 60, cy + 3, 28, 12);
+              glowGfxRef.current.stroke({ color: 0x1e1e26, width: 1.5, alpha: 0.8 });
+              // Inner rocks
+              glowGfxRef.current.ellipse(cx - 30, cy + 8, 22, 10);
+              glowGfxRef.current.fill({ color: 0x18181e, alpha: 0.85 });
+              glowGfxRef.current.ellipse(cx + 30, cy + 6, 20, 9);
+              glowGfxRef.current.fill({ color: 0x18181e, alpha: 0.85 });
+              // Center base rock
+              glowGfxRef.current.ellipse(cx, cy + 11, 28, 10);
+              glowGfxRef.current.fill({ color: 0x1a1a20, alpha: 0.9 });
+              // Subtle accent glow
+              glowGfxRef.current.ellipse(cx, cy - 4, 48, 15);
+              glowGfxRef.current.fill({ color: nc, alpha: 0.06 });
+            }
 
             // Aura behind dragon (only visible at higher streaks)
             if (currentStreak >= 3) {

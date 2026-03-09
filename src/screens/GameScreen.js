@@ -13,9 +13,8 @@ const DragonPixi = lazy(() => import('../engine/DragonPixi'));
 
 // Full-bleed side-view cave cross-section
 // Approach: sky background → cave rock drawn ON TOP as solid shapes → sky shows through naturally
-function CaveBackground({ dragon, progress }) {
+function CaveBackground({ dragon }) {
   const { primary, accent, glow } = dragon.colors;
-  const isEgg = progress <= 0.15;
 
   return (
     <svg
@@ -326,18 +325,7 @@ function CaveBackground({ dragon, progress }) {
       {/* Secondary glow halo around dragon position */}
       <ellipse cx="560" cy="520" rx="200" ry="150" fill={glow} opacity="0.04" />
 
-      {/* === NEST ROCKS — egg phase === */}
-      {isEgg && (
-        <g id="nest-rocks">
-          <ellipse cx="500" cy="672" rx="32" ry="14" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
-          <ellipse cx="620" cy="670" rx="28" ry="12" fill="#14141a" stroke="#1e1e26" strokeWidth="1.5" />
-          <ellipse cx="530" cy="678" rx="22" ry="10" fill="#18181e" stroke="#222228" strokeWidth="1" />
-          <ellipse cx="590" cy="676" rx="20" ry="9" fill="#18181e" stroke="#222228" strokeWidth="1" />
-          <ellipse cx="560" cy="681" rx="28" ry="10" fill="#1a1a20" stroke="#26262e" strokeWidth="1" />
-          <ellipse cx="560" cy="666" rx="48" ry="15" fill={accent} opacity="0.06" />
-          <ellipse cx="560" cy="662" rx="32" ry="10" fill={glow} opacity="0.05" />
-        </g>
-      )}
+      {/* Nest rocks moved to DragonPixi.js — same coordinate system as egg sprite */}
     </svg>
   );
 }
@@ -1019,7 +1007,7 @@ export default function GameScreen() {
       style={{ background: '#050510' }}
     >
       {/* Full-bleed cave background */}
-      <CaveBackground dragon={dragon} progress={progress} />
+      <CaveBackground dragon={dragon} />
 
       {/* Ambient background particles */}
       <AmbientParticles color={dragon.colors.glow + '40'} count={20} />

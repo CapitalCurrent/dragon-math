@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkmath_facts=globalThis.webpackChunkmath_facts||[]).push([[929],{9929(a,h,s){s.r(h);s(2833),s(1418),s(3896)}}]);

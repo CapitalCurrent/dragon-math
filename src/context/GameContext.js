@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { DRAGONS } from '../data/dragons';
 import { MATH_LEVELS, QUESTIONS_PER_ROUND } from '../data/mathLevels';
+import { pickMarkPosition } from '../components/WorldMarks';
 
 const GameContext = createContext();
 
@@ -27,7 +28,8 @@ const initialState = {
   level: 1,
   currentQuestion: null,
   questionsAnswered: 0,
-  correctAnswers: 0,
+  correctAnswers: 0,        // count of correct events (drives accuracy display)
+  progressScore: 0,         // weighted score (skill-boost-aware) — drives growth + round end
   streak: 0,
   bestStreak: 0,
   progress: 0, // 0 to 1 for dragon growth
@@ -42,7 +44,13 @@ const initialState = {
   skillBoost: false, // true = next correct answer gives 2x progress
   totalCorrect: 0, // lifetime
   totalPlayed: 0,  // lifetime
+  currentQuestionMissed: false, // true if any wrong attempt on the current question
+  missQueue: [], // [{ question, delay }] — questions to re-ask after N more correct answers
+  worldMarks: [], // persistent marks left on the cave by skill activations
 };
+
+const REQUEUE_DELAY = 2; // re-ask a missed problem 2 correct answers later
+const MAX_WORLD_MARKS = 8;
 
 function reducer(state, action) {
   switch (action.type) {
@@ -56,19 +64,35 @@ function reducer(state, action) {
         screen: SCREENS.PLAYING,
         questionsAnswered: 0,
         correctAnswers: 0,
+        progressScore: 0,
         streak: 0,
         progress: 0,
         unlockedSkills: [],
         newSkill: null,
         skillCharges: {},
         activeSkill: null,
+        currentQuestionMissed: false,
+        missQueue: [],
+        worldMarks: [],
       };
 
     case 'NEW_QUESTION': {
       const levelData = getLevelData(state.level);
+      // If any miss is ready (delay ≤ 0), re-deal it instead of pulling fresh.
+      const readyIdx = state.missQueue.findIndex(m => m.delay <= 0);
+      let nextQuestion;
+      let newQueue = state.missQueue;
+      if (readyIdx >= 0) {
+        nextQuestion = { ...state.missQueue[readyIdx].question, _isRequeue: true };
+        newQueue = state.missQueue.filter((_, i) => i !== readyIdx);
+      } else {
+        nextQuestion = levelData.generate();
+      }
       return {
         ...state,
-        currentQuestion: levelData.generate(),
+        currentQuestion: nextQuestion,
+        currentQuestionMissed: false,
+        missQueue: newQueue,
         wrongAnswer: false,
         showMerge: false,
         eating: false,
@@ -79,11 +103,14 @@ function reducer(state, action) {
 
     case 'CORRECT_ANSWER': {
       const roundSize = getQuestionsForLevel(state.level);
-      // 2x progress when skill boost is active
-      const progressIncrement = state.skillBoost ? 2 : 1;
-      const newCorrect = state.correctAnswers + progressIncrement;
+      // Skill boost speeds up dragon growth, NOT the accuracy count.
+      // correctAnswers always +1 (display + accuracy);
+      // progressScore +1 normally, +2 when boosted (drives growth + round end).
+      const scoreIncrement = state.skillBoost ? 2 : 1;
+      const newCorrect = state.correctAnswers + 1;
+      const newScore = state.progressScore + scoreIncrement;
       const newAnswered = state.questionsAnswered + 1;
-      const newProgress = Math.min(1, newCorrect / roundSize);
+      const newProgress = Math.min(1, newScore / roundSize);
       const newStreak = state.streak + 1;
 
       // Check for new skill unlocks
@@ -95,7 +122,7 @@ function reducer(state, action) {
         if (justUnlocked) newSkill = justUnlocked;
       }
 
-      const isComplete = newCorrect >= roundSize;
+      const isComplete = newScore >= roundSize;
 
       // Charge all unlocked skills (+1 per correct answer, max 3)
       const allUnlocked = newSkill
@@ -106,9 +133,20 @@ function reducer(state, action) {
         newCharges[sn] = Math.min(3, (newCharges[sn] || 0) + 1);
       }
 
+      // Decrement existing miss-queue delays. If this question was missed and
+      // isn't itself a re-queue, schedule it to come back in REQUEUE_DELAY turns.
+      let newMissQueue = state.missQueue.map(m => ({ ...m, delay: m.delay - 1 }));
+      if (state.currentQuestionMissed && !state.currentQuestion?._isRequeue) {
+        newMissQueue = [
+          ...newMissQueue,
+          { question: state.currentQuestion, delay: REQUEUE_DELAY },
+        ];
+      }
+
       return {
         ...state,
         correctAnswers: newCorrect,
+        progressScore: newScore,
         questionsAnswered: newAnswered,
         streak: newStreak,
         bestStreak: Math.max(state.bestStreak, newStreak),
@@ -120,6 +158,8 @@ function reducer(state, action) {
         newSkill,
         unlockedSkills: allUnlocked,
         skillCharges: newCharges,
+        currentQuestionMissed: false,
+        missQueue: newMissQueue,
         screen: isComplete ? SCREENS.VICTORY : state.screen,
       };
     }
@@ -131,6 +171,7 @@ function reducer(state, action) {
         streak: 0,
         wrongAnswer: true,
         totalPlayed: state.totalPlayed + 1,
+        currentQuestionMissed: true,
       };
 
     case 'OPEN_MOUTH':
@@ -142,7 +183,27 @@ function reducer(state, action) {
     case 'USE_SKILL': {
       const skill = action.skill;
       const charges = { ...state.skillCharges, [skill.name]: 0 };
-      return { ...state, activeSkill: skill, skillCharges: charges, skillBoost: true };
+      // Leave a persistent mark on the cave at a zone-aware random position
+      const element = state.dragon?.id || 'ember';
+      const pos = pickMarkPosition(element, state.worldMarks);
+      const newMark = {
+        id: `mk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        element,
+        x: pos.x,
+        y: pos.y,
+        rot: (Math.random() - 0.5) * 24,
+        scale: 0.8 + Math.random() * 0.5,
+        createdAt: Date.now(),
+      };
+      const trimmed = [...state.worldMarks, newMark];
+      while (trimmed.length > MAX_WORLD_MARKS) trimmed.shift();
+      return {
+        ...state,
+        activeSkill: skill,
+        skillCharges: charges,
+        skillBoost: true,
+        worldMarks: trimmed,
+      };
     }
 
     case 'CLEAR_ACTIVE_SKILL':
@@ -171,10 +232,12 @@ function reducer(state, action) {
       const unlocked = skills.filter(s => p >= s.unlocksAt).map(s => s.name);
       const charges = {};
       for (const sn of unlocked) charges[sn] = 3;
+      const slotCount = Math.round(p * getQuestionsForLevel(state.level));
       return {
         ...state,
         progress: p,
-        correctAnswers: Math.round(p * getQuestionsForLevel(state.level)),
+        correctAnswers: slotCount,
+        progressScore: slotCount,
         unlockedSkills: unlocked,
         skillCharges: charges,
         screen: SCREENS.PLAYING,
@@ -206,10 +269,10 @@ export function GameProvider({ children }) {
     if (!state.currentQuestion) return;
     if (parseInt(answer) === state.currentQuestion.answer) {
       dispatch({ type: 'CORRECT_ANSWER' });
-      // Counting mode: shorter celebration, then next question
-      // Math mode: longer animation (join 700 + skill 800 + eat/fly 1100 + buffer 200)
+      // Counting mode: celebrate 700 + fly 800 + buffer 300 = 1800
+      // Math mode: join 700 + skill 800 + eat/fly 1100 + buffer 200 = 2800
       const isCounting = state.currentQuestion.type === 'counting';
-      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), isCounting ? 1800 : 2800);
+      setTimeout(() => dispatch({ type: 'NEW_QUESTION' }), isCounting ? 2200 : 2800);
     } else {
       dispatch({ type: 'WRONG_ANSWER' });
     }

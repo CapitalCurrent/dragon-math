@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GameProvider, useGame, SCREENS } from './context/GameContext';
 import TitleScreen from './screens/TitleScreen';
@@ -7,38 +7,45 @@ import GameScreen from './screens/GameScreen';
 import VictoryScreen from './screens/VictoryScreen';
 import { SkillUnlockPopup } from './components/SkillBar';
 
-const VERSIONS = { V1: 'v1', V2: 'v2' };
-const pkgVersion = process.env.REACT_APP_VERSION || require('../package.json').version;
-const VERSION_LABELS = { v1: `v${pkgVersion} SVG`, v2: `v${pkgVersion} Pixi` };
-const VersionContext = createContext(VERSIONS.V1);
-export const useVersion = () => useContext(VersionContext);
+const APP_VERSION = process.env.REACT_APP_VERSION || require('../package.json').version;
 
-function VersionToggle({ version, setVersion }) {
+// Always-visible version badge — same dimensions/position on phone and PC.
+// Tap/click expands to show platform info, useful when comparing across devices.
+function VersionBadge() {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div style={{
-      position: 'fixed', top: 8, right: 8, zIndex: 9999,
-      display: 'flex', gap: 4, background: '#0a0a2a', borderRadius: 12,
-      padding: '4px 6px', border: '1px solid #2a2a4a',
-    }}>
-      {Object.entries(VERSIONS).map(([label, val]) => (
-        <button
-          key={val}
-          onClick={() => {
-            setVersion(val);
-            window.location.hash = val === VERSIONS.V1 ? '' : val;
-          }}
-          style={{
-            padding: '4px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: version === val ? '#00A7E1' : 'transparent',
-            color: version === val ? '#fff' : '#888',
-            fontWeight: 'bold', fontSize: 12, transition: 'all 0.2s',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-          }}
-        >
-          <span>{label}</span>
-          <span style={{ fontSize: 9, opacity: 0.7 }}>{VERSION_LABELS[val]}</span>
-        </button>
-      ))}
+    <div
+      onClick={() => setExpanded(e => !e)}
+      role="button"
+      aria-label={`Version ${APP_VERSION}`}
+      style={{
+        position: 'fixed', top: 8, right: 8, zIndex: 9999,
+        minWidth: 44, minHeight: 44,                      // touch-target floor
+        padding: '8px 14px',
+        background: 'rgba(10, 10, 30, 0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(0, 167, 225, 0.4)',
+        borderRadius: 10,
+        color: '#7dd3fc',
+        fontSize: 13, fontWeight: 700,
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        cursor: 'pointer', userSelect: 'none',
+        display: 'flex', alignItems: 'center', gap: 6,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      <span style={{
+        width: 6, height: 6, borderRadius: '50%',
+        background: '#10b981', boxShadow: '0 0 6px #10b981',
+      }} />
+      <span>v{APP_VERSION}</span>
+      {expanded && (
+        <span style={{ fontSize: 11, opacity: 0.7, marginLeft: 4 }}>
+          {window.innerWidth < 768 ? '📱' : '🖥️'} {window.innerWidth}×{window.innerHeight}
+        </span>
+      )}
     </div>
   );
 }
@@ -101,27 +108,11 @@ function AppContent() {
 }
 
 function App() {
-  const [version, setVersion] = useState(() => {
-    const hash = window.location.hash.replace('#', '');
-    return hash === 'v2' ? VERSIONS.V2 : VERSIONS.V1;
-  });
-
-  useEffect(() => {
-    const onHash = () => {
-      const hash = window.location.hash.replace('#', '');
-      setVersion(hash === 'v2' ? VERSIONS.V2 : VERSIONS.V1);
-    };
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
   return (
-    <VersionContext.Provider value={version}>
-      <GameProvider>
-        <VersionToggle version={version} setVersion={setVersion} />
-        <AppContent />
-      </GameProvider>
-    </VersionContext.Provider>
+    <GameProvider>
+      <VersionBadge />
+      <AppContent />
+    </GameProvider>
   );
 }
 

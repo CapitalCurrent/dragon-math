@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 
@@ -11,13 +11,33 @@ function getLayout(count) {
 }
 
 export default function TruckCounting() {
-  const { currentQuestion, showMerge, dragon } = useGame();
+  const { currentQuestion, showMerge, dragon, dispatch } = useGame();
   const colors = dragon?.colors || { accent: '#fff', glow: '#fff', primary: '#fff' };
+  const [phase, setPhase] = useState('question'); // question | flyAway | done
 
   const layout = useMemo(() => {
     if (!currentQuestion || currentQuestion.type !== 'counting') return [];
     return getLayout(currentQuestion.count);
   }, [currentQuestion]);
+
+  // When correct answer: celebration → open mouth → trucks fly to dragon
+  useEffect(() => {
+    if (showMerge) {
+      setPhase('celebrate');
+      // Brief celebration, then trucks fly away to dragon
+      const t1 = setTimeout(() => {
+        dispatch({ type: 'OPEN_MOUTH' });
+      }, 400);
+      const t2 = setTimeout(() => {
+        setPhase('flyAway');
+        dispatch({ type: 'START_EATING' });
+      }, 700);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    } else {
+      setPhase('question');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMerge]);
 
   if (!currentQuestion || currentQuestion.type !== 'counting') return null;
 
@@ -25,7 +45,7 @@ export default function TruckCounting() {
   let itemIndex = 0;
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full">
+    <div className="flex flex-col items-center w-full">
       <AnimatePresence mode="wait">
         <motion.div
           key={`${count}-${vehicle.emoji}-${currentQuestion._id || ''}`}
@@ -35,6 +55,16 @@ export default function TruckCounting() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
+          {/* "How many?" prompt */}
+          <motion.p
+            className="text-lg md:text-xl font-bold text-gray-300 mb-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            How many {vehicle.name}?
+          </motion.p>
+
           {/* Vehicle rows */}
           {layout.map((rowCount, rowIdx) => (
             <div key={rowIdx} className="flex items-center justify-center gap-3 md:gap-4">
@@ -45,12 +75,22 @@ export default function TruckCounting() {
                     key={idx}
                     className="text-4xl md:text-5xl lg:text-6xl"
                     initial={{ x: 120, opacity: 0, scale: 0.3 }}
-                    animate={{
+                    animate={phase === 'flyAway' ? {
+                      // Fly up-left toward dragon (rough direction)
+                      x: -150 - idx * 20,
+                      y: -120 - idx * 15,
+                      scale: 0.2,
+                      opacity: 0,
+                    } : {
                       x: 0,
                       opacity: 1,
                       scale: 1,
                     }}
-                    transition={{
+                    transition={phase === 'flyAway' ? {
+                      duration: 0.6,
+                      delay: idx * 0.06,
+                      ease: 'easeIn',
+                    } : {
                       delay: idx * 0.18,
                       duration: 0.4,
                       type: 'spring',
@@ -63,19 +103,19 @@ export default function TruckCounting() {
                         : 'none',
                     }}
                   >
-                    {/* Idle bounce animation after entrance */}
+                    {/* Idle bounce / celebration animation */}
                     <motion.span
                       style={{ display: 'inline-block' }}
-                      animate={showMerge ? {
+                      animate={phase === 'celebrate' ? {
                         // Celebration: trucks jump!
                         y: [0, -20, 0],
                         rotate: [0, -10, 10, 0],
                         scale: [1, 1.2, 1],
-                      } : {
+                      } : phase === 'flyAway' ? {} : {
                         // Gentle idle bounce
                         y: [0, -4, 0],
                       }}
-                      transition={showMerge ? {
+                      transition={phase === 'celebrate' ? {
                         duration: 0.5,
                         delay: idx * 0.08,
                       } : {
@@ -113,6 +153,13 @@ export default function TruckCounting() {
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+
+      {/* Big visual gap — separator so numbers don't look like labels */}
+      <div className="my-6 md:my-8 w-full flex justify-center">
+        <div className="w-24 h-0.5 rounded-full" style={{
+          background: `linear-gradient(90deg, transparent, ${colors.primary}40, transparent)`,
+        }} />
+      </div>
     </div>
   );
 }

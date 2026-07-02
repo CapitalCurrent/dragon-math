@@ -2,23 +2,25 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useGame, SCREENS } from '../context/GameContext';
 import { MATH_LEVELS } from '../data/mathLevels';
+import titleHero from '../assets/art/title-hero.webp';
 
 export default function TitleScreen() {
   const { dispatch, level } = useGame();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-      {/* Animated dragon silhouette */}
-      <motion.div
-        className="text-8xl md:text-9xl mb-4"
+      {/* Animated hero dragon (studio-generated art) */}
+      <motion.img
+        src={titleHero}
+        alt="Dragon mascot"
+        className="w-48 md:w-64 mb-4 select-none pointer-events-none"
+        style={{ filter: 'drop-shadow(0 0 30px #ff6b3550)' }}
         animate={{
           y: [0, -15, 0],
           rotate: [0, 2, -2, 0],
         }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        🐉
-      </motion.div>
+      />
 
       <motion.h1
         className="text-4xl md:text-6xl font-black mb-2"

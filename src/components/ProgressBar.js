@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { MATH_LEVELS, QUESTIONS_PER_ROUND } from '../data/mathLevels';
 
 export default function ProgressBar() {
-  const { dragon, progress, correctAnswers, streak, accuracy, level, skillBoost } = useGame();
+  const { dragon, progress, progressScore, streak, accuracy, level, skillBoost } = useGame();
   const levelData = MATH_LEVELS[level - 1];
   if (!dragon) return null;
 
@@ -42,7 +42,7 @@ export default function ProgressBar() {
             )}
           </AnimatePresence>
           <span className="text-sm text-gray-400">
-            {correctAnswers} / {QUESTIONS_PER_ROUND}
+            {Math.min(progressScore, QUESTIONS_PER_ROUND)} / {QUESTIONS_PER_ROUND}
           </span>
         </div>
       </div>

@@ -4,20 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Dragon art with egg hatching → baby → full dragon growth
 // progress: 0 = egg, ~0.05 = hatching, 0.05+ = baby growing to adult
 
-export default function DragonSVG({ dragon, progress, size = 400, chomping = false }) {
+export default function DragonSVG({ dragon, progress, size = 400, chomping = false, mouthRef }) {
   if (!dragon) return null;
 
   // Fixed-size wrapper — prevents ANY layout shift between phases
   let content;
 
   if (progress <= 0) {
-    content = <Egg dragon={dragon} size={size} wobble={false} />;
+    content = <Egg dragon={dragon} size={size} wobble={false} mouthRef={mouthRef} />;
   } else if (progress <= 0.15) {
     const crackStage = Math.min(3, Math.ceil(progress / 0.05));
-    content = <HatchingEgg dragon={dragon} size={size} crackStage={crackStage} />;
+    content = <HatchingEgg dragon={dragon} size={size} crackStage={crackStage} mouthRef={mouthRef} />;
   } else {
     const growthT = (progress - 0.15) / 0.85;
-    content = <GrowingDragon dragon={dragon} t={growthT} size={size} chomping={chomping} />;
+    content = <GrowingDragon dragon={dragon} t={growthT} size={size} chomping={chomping} mouthRef={mouthRef} />;
   }
 
   return (
@@ -28,7 +28,7 @@ export default function DragonSVG({ dragon, progress, size = 400, chomping = fal
 }
 
 // === EGG (pre-game, wobbles gently) ===
-function Egg({ dragon, size, wobble = true }) {
+function Egg({ dragon, size, wobble = true, mouthRef }) {
   const { primary, secondary, accent, glow } = dragon.colors;
   const s = Math.min(size * 0.55, 250);
 
@@ -80,6 +80,9 @@ function Egg({ dragon, size, wobble = true }) {
           animate={{ opacity: [0, 0.3, 0], scale: [1, 1.02, 1] }}
           transition={{ duration: 2.5, repeat: Infinity }}
         />
+        {/* Invisible target for FlyingAnswer — center of egg, so the answer
+            disappears INTO the egg instead of landing on top of it */}
+        <circle ref={mouthRef} cx="100" cy="110" r="1" fill="transparent" pointerEvents="none" />
       </svg>
     </motion.div>
   );
@@ -140,7 +143,7 @@ function EggMarkings({ dragon }) {
 // crackStage 1: first cracks + wobble (answer 1)
 // crackStage 2: heavy cracks + glow shining through (answer 2)
 // crackStage 3: burst open → baby emerges (answer 3)
-function HatchingEgg({ dragon, size, crackStage }) {
+function HatchingEgg({ dragon, size, crackStage, mouthRef }) {
   const { primary, secondary, accent, glow } = dragon.colors;
   const [hatched, setHatched] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
@@ -200,6 +203,8 @@ function HatchingEgg({ dragon, size, crackStage }) {
             >
               <ellipse cx="100" cy="110" rx="55" ry="75" fill={`url(#hatch-g-${dragon.id})`} />
               <EggMarkings dragon={dragon} />
+              {/* Invisible target for FlyingAnswer — egg center, follows shake */}
+              <circle ref={mouthRef} cx="100" cy="110" r="1" fill="transparent" pointerEvents="none" />
 
               {/* === Stage 1+: First crack — single zigzag line === */}
               <motion.path
@@ -419,7 +424,7 @@ function HatchingEgg({ dragon, size, crackStage }) {
               opacity: { duration: 0.4 },
             }}
           >
-            <GrowingDragon dragon={dragon} t={0} size={s} chomping={false} />
+            <GrowingDragon dragon={dragon} t={0} size={s} chomping={false} mouthRef={mouthRef} />
           </motion.div>
         </>
       )}
@@ -471,7 +476,7 @@ function getPhysiologyMods(phys) {
   return mods;
 }
 
-function GrowingDragon({ dragon, t, size, chomping }) {
+function GrowingDragon({ dragon, t, size, chomping, mouthRef }) {
   const { primary, secondary, accent, glow } = dragon.colors;
   const phys = dragon.physiology || {};
   const mods = getPhysiologyMods(phys);
@@ -529,10 +534,10 @@ function GrowingDragon({ dragon, t, size, chomping }) {
         : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
       }
     >
-      <svg width="100%" height="100%" viewBox="0 0 500 520" xmlns="http://www.w3.org/2000/svg">
+      <svg width="100%" height="100%" viewBox="0 0 500 520" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
         <defs>
           <radialGradient id={`bg-${dragon.id}`} cx="35%" cy="30%">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.4" />
+            <stop offset="0%" stopColor={accent} />
             <stop offset="40%" stopColor={primary} />
             <stop offset="100%" stopColor={secondary} />
           </radialGradient>
@@ -583,7 +588,7 @@ function GrowingDragon({ dragon, t, size, chomping }) {
           </radialGradient>
           {/* Head 3D gradient */}
           <radialGradient id={`head-g-${dragon.id}`} cx="35%" cy="30%">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.35" />
+            <stop offset="0%" stopColor={accent} />
             <stop offset="40%" stopColor={primary} />
             <stop offset="100%" stopColor={secondary} />
           </radialGradient>
@@ -852,6 +857,21 @@ function GrowingDragon({ dragon, t, size, chomping }) {
             snoutLen={snoutLen} hornLen={hornLen} eyeRatio={eyeRatio}
             jawAngularity={jawAngularity} browRidge={browRidge}
             breathIntensity={breathIntensity} />
+          {/* Invisible target at the back of the mouth / throat — FlyingAnswer
+              aims here so the answer disappears INTO the mouth.
+              X: just past where the back teeth end (teethEndX = headCx - headRx*0.2),
+                 so it's in the throat, not at the tip.
+              Y: at the upper lip line (snoutTipY = headCy + headRy*0.1), where
+                 the actual mouth opening is — NOT down at the chin.
+              getBoundingClientRect resolves all parent transforms automatically. */}
+          <circle
+            ref={mouthRef}
+            cx={headCx - headRx * 0.1}
+            cy={headCy + headRy * 0.1}
+            r="1"
+            fill="transparent"
+            pointerEvents="none"
+          />
         </g>
 
         {/* === TYPE-SPECIFIC FEATURES === */}

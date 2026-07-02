@@ -3,7 +3,22 @@ import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { DRAGON_LIST } from '../data/dragons';
 
-import DragonSVG from '../components/DragonSVG';
+import eggEmber from '../assets/art/egg-ember.webp';
+import eggFrost from '../assets/art/egg-frost.webp';
+import eggStone from '../assets/art/egg-stone.webp';
+import eggShadow from '../assets/art/egg-shadow.webp';
+import eggGlimmer from '../assets/art/egg-glimmer.webp';
+import eggStorm from '../assets/art/egg-storm.webp';
+
+// Studio-generated egg portraits (ComfyUI daily tier, seed 4242)
+const EGG_ART = {
+  ember: eggEmber,
+  frost: eggFrost,
+  stone: eggStone,
+  shadow: eggShadow,
+  glimmer: eggGlimmer,
+  storm: eggStorm,
+};
 
 export default function DragonSelectScreen() {
   const { selectDragon, level } = useGame();
@@ -48,8 +63,13 @@ export default function DragonSelectScreen() {
             onClick={() => selectDragon(dragon.id)}
           >
             {/* Egg preview */}
-            <div className="mb-3">
-              <DragonSVG dragon={dragon} progress={0} size={150} />
+            <div className="mb-3 h-[150px] flex items-end justify-center">
+              <img
+                src={EGG_ART[dragon.id]}
+                alt={`${dragon.name} egg`}
+                className="max-h-[150px] w-auto select-none pointer-events-none"
+                style={{ filter: `drop-shadow(0 6px 16px ${dragon.colors.glow}45)` }}
+              />
             </div>
 
             <h3

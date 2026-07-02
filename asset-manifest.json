@@ -1,15 +1,23 @@
 {
   "files": {
     "main.css": "./static/css/main.ff33e205.css",
-    "main.js": "./static/js/main.b8744d7c.js",
+    "main.js": "./static/js/main.f1511233.js",
     "static/js/453.3965d825.chunk.js": "./static/js/453.3965d825.chunk.js",
+    "static/media/title-hero.webp": "./static/media/title-hero.9a7daea83712a44f3c9c.webp",
+    "static/media/cave-bg.webp": "./static/media/cave-bg.014fc1b136ad07e1f79e.webp",
+    "static/media/egg-glimmer.webp": "./static/media/egg-glimmer.b40f00b65ef7da026182.webp",
+    "static/media/egg-stone.webp": "./static/media/egg-stone.bbd69700691c1b3e9d19.webp",
+    "static/media/egg-storm.webp": "./static/media/egg-storm.c9cc343cf8d33ec066f7.webp",
+    "static/media/egg-frost.webp": "./static/media/egg-frost.7353d0cccf9f4e036a42.webp",
+    "static/media/egg-ember.webp": "./static/media/egg-ember.37c458892c5e494da622.webp",
+    "static/media/egg-shadow.webp": "./static/media/egg-shadow.6f32e6ac31aeddc5acd1.webp",
     "index.html": "./index.html",
     "main.ff33e205.css.map": "./static/css/main.ff33e205.css.map",
-    "main.b8744d7c.js.map": "./static/js/main.b8744d7c.js.map",
+    "main.f1511233.js.map": "./static/js/main.f1511233.js.map",
     "453.3965d825.chunk.js.map": "./static/js/453.3965d825.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ff33e205.css",
-    "static/js/main.b8744d7c.js"
+    "static/js/main.f1511233.js"
   ]
 }

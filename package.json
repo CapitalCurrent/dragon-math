@@ -1,6 +1,6 @@
 {
   "name": "math-facts",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "homepage": ".",
   "private": true,
   "dependencies": {
@@ -22,8 +22,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "react-scripts build",
-    "deploy": "gh-pages -d build"
+    "predeploy": "react-scripts build && node -e \"require('fs').writeFileSync('build/.nojekyll','')\"",
+    "deploy": "gh-pages -d build --dotfiles"
   },
   "eslintConfig": {
     "extends": [

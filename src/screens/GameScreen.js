@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import DragonSVG from '../components/DragonSVG';
+import DragonSprite, { hasSpriteArt } from '../components/DragonSprite';
 import FloatingNumbers from '../components/FloatingNumbers';
 import TruckCounting from '../components/TruckCounting';
 import AnswerInput from '../components/AnswerInput';
@@ -418,7 +419,9 @@ export default function GameScreen() {
           {/* Dragon on the floor */}
           <div className="flex-shrink-0 flex items-end justify-center" ref={dragonRef}>
 
-            <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />
+            {hasSpriteArt(dragon)
+              ? <DragonSprite dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />
+              : <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />}
           </div>
 
           {/* Stage name + skill bar — below dragon, above cave floor */}

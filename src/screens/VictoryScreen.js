@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import DragonSVG from '../components/DragonSVG';
+import DragonSprite, { hasSpriteArt } from '../components/DragonSprite';
 
 export default function VictoryScreen() {
   const { dragon, accuracy, bestStreak, correctAnswers, questionsAnswered, dispatch } = useGame();
@@ -18,7 +19,9 @@ export default function VictoryScreen() {
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 12 }}
       >
-        <DragonSVG dragon={dragon} progress={1} size={450} />
+        {hasSpriteArt(dragon)
+          ? <DragonSprite dragon={dragon} progress={1} size={450} />
+          : <DragonSVG dragon={dragon} progress={1} size={450} />}
       </motion.div>
 
       <motion.h1

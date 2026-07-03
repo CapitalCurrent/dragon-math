@@ -3,22 +3,7 @@ import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { DRAGON_LIST } from '../data/dragons';
 
-import eggEmber from '../assets/art/egg-ember.webp';
-import eggFrost from '../assets/art/egg-frost.webp';
-import eggStone from '../assets/art/egg-stone.webp';
-import eggShadow from '../assets/art/egg-shadow.webp';
-import eggGlimmer from '../assets/art/egg-glimmer.webp';
-import eggStorm from '../assets/art/egg-storm.webp';
-
-// Studio-generated egg portraits (ComfyUI daily tier, seed 4242)
-const EGG_ART = {
-  ember: eggEmber,
-  frost: eggFrost,
-  stone: eggStone,
-  shadow: eggShadow,
-  glimmer: eggGlimmer,
-  storm: eggStorm,
-};
+import { EGG_ART } from '../components/DragonSprite';
 
 export default function DragonSelectScreen() {
   const { selectDragon, level } = useGame();

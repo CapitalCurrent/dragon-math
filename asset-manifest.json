@@ -1,29 +1,35 @@
 {
   "files": {
     "main.css": "./static/css/main.ff33e205.css",
-    "main.js": "./static/js/main.2b0669b3.js",
+    "main.js": "./static/js/main.95ddfc5f.js",
     "static/js/453.3965d825.chunk.js": "./static/js/453.3965d825.chunk.js",
+    "static/media/ember-drake-open.webp": "./static/media/ember-drake-open.18f4af26c0129ad151f3.webp",
+    "static/media/ember-whelp2-open.webp": "./static/media/ember-whelp2-open.0eb2dab51450d275f4c8.webp",
+    "static/media/ember-hatch.webp": "./static/media/ember-hatch.d01f4d4d8cca9b33fe0d.webp",
+    "static/media/ember-drake.webp": "./static/media/ember-drake.e16dea0c5b1a8ddf23be.webp",
+    "static/media/ember-hatch-open.webp": "./static/media/ember-hatch-open.cab904d1c717e4678413.webp",
     "static/media/title-hero.webp": "./static/media/title-hero.9a7daea83712a44f3c9c.webp",
+    "static/media/ember-adult2.webp": "./static/media/ember-adult2.a4a8abb5a871517f0464.webp",
+    "static/media/ember-adult2-open.webp": "./static/media/ember-adult2-open.c80615ad3b3f4b8d180b.webp",
+    "static/media/ember-whelp2.webp": "./static/media/ember-whelp2.16d868498393a46ed9a4.webp",
     "static/media/cave-bg.webp": "./static/media/cave-bg.014fc1b136ad07e1f79e.webp",
-    "static/media/ember-adult.webp": "./static/media/ember-adult.d16969f7b6e1717608cf.webp",
-    "static/media/ember-baby.webp": "./static/media/ember-baby.30ef4769c82b2c805d7e.webp",
-    "static/media/ember-baby-open.webp": "./static/media/ember-baby-open.49574088b164f247e954.webp",
-    "static/media/ember-juv-open.webp": "./static/media/ember-juv-open.44a3aa7b61a56da9c099.webp",
-    "static/media/ember-juv.webp": "./static/media/ember-juv.9223b4747ca28dea85ea.webp",
-    "static/media/ember-adult-open.webp": "./static/media/ember-adult-open.0fd4031bc74fe561e0ad.webp",
     "static/media/egg-glimmer.webp": "./static/media/egg-glimmer.b40f00b65ef7da026182.webp",
     "static/media/egg-stone.webp": "./static/media/egg-stone.bbd69700691c1b3e9d19.webp",
     "static/media/egg-storm.webp": "./static/media/egg-storm.c9cc343cf8d33ec066f7.webp",
     "static/media/egg-frost.webp": "./static/media/egg-frost.7353d0cccf9f4e036a42.webp",
+    "static/media/ember-egg-2.webp": "./static/media/ember-egg-2.b698e391d45d1777bf11.webp",
+    "static/media/ember-egg-3.webp": "./static/media/ember-egg-3.c18a9575a1d2ccee46dd.webp",
     "static/media/egg-ember.webp": "./static/media/egg-ember.37c458892c5e494da622.webp",
+    "static/media/ember-egg-1.webp": "./static/media/ember-egg-1.8a27325440702b37d0fc.webp",
+    "static/media/ember-egg-0.webp": "./static/media/ember-egg-0.70a5bf5afb4baebd1f3f.webp",
     "static/media/egg-shadow.webp": "./static/media/egg-shadow.6f32e6ac31aeddc5acd1.webp",
     "index.html": "./index.html",
     "main.ff33e205.css.map": "./static/css/main.ff33e205.css.map",
-    "main.2b0669b3.js.map": "./static/js/main.2b0669b3.js.map",
+    "main.95ddfc5f.js.map": "./static/js/main.95ddfc5f.js.map",
     "453.3965d825.chunk.js.map": "./static/js/453.3965d825.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ff33e205.css",
-    "static/js/main.2b0669b3.js"
+    "static/js/main.95ddfc5f.js"
   ]
 }

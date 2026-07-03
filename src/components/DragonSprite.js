@@ -8,12 +8,18 @@ import eggShadow from '../assets/art/egg-shadow.webp';
 import eggGlimmer from '../assets/art/egg-glimmer.webp';
 import eggStorm from '../assets/art/egg-storm.webp';
 
-import emberBaby from '../assets/art/ember-baby.webp';
-import emberBabyOpen from '../assets/art/ember-baby-open.webp';
-import emberJuv from '../assets/art/ember-juv.webp';
-import emberJuvOpen from '../assets/art/ember-juv-open.webp';
-import emberAdult from '../assets/art/ember-adult.webp';
-import emberAdultOpen from '../assets/art/ember-adult-open.webp';
+import emberEgg0 from '../assets/art/ember-egg-0.webp';
+import emberEgg1 from '../assets/art/ember-egg-1.webp';
+import emberEgg2 from '../assets/art/ember-egg-2.webp';
+import emberEgg3 from '../assets/art/ember-egg-3.webp';
+import emberHatch from '../assets/art/ember-hatch.webp';
+import emberHatchOpen from '../assets/art/ember-hatch-open.webp';
+import emberWhelp from '../assets/art/ember-whelp2.webp';
+import emberWhelpOpen from '../assets/art/ember-whelp2-open.webp';
+import emberDrake from '../assets/art/ember-drake.webp';
+import emberDrakeOpen from '../assets/art/ember-drake-open.webp';
+import emberAdult from '../assets/art/ember-adult2.webp';
+import emberAdultOpen from '../assets/art/ember-adult2-open.webp';
 
 // Studio-generated egg portraits — shared with DragonSelectScreen so the egg
 // the player picks is the same egg they hatch in the game.
@@ -26,14 +32,22 @@ export const EGG_ART = {
   storm: eggStorm,
 };
 
-// Painted growth-stage sprites. Each stage has a closed/open mouth pair cropped
-// to the SAME canvas so the chomp swap doesn't shift the character.
-// Dragons without an entry here fall back to the procedural DragonSVG.
+// Painted crack progression (img2img from the egg itself, one union-cropped
+// canvas). Index = crackStage 0-3. Dragons without an entry fall back to the
+// SVG CrackOverlay on their select-screen egg portrait.
+const EGG_CRACK_ART = {
+  ember: [emberEgg0, emberEgg1, emberEgg2, emberEgg3],
+};
+
+// Painted growth-stage sprites: hatchling -> whelp -> drake -> adult, each an
+// aligned closed/open mouth pair. Faces mature from cute to fierce with age —
+// all derived from one identity (img2img de-age chain + hybrid IPAdapter).
 const SPRITE_STAGES = {
   ember: [
-    { at: 0, closed: emberBaby, open: emberBabyOpen },
-    { at: 0.35, closed: emberJuv, open: emberJuvOpen },
-    { at: 0.72, closed: emberAdult, open: emberAdultOpen },
+    { at: 0, closed: emberHatch, open: emberHatchOpen },
+    { at: 0.26, closed: emberWhelp, open: emberWhelpOpen },
+    { at: 0.55, closed: emberDrake, open: emberDrakeOpen },
+    { at: 0.85, closed: emberAdult, open: emberAdultOpen },
   ],
 };
 
@@ -41,7 +55,7 @@ export function hasSpriteArt(dragon) {
   return !!SPRITE_STAGES[dragon?.id];
 }
 
-// Crack lines drawn over the painted egg — same 3-stage thresholds as the SVG egg
+// SVG crack lines — fallback for dragons without painted crack frames
 function CrackOverlay({ crackStage, glow }) {
   return (
     <svg viewBox="0 0 100 130" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -75,6 +89,9 @@ function CrackOverlay({ crackStage, glow }) {
 function SpriteEgg({ dragon, size, crackStage, mouthRef }) {
   const eggH = size * 0.5;
   const { glow } = dragon.colors;
+  const crackFrames = EGG_CRACK_ART[dragon.id];
+  // Glow intensifies as the hatch approaches
+  const glowPx = 14 + crackStage * 10;
   return (
     <div style={{
       width: size, height: size, display: 'flex',
@@ -89,14 +106,14 @@ function SpriteEgg({ dragon, size, crackStage, mouthRef }) {
         }}
       >
         <img
-          src={EGG_ART[dragon.id]}
+          src={crackFrames ? crackFrames[crackStage] : EGG_ART[dragon.id]}
           alt={`${dragon.name} egg`}
           style={{
             height: eggH, width: 'auto', display: 'block',
-            filter: `drop-shadow(0 8px 18px ${glow}55)`,
+            filter: `drop-shadow(0 8px ${glowPx}px ${glow}${crackStage > 1 ? '88' : '55'})`,
           }}
         />
-        <CrackOverlay crackStage={crackStage} glow={glow} />
+        {!crackFrames && <CrackOverlay crackStage={crackStage} glow={glow} />}
         {/* Invisible marker for FlyingAnswer targeting */}
         <div ref={mouthRef} style={{
           position: 'absolute', left: '50%', top: '40%',
@@ -118,7 +135,8 @@ export default function DragonSprite({ dragon, progress, size = 400, chomping = 
 
   const t = Math.min(1, (progress - 0.15) / 0.85);
   const stage = [...stages].reverse().find(s => t >= s.at) || stages[0];
-  const displaySize = size * (0.55 + t * 0.45);
+  // Hatchling starts small (35%) and grows to full size
+  const displaySize = size * (0.35 + t * 0.65);
 
   return (
     <div style={{

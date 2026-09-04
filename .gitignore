@@ -24,3 +24,4 @@ yarn-error.log*
 
 # dragon-morph pipeline scratch (generated frames, dry-run graphs)
 /tools/dragon-morph/work
+__pycache__/

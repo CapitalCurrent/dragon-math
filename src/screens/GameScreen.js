@@ -367,6 +367,9 @@ export default function GameScreen() {
   const isMobilePortrait = w < h && w < 768;
   const isWide = w >= 1024;
   const dragonSize = isLandscape ? Math.min(280, h - 80) : isWide ? 520 : 380;
+  // Morph frames sit on a wide canvas (spread wings): give the dragon column a
+  // real width budget so the box scales down instead of being clipped.
+  const dragonMaxWidth = isLandscape ? 340 : Math.min(isWide ? 760 : 600, Math.floor(w * 0.52));
 
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
@@ -415,12 +418,12 @@ export default function GameScreen() {
       }`} style={{ paddingBottom: isLandscape ? 8 : isWide ? 120 : 40 }}>
 
         {/* Dragon area — sits on cave floor, left ~45% */}
-        <div className={`flex flex-col items-center ${isLandscape || isWide ? 'flex-1' : ''}`} style={{ maxWidth: isLandscape ? 340 : 600 }}>
+        <div className={`flex flex-col items-center ${isLandscape || isWide ? 'flex-1' : ''}`} style={{ maxWidth: dragonMaxWidth }}>
           {/* Dragon on the floor */}
-          <div className="flex-shrink-0 flex items-end justify-center" ref={dragonRef}>
+          <div className="flex-shrink-0 flex items-end justify-center" ref={dragonRef} style={{ overflow: 'visible' }}>
 
             {hasSpriteArt(dragon)
-              ? <DragonSprite dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />
+              ? <DragonSprite dragon={dragon} progress={progress} size={dragonSize} maxWidth={dragonMaxWidth} chomping={mouthOpen} mouthRef={mouthRef} />
               : <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />}
           </div>
 

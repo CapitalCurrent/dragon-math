@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# dragon-morph pipeline scratch (generated frames, dry-run graphs)
+/tools/dragon-morph/work

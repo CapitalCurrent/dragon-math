@@ -23,7 +23,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "react-scripts build && node -e \"require('fs').writeFileSync('build/.nojekyll','')\"",
-    "deploy": "gh-pages -d build --dotfiles"
+    "deploy": "bash tools/publish-pages.sh"
   },
   "eslintConfig": {
     "extends": [

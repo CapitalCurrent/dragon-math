@@ -338,7 +338,10 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
             const dy = src ? (frame.mouth.y - src.mouth.y) * 100 : 0;
             return (
               <img src={power.fx[fxK]} alt="" aria-hidden="true"
-                style={{ ...FILL, left: `${dx}%`, top: `${dy}%`, mixBlendMode: 'screen', zIndex: 5, pointerEvents: 'none' }} />
+                style={{ ...FILL, left: `${dx}%`, top: `${dy}%`, mixBlendMode: 'screen', zIndex: 5, pointerEvents: 'none',
+                  transform: power.big ? 'scale(1.45)' : 'none',
+                  transformOrigin: `${frame.mouth.x * 100}% ${frame.mouth.y * 100}%`,
+                  filter: power.big ? 'brightness(1.25) saturate(1.1)' : 'none' }} />
             );
           })()}
           {/* Invisible mouth marker for FlyingAnswer targeting — per frame, since the mouth moves as it grows */}

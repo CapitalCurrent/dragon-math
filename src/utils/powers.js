@@ -10,8 +10,13 @@ export function powerIdFor(dragon, skill) {
 // The effect sequence for a skill from the active art set, or null when the set has none.
 export function powerFxFor(set, dragon, skill) {
   const id = powerIdFor(dragon, skill);
-  const entry = id && set?.powers ? set.powers[id] : null;
-  return entry && entry.fx && entry.fx.length ? { id, ...entry } : null;
+  if (!id || !set?.powers) return null;
+  const entry = set.powers[id];
+  if (entry && entry.fx && entry.fx.length) return { id, ...entry };
+  // the ULTIMATE has no clip of its own (generation kept inventing a ghost second dragon inside the
+  // explosion): it replays the fire-breath performance, bigger and brighter.
+  if (id === 'blast' && set.powers.breath?.fx?.length) return { id, ...set.powers.breath, big: true };
+  return null;
 }
 
 export function setHasPowers(set) {

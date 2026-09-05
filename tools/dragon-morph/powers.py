@@ -64,7 +64,16 @@ def extract(frame_path, base_rgb, mouth_px, feather_px, whole=False, body_mask=N
     yy, xx = np.mgrid[0:CH, 0:CW]
     if not whole:
         gate = np.clip((xx - (mouth_px[0] - feather_px)) / feather_px, 0, 1)
-        alpha *= gate
+        # and nothing well below the mouth line (a puff that sat at the throat/chest, Ryan 9/5):
+        # full strength down to mouth_y + 9% of the frame, fading out over the next 9%
+        vgate = np.clip(((mouth_px[1] + CH * 0.18) - yy) / (CH * 0.09), 0, 1)
+        alpha *= gate * vgate
+        if body_mask is not None:
+            # the clip's own dragon moves (head raised, wings spread) and that motion also "brightens":
+            # kill anything on OUR dragon's silhouette EXCEPT a disc at the mouth where the flame is born
+            # (Ryan 9/5: a ghost second dragon appeared inside the blast)
+            near = ((xx - mouth_px[0]) ** 2 + (yy - mouth_px[1]) ** 2) < (CW * 0.10) ** 2
+            alpha *= np.where(near, 1.0, 1.0 - body_mask)
     elif body_mask is not None:
         # a shield lives AROUND the dragon: nothing on its own silhouette (Ryan 9/5: the first one
         # sat on the back of its head and tinted the body)

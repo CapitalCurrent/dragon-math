@@ -503,8 +503,19 @@ def crack_mask(prev_path, intact_path, grow):
     m = Image.fromarray(((np.asarray(m) > 0) & egg_alpha).astype(np.uint8) * 255, "L")
     return m
 
+_REMBG = {}
 def rembg_rgba(png, model="birefnet-general"):
-    return Image.open(cc().remove_bg(png, model)).convert("RGBA")
+    """Background removal with a CACHED rembg session (cc-gen's remove_bg builds a new session per
+    call, which reloads BiRefNet every time - the idle chain spent most of its time on that, 9/5)."""
+    from rembg import remove, new_session
+    if model not in _REMBG:
+        _REMBG[model] = new_session(model)
+    with open(png, "rb") as f:
+        data = remove(f.read(), session=_REMBG[model])
+    out = os.path.splitext(png)[0] + "_nobg.png"
+    with open(out, "wb") as f:
+        f.write(data)
+    return Image.open(out).convert("RGBA")
 
 def save_png(im, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)

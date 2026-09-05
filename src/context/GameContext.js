@@ -212,6 +212,17 @@ function reducer(state, action) {
     case 'CLEAR_SKILL_POPUP':
       return { ...state, newSkill: null };
 
+    // POWERS (generated performances): performed once automatically at unlock, then ONE tap replay
+    // each (Ryan 9/5: no recharge). `activePower` = { id, skill, replay } while it plays.
+    case 'PLAY_POWER': {
+      if (state.activePower) return state;
+      const used = action.replay ? { ...(state.powerUsed || {}), [action.id]: true } : (state.powerUsed || {});
+      return { ...state, activePower: { id: action.id, skill: action.skill, replay: !!action.replay }, powerUsed: used,
+               mouthOpen: true };
+    }
+    case 'CLEAR_ACTIVE_POWER':
+      return { ...state, activePower: null, mouthOpen: state.eating };
+
     case 'PLAY_AGAIN':
       return {
         ...initialState,

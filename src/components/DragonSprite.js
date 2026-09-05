@@ -114,8 +114,26 @@ const FILL = {
   objectFit: 'contain', objectPosition: 'center bottom', display: 'block',
 };
 
-function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef }) {
+function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef, power, onPowerDone }) {
   const target = pickFrame(set.frames, progress);
+
+  // A POWER performance: the generated effect frames play over the dragon (screen blend), anchored
+  // at the mouth: the frames were captured on the unlock frame, so they shift by the mouth delta
+  // when replayed on a bigger dragon. Jaws open for the middle of the performance.
+  const [fxK, setFxK] = useState(-1);
+  useEffect(() => {
+    if (!power || !power.fx || !power.fx.length) { setFxK(-1); return undefined; }
+    let k = 0;
+    setFxK(0);
+    const t = setInterval(() => {
+      k += 1;
+      if (k >= power.fx.length) { clearInterval(t); setFxK(-1); onPowerDone && onPowerDone(); return; }
+      setFxK(k);
+    }, 75);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [power]);
+  const performing = fxK >= 0;
   const { glow } = dragon.colors;
   const eggFrames = set.frames.filter(f => f.kind === 'egg');
 
@@ -172,7 +190,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
       k += dir;
       if (k >= idleFrames.length - 1 || k <= 0) dir = -dir;
       setIdleK(k);
-    }, 140);
+    }, 190);
     return () => clearInterval(t);
   }, [idleFrames, chomping]);
 
@@ -288,9 +306,22 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               src={frame.blink}
               alt=""
               aria-hidden="true"
-              style={{ ...FILL, opacity: blinking && !chomping ? 1 : 0, transition: 'opacity 0.05s', zIndex: 3 }}
+              style={{ ...FILL, opacity: blinking && !chomping && !performing ? 1 : 0, transition: 'opacity 0.05s', zIndex: 3 }}
             />
           )}
+          {performing && frame.open && (
+            <img src={frame.open} alt="" aria-hidden="true"
+              style={{ ...FILL, opacity: fxK >= 2 && fxK < power.fx.length - 3 ? 1 : 0, transition: 'opacity 0.08s', zIndex: 4 }} />
+          )}
+          {performing && (() => {
+            const src = set.frames.find(f => f.kind === 'dragon' && set.frames.filter(g => g.kind === 'dragon').indexOf(f) === power.frame);
+            const dx = src ? (frame.mouth.x - src.mouth.x) * 100 : 0;
+            const dy = src ? (frame.mouth.y - src.mouth.y) * 100 : 0;
+            return (
+              <img src={power.fx[fxK]} alt="" aria-hidden="true"
+                style={{ ...FILL, left: `${dx}%`, top: `${dy}%`, mixBlendMode: 'screen', zIndex: 5, pointerEvents: 'none' }} />
+            );
+          })()}
           {/* Invisible mouth marker for FlyingAnswer targeting — per frame, since the mouth moves as it grows */}
           <div ref={mouthRef} style={{
             position: 'absolute', left: `${frame.mouth.x * 100}%`, top: `${frame.mouth.y * 100}%`,
@@ -371,12 +402,12 @@ function SpriteEgg({ dragon, size, crackStage, mouthRef }) {
   );
 }
 
-export default function DragonSprite({ dragon, progress, size = 400, maxWidth, chomping = false, mouthRef }) {
+export default function DragonSprite({ dragon, progress, size = 400, maxWidth, chomping = false, mouthRef, power, onPowerDone }) {
   const morph = morphSetFor(dragon);
   if (morph) {
     return (
       <MorphSprite dragon={dragon} set={morph} progress={progress} size={size}
-        maxWidth={maxWidth} chomping={chomping} mouthRef={mouthRef} />
+        maxWidth={maxWidth} chomping={chomping} mouthRef={mouthRef} power={power} onPowerDone={onPowerDone} />
     );
   }
 

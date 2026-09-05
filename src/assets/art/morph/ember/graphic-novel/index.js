@@ -40,112 +40,252 @@ import e36 from './e36.webp';
 import f00 from './f00.webp';
 import f00o from './f00o.webp';
 import f00b from './f00b.webp';
+import f00i0 from './f00i0.webp';
+import f00i1 from './f00i1.webp';
+import f00i2 from './f00i2.webp';
+import f00i3 from './f00i3.webp';
+import f00i4 from './f00i4.webp';
+import f00i5 from './f00i5.webp';
+import f00i6 from './f00i6.webp';
+import f00i7 from './f00i7.webp';
 import f01 from './f01.webp';
 import f01o from './f01o.webp';
 import f01b from './f01b.webp';
+import f01i0 from './f01i0.webp';
+import f01i1 from './f01i1.webp';
+import f01i2 from './f01i2.webp';
+import f01i3 from './f01i3.webp';
+import f01i4 from './f01i4.webp';
+import f01i5 from './f01i5.webp';
+import f01i6 from './f01i6.webp';
+import f01i7 from './f01i7.webp';
 import f02 from './f02.webp';
 import f02o from './f02o.webp';
 import f02b from './f02b.webp';
+import f02i0 from './f02i0.webp';
+import f02i1 from './f02i1.webp';
+import f02i2 from './f02i2.webp';
+import f02i3 from './f02i3.webp';
+import f02i4 from './f02i4.webp';
+import f02i5 from './f02i5.webp';
+import f02i6 from './f02i6.webp';
+import f02i7 from './f02i7.webp';
 import f03 from './f03.webp';
 import f03o from './f03o.webp';
 import f03b from './f03b.webp';
+import f03i0 from './f03i0.webp';
+import f03i1 from './f03i1.webp';
+import f03i2 from './f03i2.webp';
+import f03i3 from './f03i3.webp';
+import f03i4 from './f03i4.webp';
+import f03i5 from './f03i5.webp';
+import f03i6 from './f03i6.webp';
+import f03i7 from './f03i7.webp';
 import f04 from './f04.webp';
 import f04o from './f04o.webp';
 import f04b from './f04b.webp';
+import f04i0 from './f04i0.webp';
+import f04i1 from './f04i1.webp';
+import f04i2 from './f04i2.webp';
+import f04i3 from './f04i3.webp';
+import f04i4 from './f04i4.webp';
+import f04i5 from './f04i5.webp';
+import f04i6 from './f04i6.webp';
+import f04i7 from './f04i7.webp';
 import f05 from './f05.webp';
 import f05o from './f05o.webp';
 import f05b from './f05b.webp';
+import f05i0 from './f05i0.webp';
+import f05i1 from './f05i1.webp';
+import f05i2 from './f05i2.webp';
+import f05i3 from './f05i3.webp';
+import f05i4 from './f05i4.webp';
+import f05i5 from './f05i5.webp';
+import f05i6 from './f05i6.webp';
+import f05i7 from './f05i7.webp';
 import f06 from './f06.webp';
 import f06o from './f06o.webp';
 import f06b from './f06b.webp';
+import f06i0 from './f06i0.webp';
+import f06i1 from './f06i1.webp';
+import f06i2 from './f06i2.webp';
+import f06i3 from './f06i3.webp';
+import f06i4 from './f06i4.webp';
+import f06i5 from './f06i5.webp';
+import f06i6 from './f06i6.webp';
+import f06i7 from './f06i7.webp';
 import f07 from './f07.webp';
 import f07o from './f07o.webp';
 import f07b from './f07b.webp';
+import f07i0 from './f07i0.webp';
+import f07i1 from './f07i1.webp';
+import f07i2 from './f07i2.webp';
+import f07i3 from './f07i3.webp';
+import f07i4 from './f07i4.webp';
+import f07i5 from './f07i5.webp';
+import f07i6 from './f07i6.webp';
+import f07i7 from './f07i7.webp';
 import f08 from './f08.webp';
 import f08o from './f08o.webp';
 import f08b from './f08b.webp';
+import f08i0 from './f08i0.webp';
+import f08i1 from './f08i1.webp';
+import f08i2 from './f08i2.webp';
+import f08i3 from './f08i3.webp';
+import f08i4 from './f08i4.webp';
+import f08i5 from './f08i5.webp';
+import f08i6 from './f08i6.webp';
+import f08i7 from './f08i7.webp';
 import f09 from './f09.webp';
 import f09o from './f09o.webp';
 import f09b from './f09b.webp';
+import f09i0 from './f09i0.webp';
+import f09i1 from './f09i1.webp';
+import f09i2 from './f09i2.webp';
+import f09i3 from './f09i3.webp';
+import f09i4 from './f09i4.webp';
+import f09i5 from './f09i5.webp';
+import f09i6 from './f09i6.webp';
+import f09i7 from './f09i7.webp';
 import f10 from './f10.webp';
 import f10o from './f10o.webp';
 import f10b from './f10b.webp';
+import f10i0 from './f10i0.webp';
+import f10i1 from './f10i1.webp';
+import f10i2 from './f10i2.webp';
+import f10i3 from './f10i3.webp';
+import f10i4 from './f10i4.webp';
+import f10i5 from './f10i5.webp';
+import f10i6 from './f10i6.webp';
+import f10i7 from './f10i7.webp';
 import f11 from './f11.webp';
 import f11o from './f11o.webp';
 import f11b from './f11b.webp';
+import f11i0 from './f11i0.webp';
+import f11i1 from './f11i1.webp';
+import f11i2 from './f11i2.webp';
+import f11i3 from './f11i3.webp';
+import f11i4 from './f11i4.webp';
+import f11i5 from './f11i5.webp';
+import f11i6 from './f11i6.webp';
+import f11i7 from './f11i7.webp';
 import f12 from './f12.webp';
 import f12o from './f12o.webp';
 import f12b from './f12b.webp';
+import f12i0 from './f12i0.webp';
+import f12i1 from './f12i1.webp';
+import f12i2 from './f12i2.webp';
+import f12i3 from './f12i3.webp';
+import f12i4 from './f12i4.webp';
+import f12i5 from './f12i5.webp';
+import f12i6 from './f12i6.webp';
+import f12i7 from './f12i7.webp';
 import f13 from './f13.webp';
 import f13o from './f13o.webp';
 import f13b from './f13b.webp';
+import f13i0 from './f13i0.webp';
+import f13i1 from './f13i1.webp';
+import f13i2 from './f13i2.webp';
+import f13i3 from './f13i3.webp';
+import f13i4 from './f13i4.webp';
+import f13i5 from './f13i5.webp';
+import f13i6 from './f13i6.webp';
+import f13i7 from './f13i7.webp';
 import f14 from './f14.webp';
 import f14o from './f14o.webp';
 import f14b from './f14b.webp';
+import f14i0 from './f14i0.webp';
+import f14i1 from './f14i1.webp';
+import f14i2 from './f14i2.webp';
+import f14i3 from './f14i3.webp';
+import f14i4 from './f14i4.webp';
+import f14i5 from './f14i5.webp';
+import f14i6 from './f14i6.webp';
+import f14i7 from './f14i7.webp';
 import f15 from './f15.webp';
 import f15o from './f15o.webp';
 import f15b from './f15b.webp';
+import f15i0 from './f15i0.webp';
+import f15i1 from './f15i1.webp';
+import f15i2 from './f15i2.webp';
+import f15i3 from './f15i3.webp';
+import f15i4 from './f15i4.webp';
+import f15i5 from './f15i5.webp';
+import f15i6 from './f15i6.webp';
+import f15i7 from './f15i7.webp';
 import f16 from './f16.webp';
 import f16o from './f16o.webp';
 import f16b from './f16b.webp';
+import f16i0 from './f16i0.webp';
+import f16i1 from './f16i1.webp';
+import f16i2 from './f16i2.webp';
+import f16i3 from './f16i3.webp';
+import f16i4 from './f16i4.webp';
+import f16i5 from './f16i5.webp';
+import f16i6 from './f16i6.webp';
+import f16i7 from './f16i7.webp';
 import eggPortrait from './egg.webp';
 import remnants from './remnants.webp';
 
 const FRAMES = [
-  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.5115, y: 0.7388 } },
-  { p: 0.00417, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.5115, y: 0.7388 } },
-  { p: 0.00833, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.5115, y: 0.7388 } },
-  { p: 0.0125, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.5115, y: 0.6063 } },
-  { p: 0.01667, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.5115, y: 0.6211 } },
-  { p: 0.02083, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.5115, y: 0.7388 } },
-  { p: 0.025, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.5115, y: 0.7261 } },
-  { p: 0.02917, kind: 'egg', closed: e7, open: null, blink: null, mouth: { x: 0.5115, y: 0.5908 } },
-  { p: 0.03333, kind: 'egg', closed: e8, open: null, blink: null, mouth: { x: 0.5120, y: 0.5908 } },
-  { p: 0.0375, kind: 'egg', closed: e9, open: null, blink: null, mouth: { x: 0.5120, y: 0.6232 } },
-  { p: 0.04167, kind: 'egg', closed: e10, open: null, blink: null, mouth: { x: 0.5120, y: 0.7218 } },
-  { p: 0.04583, kind: 'egg', closed: e11, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.05, kind: 'egg', closed: e12, open: null, blink: null, mouth: { x: 0.5115, y: 0.7381 } },
-  { p: 0.05417, kind: 'egg', closed: e13, open: null, blink: null, mouth: { x: 0.5115, y: 0.7381 } },
-  { p: 0.05833, kind: 'egg', closed: e14, open: null, blink: null, mouth: { x: 0.5115, y: 0.7381 } },
-  { p: 0.0625, kind: 'egg', closed: e15, open: null, blink: null, mouth: { x: 0.5115, y: 0.7381 } },
-  { p: 0.06667, kind: 'egg', closed: e16, open: null, blink: null, mouth: { x: 0.5115, y: 0.7381 } },
-  { p: 0.07083, kind: 'egg', closed: e17, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.075, kind: 'egg', closed: e18, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.07917, kind: 'egg', closed: e19, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.08333, kind: 'egg', closed: e20, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.0875, kind: 'egg', closed: e21, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.09167, kind: 'egg', closed: e22, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.09583, kind: 'egg', closed: e23, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.1, kind: 'egg', closed: e24, open: null, blink: null, mouth: { x: 0.5120, y: 0.7381 } },
-  { p: 0.10417, kind: 'egg', closed: e25, open: null, blink: null, mouth: { x: 0.5124, y: 0.7381 } },
-  { p: 0.10833, kind: 'egg', closed: e26, open: null, blink: null, mouth: { x: 0.5124, y: 0.7381 } },
-  { p: 0.1125, kind: 'egg', closed: e27, open: null, blink: null, mouth: { x: 0.5124, y: 0.7374 } },
-  { p: 0.11667, kind: 'egg', closed: e28, open: null, blink: null, mouth: { x: 0.5124, y: 0.7374 } },
-  { p: 0.12083, kind: 'egg', closed: e29, open: null, blink: null, mouth: { x: 0.5124, y: 0.7374 } },
-  { p: 0.125, kind: 'egg', closed: e30, open: null, blink: null, mouth: { x: 0.5124, y: 0.7374 } },
-  { p: 0.12917, kind: 'egg', closed: e31, open: null, blink: null, mouth: { x: 0.5124, y: 0.7374 } },
-  { p: 0.13333, kind: 'egg', closed: e32, open: null, blink: null, mouth: { x: 0.5124, y: 0.7366 } },
-  { p: 0.1375, kind: 'egg', closed: e33, open: null, blink: null, mouth: { x: 0.5124, y: 0.7359 } },
-  { p: 0.14167, kind: 'egg', closed: e34, open: null, blink: null, mouth: { x: 0.5129, y: 0.7298 } },
-  { p: 0.14583, kind: 'egg', closed: e35, open: null, blink: null, mouth: { x: 0.5115, y: 0.7363 } },
-  { p: 0.15, kind: 'egg', closed: e36, open: null, blink: null, mouth: { x: 0.5115, y: 0.7363 } },
-  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, mouth: { x: 0.5080, y: 0.7366 } },
-  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, mouth: { x: 0.5075, y: 0.7112 } },
-  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, mouth: { x: 0.4929, y: 0.6780 } },
-  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, mouth: { x: 0.5124, y: 0.6535 } },
-  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, mouth: { x: 0.5075, y: 0.5995 } },
-  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, mouth: { x: 0.5084, y: 0.5931 } },
-  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, mouth: { x: 0.5209, y: 0.5558 } },
-  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, mouth: { x: 0.4991, y: 0.5267 } },
-  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, mouth: { x: 0.5093, y: 0.5069 } },
-  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, mouth: { x: 0.5031, y: 0.4680 } },
-  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: f10b, mouth: { x: 0.7754, y: 0.4609 } },
-  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, mouth: { x: 0.7696, y: 0.4622 } },
-  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, mouth: { x: 0.8512, y: 0.3913 } },
-  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: f13b, mouth: { x: 0.8384, y: 0.3981 } },
-  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: f14b, mouth: { x: 0.8057, y: 0.3017 } },
-  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: f15b, mouth: { x: 0.8154, y: 0.2871 } },
-  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, mouth: { x: 0.8547, y: 0.2648 } },
+  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7388 } },
+  { p: 0.00417, kind: 'egg', closed: e1, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7388 } },
+  { p: 0.00833, kind: 'egg', closed: e2, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7388 } },
+  { p: 0.0125, kind: 'egg', closed: e3, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.6063 } },
+  { p: 0.01667, kind: 'egg', closed: e4, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.6211 } },
+  { p: 0.02083, kind: 'egg', closed: e5, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7388 } },
+  { p: 0.025, kind: 'egg', closed: e6, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7261 } },
+  { p: 0.02917, kind: 'egg', closed: e7, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.5908 } },
+  { p: 0.03333, kind: 'egg', closed: e8, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.5908 } },
+  { p: 0.0375, kind: 'egg', closed: e9, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.6232 } },
+  { p: 0.04167, kind: 'egg', closed: e10, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7218 } },
+  { p: 0.04583, kind: 'egg', closed: e11, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.05, kind: 'egg', closed: e12, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7381 } },
+  { p: 0.05417, kind: 'egg', closed: e13, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7381 } },
+  { p: 0.05833, kind: 'egg', closed: e14, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7381 } },
+  { p: 0.0625, kind: 'egg', closed: e15, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7381 } },
+  { p: 0.06667, kind: 'egg', closed: e16, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7381 } },
+  { p: 0.07083, kind: 'egg', closed: e17, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.075, kind: 'egg', closed: e18, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.07917, kind: 'egg', closed: e19, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.08333, kind: 'egg', closed: e20, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.0875, kind: 'egg', closed: e21, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.09167, kind: 'egg', closed: e22, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.09583, kind: 'egg', closed: e23, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.1, kind: 'egg', closed: e24, open: null, blink: null, idle: [], mouth: { x: 0.5120, y: 0.7381 } },
+  { p: 0.10417, kind: 'egg', closed: e25, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7381 } },
+  { p: 0.10833, kind: 'egg', closed: e26, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7381 } },
+  { p: 0.1125, kind: 'egg', closed: e27, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7374 } },
+  { p: 0.11667, kind: 'egg', closed: e28, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7374 } },
+  { p: 0.12083, kind: 'egg', closed: e29, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7374 } },
+  { p: 0.125, kind: 'egg', closed: e30, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7374 } },
+  { p: 0.12917, kind: 'egg', closed: e31, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7374 } },
+  { p: 0.13333, kind: 'egg', closed: e32, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7366 } },
+  { p: 0.1375, kind: 'egg', closed: e33, open: null, blink: null, idle: [], mouth: { x: 0.5124, y: 0.7359 } },
+  { p: 0.14167, kind: 'egg', closed: e34, open: null, blink: null, idle: [], mouth: { x: 0.5129, y: 0.7298 } },
+  { p: 0.14583, kind: 'egg', closed: e35, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7363 } },
+  { p: 0.15, kind: 'egg', closed: e36, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7363 } },
+  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, idle: [f00i0, f00i1, f00i2, f00i3, f00i4, f00i5, f00i6, f00i7], mouth: { x: 0.5080, y: 0.7366 } },
+  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, idle: [f01i0, f01i1, f01i2, f01i3, f01i4, f01i5, f01i6, f01i7], mouth: { x: 0.5075, y: 0.7112 } },
+  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, idle: [f02i0, f02i1, f02i2, f02i3, f02i4, f02i5, f02i6, f02i7], mouth: { x: 0.4929, y: 0.6780 } },
+  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, idle: [f03i0, f03i1, f03i2, f03i3, f03i4, f03i5, f03i6, f03i7], mouth: { x: 0.5124, y: 0.6535 } },
+  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, idle: [f04i0, f04i1, f04i2, f04i3, f04i4, f04i5, f04i6, f04i7], mouth: { x: 0.5075, y: 0.5995 } },
+  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, idle: [f05i0, f05i1, f05i2, f05i3, f05i4, f05i5, f05i6, f05i7], mouth: { x: 0.5084, y: 0.5931 } },
+  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, idle: [f06i0, f06i1, f06i2, f06i3, f06i4, f06i5, f06i6, f06i7], mouth: { x: 0.5209, y: 0.5558 } },
+  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, idle: [f07i0, f07i1, f07i2, f07i3, f07i4, f07i5, f07i6, f07i7], mouth: { x: 0.4991, y: 0.5267 } },
+  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, idle: [f08i0, f08i1, f08i2, f08i3, f08i4, f08i5, f08i6, f08i7], mouth: { x: 0.5093, y: 0.5069 } },
+  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, idle: [f09i0, f09i1, f09i2, f09i3, f09i4, f09i5, f09i6, f09i7], mouth: { x: 0.5031, y: 0.4680 } },
+  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: f10b, idle: [f10i0, f10i1, f10i2, f10i3, f10i4, f10i5, f10i6, f10i7], mouth: { x: 0.7754, y: 0.4609 } },
+  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, idle: [f11i0, f11i1, f11i2, f11i3, f11i4, f11i5, f11i6, f11i7], mouth: { x: 0.7696, y: 0.4622 } },
+  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, idle: [f12i0, f12i1, f12i2, f12i3, f12i4, f12i5, f12i6, f12i7], mouth: { x: 0.8512, y: 0.3913 } },
+  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: f13b, idle: [f13i0, f13i1, f13i2, f13i3, f13i4, f13i5, f13i6, f13i7], mouth: { x: 0.8384, y: 0.3981 } },
+  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: f14b, idle: [f14i0, f14i1, f14i2, f14i3, f14i4, f14i5, f14i6, f14i7], mouth: { x: 0.8057, y: 0.3017 } },
+  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: f15b, idle: [f15i0, f15i1, f15i2, f15i3, f15i4, f15i5, f15i6, f15i7], mouth: { x: 0.8154, y: 0.2871 } },
+  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, idle: [f16i0, f16i1, f16i2, f16i3, f16i4, f16i5, f16i6, f16i7], mouth: { x: 0.8547, y: 0.2648 } },
 ];
 
-export default { aspect: 1.3690, width: 1024, height: 748, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES };
+const POWERS = {
+
+};
+
+export default { aspect: 1.3690, width: 1024, height: 748, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES, powers: POWERS };

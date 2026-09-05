@@ -47,7 +47,7 @@ def run(pl, indices, seed):
         n = ltx.run(args)
         if n < IDLE_N:
             print(f"  {i:02d}: clip too short ({n})"); continue
-        picks = [round(k * (n - 1) / (IDLE_N - 1)) for k in range(IDLE_N)]
+        picks = [round(k * (int(n * 0.6) - 1) / (IDLE_N - 1)) for k in range(IDLE_N)]   # the calm first 60% of the clip
         for k, fi in enumerate(picks):
             cut = M.rembg_rgba(pl.p("idle", f"clip_{i:02d}", f"f{fi:03d}.png"))
             # back into the growth frame's canvas coordinates: undo the scene placement + scale

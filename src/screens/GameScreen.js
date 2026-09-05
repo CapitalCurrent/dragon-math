@@ -8,6 +8,9 @@ import TruckCounting from '../components/TruckCounting';
 import AnswerInput from '../components/AnswerInput';
 import ProgressBar from '../components/ProgressBar';
 import SkillBar from '../components/SkillBar';
+import PowerBar from '../components/PowerBar';
+import { morphSetFor } from '../components/DragonSprite';
+import { powerFxFor, setHasPowers } from '../utils/powers';
 import DevPanel from '../components/DevPanel';
 import WorldMarks from '../components/WorldMarks';
 import {
@@ -333,7 +336,21 @@ function SkillBlast({ skill, dragon, dispatch }) {
 }
 
 export default function GameScreen() {
-  const { dragon, progress, eating, mouthOpen, currentQuestion, activeSkill, dispatch } = useGame();
+  const { dragon, progress, eating, mouthOpen, currentQuestion, activeSkill, activePower, newSkill, dispatch } = useGame();
+
+  // Generated POWERS (morph art sets with effect frames): a newly unlocked power performs itself.
+  const morphSet = morphSetFor(dragon);
+  const hasPowers = setHasPowers(morphSet);
+  React.useEffect(() => {
+    if (!hasPowers || !newSkill) return;
+    dispatch({ type: 'PLAY_POWER', id: powerFxFor(morphSet, dragon, newSkill)?.id, skill: newSkill, replay: false });
+    dispatch({ type: 'CLEAR_SKILL_POPUP' });
+  }, [hasPowers, newSkill, morphSet, dragon, dispatch]);
+  const powerFx = hasPowers && activePower ? powerFxFor(morphSet, dragon, activePower.skill) : null;
+  React.useEffect(() => {
+    // a power with no frames for this set ends immediately
+    if (activePower && hasPowers && !powerFx) dispatch({ type: 'CLEAR_ACTIVE_POWER' });
+  }, [activePower, hasPowers, powerFx, dispatch]);
   const dragonRef = useRef(null);
   const mouthRef = useRef(null);
   const numbersRef = useRef(null);
@@ -430,7 +447,8 @@ export default function GameScreen() {
           <div className="flex-shrink-0 flex items-end justify-center" ref={dragonRef} style={{ overflow: 'visible' }}>
 
             {hasSpriteArt(dragon)
-              ? <DragonSprite dragon={dragon} progress={progress} size={dragonSize} maxWidth={dragonMaxWidth} chomping={mouthOpen} mouthRef={mouthRef} />
+              ? <DragonSprite dragon={dragon} progress={progress} size={dragonSize} maxWidth={dragonMaxWidth} chomping={mouthOpen && !activePower} mouthRef={mouthRef}
+                  power={powerFx} onPowerDone={() => dispatch({ type: 'CLEAR_ACTIVE_POWER' })} />
               : <DragonSVG dragon={dragon} progress={progress} size={dragonSize} chomping={mouthOpen} mouthRef={mouthRef} />}
           </div>
 
@@ -455,7 +473,7 @@ export default function GameScreen() {
           </motion.div>
 
           <div className={isLandscape ? 'mt-1 mb-1' : 'mt-2 mb-4'}>
-            <SkillBar />
+            {hasPowers ? <PowerBar /> : <SkillBar />}
           </div>
         </div>
 

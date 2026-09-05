@@ -111,6 +111,27 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   one tap replay each, no recharge; retire the skill bar.
   NEXT: realistic rebuild (5th leg inpaint on the realistic adult; newborn with wing nubs; blink only
   where the eye is found - coded) → idle loops per growth frame (8-frame ping-pong from LTX) → powers.**
+- **16:52 v2.8.4 DEPLOYED: realistic set REBUILT (adult 5th leg inpainted, newborn 4101 mirrored with
+  wings, blink only where the eye is located, frames 3/4 rerolled for a pale tail tip). All three
+  sets carry the LTX egg (37 frames) + remnants. NOW: step 3 idle loops (`idle.py` → idle/ frames →
+  export `idle: [...]` per frame → app plays them back and forth at rest, replacing the fake breathing);
+  test on comic 0/8/16 first, then all 51. THEN step 4 powers (effect-only LTX clips on black, mouth-
+  anchored feathered mask, screen blend; auto-perform at unlock + one tap replay; retire SkillBar).**
+- **17:10 idle chain running detached (`work/idle.out`, 3 sets × 17 LTX clips → idle/ frames; export
+  writes `idle: [...]`; app plays back and forth at 190 ms). `powers.py` written (effect-only clips on
+  black, mouth-gated extraction, direction left on canvas → mirrored at export; export writes
+  `powers: {name: {unlock, frame, fx: [...]}}`). App powers system being wired: PLAY_POWER /
+  CLEAR_ACTIVE_POWER in GameContext, PowerBar replaces SkillBar for morph sets (auto-perform at
+  unlock, one replay each), MorphSprite plays fx frames anchored by the mouth delta. Power ids by
+  unlock order: spark, puff, breath, shield, blast (map from dragons.js skills[0..4]).**
+- **18:30 idle frames DONE for all 3 sets (51 clips; the slowness was rembg reloading its model per
+  call → cached session in `rembg_rgba`, 25 s/frame now). Export chain (comic + painterly + deploy
+  v2.8.5 + commit) running detached (`work/export.out`); realistic already exported with idle.
+  Powers chain for the comic set running detached (`work/powers.out` → work/ember-graphic-novel/powers/).
+  App powers system is coded (PLAY_POWER/CLEAR_ACTIVE_POWER, PowerBar, MorphSprite fx playback,
+  GameScreen auto-perform at unlock) and inert until a set's manifest has `powers`.
+  NEXT: review the 5 comic effect strips → export comic with powers → deploy → Iona tests powers.
+  Export webp method is 4 now (method 6 blew the 10-min cap with 136 idle files per set).**
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

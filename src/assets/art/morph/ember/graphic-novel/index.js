@@ -226,6 +226,70 @@ import f16i6 from './f16i6.webp';
 import f16i7 from './f16i7.webp';
 import eggPortrait from './egg.webp';
 import remnants from './remnants.webp';
+import pw_blast_0 from './pw_blast_0.webp';
+import pw_blast_1 from './pw_blast_1.webp';
+import pw_blast_2 from './pw_blast_2.webp';
+import pw_blast_3 from './pw_blast_3.webp';
+import pw_blast_4 from './pw_blast_4.webp';
+import pw_blast_5 from './pw_blast_5.webp';
+import pw_blast_6 from './pw_blast_6.webp';
+import pw_blast_7 from './pw_blast_7.webp';
+import pw_blast_8 from './pw_blast_8.webp';
+import pw_blast_9 from './pw_blast_9.webp';
+import pw_blast_10 from './pw_blast_10.webp';
+import pw_blast_11 from './pw_blast_11.webp';
+import pw_blast_12 from './pw_blast_12.webp';
+import pw_blast_13 from './pw_blast_13.webp';
+import pw_blast_14 from './pw_blast_14.webp';
+import pw_blast_15 from './pw_blast_15.webp';
+import pw_breath_0 from './pw_breath_0.webp';
+import pw_breath_1 from './pw_breath_1.webp';
+import pw_breath_2 from './pw_breath_2.webp';
+import pw_breath_3 from './pw_breath_3.webp';
+import pw_breath_4 from './pw_breath_4.webp';
+import pw_breath_5 from './pw_breath_5.webp';
+import pw_breath_6 from './pw_breath_6.webp';
+import pw_breath_7 from './pw_breath_7.webp';
+import pw_breath_8 from './pw_breath_8.webp';
+import pw_breath_9 from './pw_breath_9.webp';
+import pw_breath_10 from './pw_breath_10.webp';
+import pw_breath_11 from './pw_breath_11.webp';
+import pw_breath_12 from './pw_breath_12.webp';
+import pw_breath_13 from './pw_breath_13.webp';
+import pw_breath_14 from './pw_breath_14.webp';
+import pw_breath_15 from './pw_breath_15.webp';
+import pw_puff_0 from './pw_puff_0.webp';
+import pw_puff_1 from './pw_puff_1.webp';
+import pw_puff_2 from './pw_puff_2.webp';
+import pw_puff_3 from './pw_puff_3.webp';
+import pw_puff_4 from './pw_puff_4.webp';
+import pw_puff_5 from './pw_puff_5.webp';
+import pw_puff_6 from './pw_puff_6.webp';
+import pw_puff_7 from './pw_puff_7.webp';
+import pw_puff_8 from './pw_puff_8.webp';
+import pw_puff_9 from './pw_puff_9.webp';
+import pw_puff_10 from './pw_puff_10.webp';
+import pw_puff_11 from './pw_puff_11.webp';
+import pw_puff_12 from './pw_puff_12.webp';
+import pw_puff_13 from './pw_puff_13.webp';
+import pw_puff_14 from './pw_puff_14.webp';
+import pw_puff_15 from './pw_puff_15.webp';
+import pw_spark_0 from './pw_spark_0.webp';
+import pw_spark_1 from './pw_spark_1.webp';
+import pw_spark_2 from './pw_spark_2.webp';
+import pw_spark_3 from './pw_spark_3.webp';
+import pw_spark_4 from './pw_spark_4.webp';
+import pw_spark_5 from './pw_spark_5.webp';
+import pw_spark_6 from './pw_spark_6.webp';
+import pw_spark_7 from './pw_spark_7.webp';
+import pw_spark_8 from './pw_spark_8.webp';
+import pw_spark_9 from './pw_spark_9.webp';
+import pw_spark_10 from './pw_spark_10.webp';
+import pw_spark_11 from './pw_spark_11.webp';
+import pw_spark_12 from './pw_spark_12.webp';
+import pw_spark_13 from './pw_spark_13.webp';
+import pw_spark_14 from './pw_spark_14.webp';
+import pw_spark_15 from './pw_spark_15.webp';
 
 const FRAMES = [
   { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, idle: [], mouth: { x: 0.5115, y: 0.7388 } },
@@ -285,7 +349,10 @@ const FRAMES = [
 ];
 
 const POWERS = {
-
+  blast: { unlock: 1.0, frame: 16, fx: [pw_blast_0, pw_blast_1, pw_blast_2, pw_blast_3, pw_blast_4, pw_blast_5, pw_blast_6, pw_blast_7, pw_blast_8, pw_blast_9, pw_blast_10, pw_blast_11, pw_blast_12, pw_blast_13, pw_blast_14, pw_blast_15] },
+  breath: { unlock: 0.6, frame: 8, fx: [pw_breath_0, pw_breath_1, pw_breath_2, pw_breath_3, pw_breath_4, pw_breath_5, pw_breath_6, pw_breath_7, pw_breath_8, pw_breath_9, pw_breath_10, pw_breath_11, pw_breath_12, pw_breath_13, pw_breath_14, pw_breath_15] },
+  puff: { unlock: 0.4, frame: 4, fx: [pw_puff_0, pw_puff_1, pw_puff_2, pw_puff_3, pw_puff_4, pw_puff_5, pw_puff_6, pw_puff_7, pw_puff_8, pw_puff_9, pw_puff_10, pw_puff_11, pw_puff_12, pw_puff_13, pw_puff_14, pw_puff_15] },
+  spark: { unlock: 0.2, frame: 0, fx: [pw_spark_0, pw_spark_1, pw_spark_2, pw_spark_3, pw_spark_4, pw_spark_5, pw_spark_6, pw_spark_7, pw_spark_8, pw_spark_9, pw_spark_10, pw_spark_11, pw_spark_12, pw_spark_13, pw_spark_14, pw_spark_15] },
 };
 
 export default { aspect: 1.3690, width: 1024, height: 748, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES, powers: POWERS };

@@ -132,6 +132,21 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   GameScreen auto-perform at unlock) and inert until a set's manifest has `powers`.
   NEXT: review the 5 comic effect strips → export comic with powers → deploy → Iona tests powers.
   Export webp method is 4 now (method 6 blew the 10-min cap with 136 idle files per set).**
+- **19:05 v2.8.5 LIVE (idle life in all 3 sets; badge still says 2.8.4 - bumped in package.json for the
+  next deploy). Powers v2 (`powers.py`): works in EXPORT space on the right-facing exported frames,
+  effect gated to the RIGHT of the mouth, two seeds per power (higher effect energy wins), shield
+  excludes the dragon's own silhouette, and a MEASURED placement check writes `flags` into meta.json
+  (effect centre must be in front of the mouth; overlap with the body < 35 % / 25 % for the shield).
+  Ryan 19:00: "are you catching these without my feedback?" - honest answer: measurable yes, judgment
+  no (5 legs ×2, shield on the head). README checklist now demands explicit answers: legs = 4, wings = 2
+  on the shoulders, features attached, effect at the mouth and off the body. Chain running:
+  `work/powers.out` → then regenerate shield (delete powers/shield first) → strip → export comic
+  (powers) → deploy → commit.**
+- **19:30 POWERS for the comic set: spark / puff / breath / blast = LTX effect layers in export space
+  (edge-feathered so no clip border shows; overlap check ignores a disc around the mouth); SHIELD =
+  app-drawn aura (LTX put a fireball behind the head twice - dropped). Export+deploy chain running
+  (`work/export.out`) → v2.8.5 with powers live for Comic. Realistic/painterly powers: run
+  `powers.py --variant <v> --style <v>` (needs the set exported first), then approve/export.**
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

@@ -121,6 +121,14 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
   // at the mouth: the frames were captured on the unlock frame, so they shift by the mouth delta
   // when replayed on a bigger dragon. Jaws open for the middle of the performance.
   const [fxK, setFxK] = useState(-1);
+  const auraOn = !!(power && power.id === 'shield' && (!power.fx || !power.fx.length));
+  useEffect(() => {
+    // the shield: an aura drawn around the dragon (no generated frames), 1.6 s
+    if (!auraOn) return undefined;
+    const t = setTimeout(() => onPowerDone && onPowerDone(), 1600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auraOn]);
   useEffect(() => {
     if (!power || !power.fx || !power.fx.length) { setFxK(-1); return undefined; }
     let k = 0;
@@ -229,6 +237,17 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
         height: boxH * 0.07, borderRadius: '50%',
         background: 'radial-gradient(ellipse, #000000aa 0%, transparent 70%)',
       }} />
+      {auraOn && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: [0, 1, 1, 0], scale: [0.7, 1.05, 1.12, 1.25] }}
+          transition={{ duration: 1.6, times: [0, 0.25, 0.7, 1], ease: 'easeOut' }}
+          style={{
+            position: 'absolute', inset: '-6%', borderRadius: '50%', pointerEvents: 'none', zIndex: 6,
+            background: `radial-gradient(ellipse at 50% 70%, transparent 52%, ${glow}cc 62%, ${glow}55 70%, transparent 80%)`,
+            filter: 'blur(2px)', mixBlendMode: 'screen',
+          }} />
+      )}
       {/* The broken shell stays on the floor behind the dragon after the hatch (the nest) */}
       {!isEgg && set.remnants && (
         <img

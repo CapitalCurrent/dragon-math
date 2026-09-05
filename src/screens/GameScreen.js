@@ -346,9 +346,11 @@ export default function GameScreen() {
     dispatch({ type: 'PLAY_POWER', id: powerFxFor(morphSet, dragon, newSkill)?.id, skill: newSkill, replay: false });
     dispatch({ type: 'CLEAR_SKILL_POPUP' });
   }, [hasPowers, newSkill, morphSet, dragon, dispatch]);
-  const powerFx = hasPowers && activePower ? powerFxFor(morphSet, dragon, activePower.skill) : null;
+  // the shield has no generated frames (an aura drawn by the sprite); anything else without frames ends at once
+  const powerFx = hasPowers && activePower
+    ? (powerFxFor(morphSet, dragon, activePower.skill) || (activePower.id === 'shield' ? { id: 'shield', fx: [], frame: 0 } : null))
+    : null;
   React.useEffect(() => {
-    // a power with no frames for this set ends immediately
     if (activePower && hasPowers && !powerFx) dispatch({ type: 'CLEAR_ACTIVE_POWER' });
   }, [activePower, hasPowers, powerFx, dispatch]);
   const dragonRef = useRef(null);

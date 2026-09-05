@@ -138,7 +138,12 @@ def export_dragon(pl):
                 srcp = os.path.join(pw_root, name, f"f{fi:02d}_{k}_rgba.png")
                 if not os.path.exists(srcp):
                     break
-                nm = write(srcp, f"pw_{name}_{k}.webp")
+                if meta.get("space") == "export":
+                    # already in the exported frame's pixel space (made from the exported frame): as is
+                    nm = f"pw_{name}_{k}.webp"
+                    Image.open(srcp).convert("RGBA").save(os.path.join(out_dir, nm), "WEBP", quality=QUALITY, method=4)
+                else:
+                    nm = write(srcp, f"pw_{name}_{k}.webp")
                 imports.append(f"import pw_{name}_{k} from './{nm}';")
                 names.append(f"pw_{name}_{k}")
             if names:

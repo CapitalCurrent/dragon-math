@@ -47,7 +47,7 @@ Manual stage-by-stage is still there (`morph.py --stage keys|plates|eggs|morph|c
 `morph.py --dragon frost --show-prompts` prints a dragon's four stage prompts and its negative.
 
 ## Claude's review checklist (per packet, in this order)
-1. `keys/contact.png`: one identity across hatch → adult; realistic and serious (softness only in the
+1. `keys/contact.png` — ANSWER EXPLICITLY: legs = 4? wings = 2, on the shoulders? every feature attached where it belongs? THEN: one identity across hatch → adult; realistic and serious (softness only in the
    hatchling); every frame's whole body inside the canvas; the right element (no fire on Frost).
    **Anatomy continuity (Ryan 9/5):** the horns are the SAME horns at four sizes (buds → stubs → growing →
    full; ram stays ram, antler stays antler), never a different horn type on the baby; the body goes

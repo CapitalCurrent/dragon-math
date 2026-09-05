@@ -7,6 +7,12 @@ import e3 from './e3.webp';
 import e4 from './e4.webp';
 import e5 from './e5.webp';
 import e6 from './e6.webp';
+import e7 from './e7.webp';
+import e8 from './e8.webp';
+import e9 from './e9.webp';
+import e10 from './e10.webp';
+import e11 from './e11.webp';
+import e12 from './e12.webp';
 import f00 from './f00.webp';
 import f00o from './f00o.webp';
 import f00b from './f00b.webp';
@@ -59,15 +65,22 @@ import f16 from './f16.webp';
 import f16o from './f16o.webp';
 import f16b from './f16b.webp';
 import eggPortrait from './egg.webp';
+import remnants from './remnants.webp';
 
 const FRAMES = [
-  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.025, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.05, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.075, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.1, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.125, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
-  { p: 0.15, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.5000, y: 0.7617 } },
+  { p: 0.0125, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.025, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.0375, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.05, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.0625, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.075, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.0875, kind: 'egg', closed: e7, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.1, kind: 'egg', closed: e8, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.1125, kind: 'egg', closed: e9, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
+  { p: 0.125, kind: 'egg', closed: e10, open: null, blink: null, mouth: { x: 0.4996, y: 0.7625 } },
+  { p: 0.1375, kind: 'egg', closed: e11, open: null, blink: null, mouth: { x: 0.4996, y: 0.7625 } },
+  { p: 0.15, kind: 'egg', closed: e12, open: null, blink: null, mouth: { x: 0.4996, y: 0.7617 } },
   { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, mouth: { x: 0.5035, y: 0.7602 } },
   { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, mouth: { x: 0.4921, y: 0.7322 } },
   { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, mouth: { x: 0.5018, y: 0.6883 } },
@@ -87,4 +100,4 @@ const FRAMES = [
   { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, mouth: { x: 0.5000, y: 0.2402 } },
 ];
 
-export default { aspect: 1.4443, width: 1024, height: 709, mirrored: true, eggPortrait: eggPortrait, frames: FRAMES };
+export default { aspect: 1.4443, width: 1024, height: 709, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES };

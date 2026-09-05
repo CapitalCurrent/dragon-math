@@ -7,6 +7,12 @@ import e3 from './e3.webp';
 import e4 from './e4.webp';
 import e5 from './e5.webp';
 import e6 from './e6.webp';
+import e7 from './e7.webp';
+import e8 from './e8.webp';
+import e9 from './e9.webp';
+import e10 from './e10.webp';
+import e11 from './e11.webp';
+import e12 from './e12.webp';
 import f00 from './f00.webp';
 import f00o from './f00o.webp';
 import f00b from './f00b.webp';
@@ -59,32 +65,39 @@ import f16 from './f16.webp';
 import f16o from './f16o.webp';
 import f16b from './f16b.webp';
 import eggPortrait from './egg.webp';
+import remnants from './remnants.webp';
 
 const FRAMES = [
-  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.025, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.05, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.075, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.1, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.125, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.15, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.4964, y: 0.7457 } },
-  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, mouth: { x: 0.4941, y: 0.7435 } },
-  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, mouth: { x: 0.4936, y: 0.7178 } },
-  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, mouth: { x: 0.4787, y: 0.6843 } },
-  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, mouth: { x: 0.4986, y: 0.6595 } },
-  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, mouth: { x: 0.4936, y: 0.6049 } },
-  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, mouth: { x: 0.4946, y: 0.5984 } },
-  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, mouth: { x: 0.5073, y: 0.5607 } },
-  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, mouth: { x: 0.4850, y: 0.5313 } },
-  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, mouth: { x: 0.4955, y: 0.5113 } },
-  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, mouth: { x: 0.4891, y: 0.4720 } },
-  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: f10b, mouth: { x: 0.7676, y: 0.4648 } },
-  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, mouth: { x: 0.7616, y: 0.4661 } },
-  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, mouth: { x: 0.8451, y: 0.3944 } },
-  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: f13b, mouth: { x: 0.8320, y: 0.4013 } },
-  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: f14b, mouth: { x: 0.7986, y: 0.3038 } },
-  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: f15b, mouth: { x: 0.8160, y: 0.2847 } },
-  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, mouth: { x: 0.8511, y: 0.2696 } },
+  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.5106, y: 0.7388 } },
+  { p: 0.0125, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.025, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.0375, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.05, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.0625, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.075, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.0875, kind: 'egg', closed: e7, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.1, kind: 'egg', closed: e8, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.1125, kind: 'egg', closed: e9, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.125, kind: 'egg', closed: e10, open: null, blink: null, mouth: { x: 0.5102, y: 0.7395 } },
+  { p: 0.1375, kind: 'egg', closed: e11, open: null, blink: null, mouth: { x: 0.5102, y: 0.7395 } },
+  { p: 0.15, kind: 'egg', closed: e12, open: null, blink: null, mouth: { x: 0.5102, y: 0.7388 } },
+  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, mouth: { x: 0.5080, y: 0.7366 } },
+  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, mouth: { x: 0.5075, y: 0.7112 } },
+  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, mouth: { x: 0.4929, y: 0.6780 } },
+  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, mouth: { x: 0.5124, y: 0.6535 } },
+  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, mouth: { x: 0.5075, y: 0.5995 } },
+  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, mouth: { x: 0.5084, y: 0.5931 } },
+  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, mouth: { x: 0.5209, y: 0.5558 } },
+  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, mouth: { x: 0.4991, y: 0.5267 } },
+  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, mouth: { x: 0.5093, y: 0.5069 } },
+  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, mouth: { x: 0.5031, y: 0.4680 } },
+  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: f10b, mouth: { x: 0.7754, y: 0.4609 } },
+  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, mouth: { x: 0.7696, y: 0.4622 } },
+  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, mouth: { x: 0.8512, y: 0.3913 } },
+  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: f13b, mouth: { x: 0.8384, y: 0.3981 } },
+  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: f14b, mouth: { x: 0.8057, y: 0.3017 } },
+  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: f15b, mouth: { x: 0.8154, y: 0.2871 } },
+  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, mouth: { x: 0.8547, y: 0.2648 } },
 ];
 
-export default { aspect: 1.3545, width: 1024, height: 756, mirrored: true, eggPortrait: eggPortrait, frames: FRAMES };
+export default { aspect: 1.3690, width: 1024, height: 748, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES };

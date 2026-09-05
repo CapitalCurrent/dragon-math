@@ -129,8 +129,10 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
     const from = eggFrames.indexOf(shown), to = eggFrames.indexOf(target);
     const path = to > from ? eggFrames.slice(from + 1, to + 1) : [target];
     setRumbling(true);
-    const timers = path.map((f, k) => setTimeout(() => setShown(f), 250 + k * 380));
-    timers.push(setTimeout(() => setRumbling(false), 250 + path.length * 380 + 300));
+    // the reveal frames flip fast (a fracture runs in a burst), then the egg settles
+    const step = path.length > 2 ? 170 : 380;
+    const timers = path.map((f, k) => setTimeout(() => setShown(f), 220 + k * step));
+    timers.push(setTimeout(() => setRumbling(false), 220 + path.length * step + 350));
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
@@ -195,6 +197,15 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
         height: boxH * 0.07, borderRadius: '50%',
         background: 'radial-gradient(ellipse, #000000aa 0%, transparent 70%)',
       }} />
+      {/* The broken shell stays on the floor behind the dragon after the hatch (the nest) */}
+      {!isEgg && set.remnants && (
+        <img
+          src={set.remnants}
+          alt=""
+          aria-hidden="true"
+          style={{ ...FILL, opacity: 0.95, zIndex: 0 }}
+        />
+      )}
       {/* Aura glow in the dragon's element color, pulsing with the breath */}
       <motion.div
         animate={{ opacity: isEgg ? [0.8, 1, 0.8] : [0.65, 1, 0.65] }}
@@ -214,7 +225,9 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               : { rotate: eggIndex > 0 ? [-2.5, 2.5, -2.5] : [-1, 1, -1] })
             : chomping
               ? { scale: [1, 1.06, 0.97, 1.04, 1], y: [0, -6, 3, -2, 0] }
-              : { y: [0, -5, 0], scaleY: [1, 1.02, 1], rotate: [0, -0.6, 0, 0.5, 0] }}
+              // breathing = a chest swell from the feet up; NO vertical drift (a bob made a planted
+              // dragon look like it was hovering - Iona 9/5)
+              : { scaleY: [1, 1.025, 1], scaleX: [1, 1.008, 1], rotate: [0, -0.4, 0, 0.35, 0] }}
           transition={isEgg
             ? (rumbling
               ? { duration: 0.55, repeat: 2, ease: 'easeInOut' }
@@ -222,9 +235,9 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
             : chomping
               ? { duration: 0.7, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
               : {
-                  y: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-                  scaleY: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-                  rotate: { duration: 11, repeat: Infinity, ease: 'easeInOut' },
+                  scaleY: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
+                  scaleX: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
+                  rotate: { duration: 13, repeat: Infinity, ease: 'easeInOut' },
                 }}
         >
           {/* Crossfade: the previous frame stays mounted underneath while the new one fades in */}

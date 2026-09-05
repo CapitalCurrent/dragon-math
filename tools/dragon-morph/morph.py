@@ -45,8 +45,8 @@ KEY_M = [0.0, 1.0]              # TWO anchors only (Ryan 9/5): the adult, and th
                                 # Every other frame is a morph descendant of those two (run.py subdivides:
                                 # the midpoint is morphed and promoted to a key, then the quarter points).
 GROWTH_P = [round(0.20 + 0.05 * i, 2) for i in range(17)]   # progress values that show a dragon
-EGG_P = [0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15]   # crust + 6 crack steps (two per answer; the .x25 ones
-                                                       # are the mid-rumble frames the app shows on the way)
+EGG_P = [round(i * 0.0125, 4) for i in range(13)]      # solid + 12 reveal frames (four per answer, played on the
+                                                       # rumble; the app lands on every 4th = each answer's state)
 
 # The daughter's brief (9/3): REALISTIC, serious-looking dragons - not cute-and-cartoony. A little
 # softness is allowed in the hatchling and it drains away with age. The eggs she already likes stay.
@@ -390,70 +390,95 @@ def crack_pixels(frame_path, intact_path):
     return np.abs(a - b).mean(axis=2) > CRACK_THR
 
 def draw_crack(rgba, step, seed=4242):
-    """Draw the crack GEOMETRY ourselves (the model repaints crust when asked for a fissure, 9/5):
-    a jagged path from the upper shell that extends and widens with each step - dark fracture, a
-    white-hot core, a soft orange glow - and from step 5 a wedge of shell missing showing magma.
-    Returns (rgba with the crack drawn, L mask of the drawn region grown for the blending inpaint)."""
+    """Crack geometry FROM THE EGG'S OWN STRUCTURE (Ryan 9/5 13:10: a line drawn across the plates is
+    not realistic - the crust is thin at the seams). Seams (bright) and plates (dark) are segmented by
+    colour; a corridor from the top of the shell widens per step; inside it the seams are pushed to
+    white-hot and widened (the crust splitting where it is thinnest), the plate edges beside them
+    darken (lifting), and from step 5 one or two plates inside the corridor fall out and become the
+    hole with a magma core and a drip. Returns (rgba with the crack applied, L mask for blending)."""
     import random
     from PIL import ImageFilter
+    from scipy import ndimage as ndi
     rnd = random.Random(seed)
     im = rgba.convert("RGBA").copy()
+    arr = np.asarray(im).astype(float)
+    alpha = arr[:, :, 3] > 128
     x0, y0, x1, y1 = alpha_bbox(im)
     w, h = x1 - x0, y1 - y0
-    # a fixed jagged path down the front of the egg (fractions of the bbox), 8 segments
-    pts = [(0.46, 0.16)]
-    for k in range(8):
+    hsv = np.asarray(im.convert("RGB").convert("HSV")).astype(float)
+    seam = alpha & (hsv[:, :, 2] > 150) & (hsv[:, :, 1] > 90)          # bright orange/yellow = thin seam
+    plate = alpha & ~seam
+    # the corridor: a jagged path from the top of the shell down the front, widening with the step
+    pts = [(0.48, 0.10)]
+    for _ in range(7):
         px, py = pts[-1]
-        pts.append((min(0.9, max(0.1, px + rnd.uniform(-0.09, 0.09))), min(0.95, py + rnd.uniform(0.07, 0.11))))
-    branch = [pts[3], (pts[3][0] - 0.14, pts[3][1] + 0.05), (pts[3][0] - 0.22, pts[3][1] + 0.13)]
-    branch2 = [pts[5], (pts[5][0] + 0.13, pts[5][1] + 0.04), (pts[5][0] + 0.2, pts[5][1] + 0.12)]
-    to_px = lambda p: (x0 + p[0] * w, y0 + p[1] * h)
-    segs = {1: 3, 2: 5, 3: 7, 4: 9, 5: 9, 6: 9}[min(step, 6)]
-    main = [to_px(p) for p in pts[:segs]]
-    width = {1: 5, 2: 8, 3: 11, 4: 15, 5: 19, 6: 22}[min(step, 6)] * (w / 300)
-    layer = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    glow = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    d, g = ImageDraw.Draw(layer), ImageDraw.Draw(glow)
-    lines = [main]
-    if step >= 3:
-        lines.append([to_px(p) for p in branch])
-    if step >= 4:
-        lines.append([to_px(p) for p in branch2])
-    for ln in lines:
-        g.line(ln, fill=(255, 140, 30, 200), width=int(width * 3 + 6), joint="curve")
-        d.line(ln, fill=(20, 8, 4, 255), width=int(width + 2), joint="curve")
-        d.line(ln, fill=(255, 200, 90, 255), width=max(1, int(width * 0.45)), joint="curve")
+        pts.append((min(0.85, max(0.15, px + rnd.uniform(-0.10, 0.10))), min(0.92, py + rnd.uniform(0.08, 0.12))))
+    n_pts = {1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 8}[min(step, 6)]
+    corridor_w = {1: 0.05, 2: 0.07, 3: 0.09, 4: 0.11, 5: 0.13, 6: 0.15}[min(step, 6)] * w
+    cor = Image.new("L", im.size, 0)
+    ImageDraw.Draw(cor).line([(x0 + p[0] * w, y0 + p[1] * h) for p in pts[:n_pts]], fill=255,
+                             width=int(corridor_w), joint="curve")
+    cor = np.asarray(cor) > 0
+    active = seam & cor
+    # widen the active seams as the crack grows (the crust splitting)
+    grow_px = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5}[min(step, 6)]
+    if grow_px:
+        active = ndi.binary_dilation(active, iterations=grow_px) & alpha
+    out = arr.copy()
+    # white-hot core along the active seams, hotter with each step
+    heat = {1: 0.35, 2: 0.5, 3: 0.65, 4: 0.8, 5: 0.9, 6: 1.0}[min(step, 6)]
+    core = np.array([255, 245, 200, 255], dtype=float)
+    out[active] = out[active] * (1 - heat) + core * heat
+    # the plate edges beside the active seams darken and lift (a rim 3-6 px into the plates)
+    rim = ndi.binary_dilation(active, iterations=3 + step) & plate
+    out[rim, :3] *= 0.55
+    hole = np.zeros_like(alpha)
     if step >= 5:
-        # a wedge of shell gone around the middle of the path: dark rim, blazing core
-        cx, cy = to_px(pts[4])
-        r = (0.10 if step == 5 else 0.16) * w
-        poly = [(cx + r * math.cos(a) * rnd.uniform(0.7, 1.15), cy + r * 0.8 * math.sin(a) * rnd.uniform(0.7, 1.15))
-                for a in [i * math.pi / 5 for i in range(10)]]
-        g.polygon(poly, fill=(255, 160, 40, 230))
-        # a magma gradient: dark rim -> orange -> white-hot centre (concentric shrinking polygons)
-        for frac, col in ((1.0, (35, 12, 5, 255)), (0.82, (200, 60, 10, 255)), (0.62, (255, 140, 30, 255)),
-                          (0.40, (255, 210, 90, 255)), (0.18, (255, 245, 200, 255))):
-            d.polygon([(cx + (px - cx) * frac, cy + (py - cy) * frac) for px, py in poly], fill=col)
-        # lava DRIPS from the low point of the wedge: one at step 5, two at step 6 (Ryan 9/5: a little)
-        low = max(poly, key=lambda p: p[1])
+        # one (step 5) or two (step 6) plates inside the corridor fall out: pick the largest plate
+        # components that touch the corridor around the middle of the path
+        lbl, n = ndi.label(plate & ~rim)
+        sizes = ndi.sum(plate, lbl, index=range(1, n + 1))
+        mid_y = y0 + pts[min(4, n_pts - 1)][1] * h
+        cands = []
+        for i in range(1, n + 1):
+            ys, xs = np.where(lbl == i)
+            if len(xs) == 0 or not (cor[ys, xs].any()):
+                continue
+            cands.append((abs(ys.mean() - mid_y), -sizes[i - 1], i))
+        cands.sort()
+        for _, _, i in cands[: (1 if step == 5 else 2)]:
+            hole |= (lbl == i)
+        hole = ndi.binary_dilation(hole, iterations=2) & alpha
+        # magma gradient inside the hole: dark rim -> orange -> white-hot centre (by distance from the edge)
+        dist = ndi.distance_transform_edt(hole)
+        if dist.max() > 0:
+            t = np.clip(dist / dist.max(), 0, 1)
+            stops = [(0.0, (35, 12, 5)), (0.25, (200, 60, 10)), (0.55, (255, 140, 30)), (0.8, (255, 210, 90)), (1.0, (255, 245, 200))]
+            for c in range(3):
+                col = np.interp(t[hole], [s[0] for s in stops], [s[1][c] for s in stops])
+                out[:, :, c][hole] = col
+    out = np.clip(out, 0, 255).astype(np.uint8)
+    im2 = Image.fromarray(out, "RGBA")
+    # glow around the hot seams / hole
+    glow_src = Image.fromarray(((active | hole) * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(6 + step * 2))
+    glow = Image.new("RGBA", im.size, (255, 140, 30, 0)); glow.putalpha(glow_src.point(lambda v: int(v * 0.6)))
+    im2.alpha_composite(glow)
+    if step >= 5 and hole.any():
+        d = ImageDraw.Draw(im2)
+        ys, xs = np.where(hole)
+        low = (float(xs[ys.argmax()]), float(ys.max()))
         for k in range(1 if step == 5 else 2):
-            dx = (k * 2 - 1) * r * 0.35 if step == 6 else 0
-            length = h * (0.09 if k == 0 else 0.06)
-            path = [(low[0] + dx, low[1]), (low[0] + dx + r * 0.08, low[1] + length * 0.5), (low[0] + dx, low[1] + length)]
-            dw = max(3, int(width * 0.5))
-            g.line(path, fill=(255, 150, 40, 220), width=dw * 3, joint="curve")
+            dx = (k * 2 - 1) * w * 0.05 if step == 6 else 0
+            length = h * (0.08 if k == 0 else 0.055)
+            path = [(low[0] + dx, low[1]), (low[0] + dx + w * 0.02, low[1] + length * 0.5), (low[0] + dx, low[1] + length)]
+            dw = max(3, int(w * 0.02))
             d.line(path, fill=(230, 80, 15, 255), width=dw + 2, joint="curve")
             d.line(path, fill=(255, 215, 110, 255), width=max(1, dw // 2), joint="curve")
-            bead = (path[-1][0] - dw, path[-1][1] - dw * 0.4, path[-1][0] + dw, path[-1][1] + dw * 1.2)
-            d.ellipse(bead, fill=(255, 230, 150, 255), outline=(230, 80, 15, 255), width=1)
-    glow = glow.filter(ImageFilter.GaussianBlur(width * 1.5 + 4))
-    im.alpha_composite(glow)
-    im.alpha_composite(layer)
-    # keep the egg's own alpha: nothing is drawn outside the shell
-    im.putalpha(rgba.split()[3])
-    region = Image.fromarray((np.asarray(layer)[:, :, 3] > 0).astype(np.uint8) * 255, "L")
-    region = region.filter(ImageFilter.MaxFilter(int(width * 2) * 2 + 9))
-    return im, region
+            d.ellipse((path[-1][0] - dw, path[-1][1] - dw * 0.4, path[-1][0] + dw, path[-1][1] + dw * 1.2),
+                      fill=(255, 230, 150, 255), outline=(230, 80, 15, 255), width=1)
+    im2.putalpha(rgba.split()[3])
+    region = Image.fromarray(((ndi.binary_dilation(active | rim | hole, iterations=6)) * 255).astype(np.uint8), "L")
+    return im2, region
 
 
 def crack_mask(prev_path, intact_path, grow):

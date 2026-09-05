@@ -69,7 +69,6 @@ import f09o from './f09o.webp';
 import f09b from './f09b.webp';
 import f10 from './f10.webp';
 import f10o from './f10o.webp';
-import f10b from './f10b.webp';
 import f11 from './f11.webp';
 import f11o from './f11o.webp';
 import f11b from './f11b.webp';
@@ -78,74 +77,70 @@ import f12o from './f12o.webp';
 import f12b from './f12b.webp';
 import f13 from './f13.webp';
 import f13o from './f13o.webp';
-import f13b from './f13b.webp';
 import f14 from './f14.webp';
 import f14o from './f14o.webp';
-import f14b from './f14b.webp';
 import f15 from './f15.webp';
 import f15o from './f15o.webp';
-import f15b from './f15b.webp';
 import f16 from './f16.webp';
 import f16o from './f16o.webp';
-import f16b from './f16b.webp';
 import eggPortrait from './egg.webp';
 import remnants from './remnants.webp';
 
 const FRAMES = [
-  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, mouth: { x: 0.5000, y: 0.7546 } },
-  { p: 0.00417, kind: 'egg', closed: e1, open: null, blink: null, mouth: { x: 0.5000, y: 0.7546 } },
-  { p: 0.00833, kind: 'egg', closed: e2, open: null, blink: null, mouth: { x: 0.5000, y: 0.7546 } },
-  { p: 0.0125, kind: 'egg', closed: e3, open: null, blink: null, mouth: { x: 0.5000, y: 0.6122 } },
-  { p: 0.01667, kind: 'egg', closed: e4, open: null, blink: null, mouth: { x: 0.5000, y: 0.6281 } },
-  { p: 0.02083, kind: 'egg', closed: e5, open: null, blink: null, mouth: { x: 0.5000, y: 0.7546 } },
-  { p: 0.025, kind: 'egg', closed: e6, open: null, blink: null, mouth: { x: 0.5000, y: 0.7409 } },
-  { p: 0.02917, kind: 'egg', closed: e7, open: null, blink: null, mouth: { x: 0.5000, y: 0.5956 } },
-  { p: 0.03333, kind: 'egg', closed: e8, open: null, blink: null, mouth: { x: 0.5004, y: 0.5956 } },
-  { p: 0.0375, kind: 'egg', closed: e9, open: null, blink: null, mouth: { x: 0.5004, y: 0.6304 } },
-  { p: 0.04167, kind: 'egg', closed: e10, open: null, blink: null, mouth: { x: 0.5004, y: 0.7364 } },
-  { p: 0.04583, kind: 'egg', closed: e11, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.05, kind: 'egg', closed: e12, open: null, blink: null, mouth: { x: 0.5000, y: 0.7538 } },
-  { p: 0.05417, kind: 'egg', closed: e13, open: null, blink: null, mouth: { x: 0.5000, y: 0.7538 } },
-  { p: 0.05833, kind: 'egg', closed: e14, open: null, blink: null, mouth: { x: 0.5000, y: 0.7538 } },
-  { p: 0.0625, kind: 'egg', closed: e15, open: null, blink: null, mouth: { x: 0.5000, y: 0.7538 } },
-  { p: 0.06667, kind: 'egg', closed: e16, open: null, blink: null, mouth: { x: 0.5000, y: 0.7538 } },
-  { p: 0.07083, kind: 'egg', closed: e17, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.075, kind: 'egg', closed: e18, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.07917, kind: 'egg', closed: e19, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.08333, kind: 'egg', closed: e20, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.0875, kind: 'egg', closed: e21, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.09167, kind: 'egg', closed: e22, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.09583, kind: 'egg', closed: e23, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.1, kind: 'egg', closed: e24, open: null, blink: null, mouth: { x: 0.5004, y: 0.7538 } },
-  { p: 0.10417, kind: 'egg', closed: e25, open: null, blink: null, mouth: { x: 0.5008, y: 0.7538 } },
-  { p: 0.10833, kind: 'egg', closed: e26, open: null, blink: null, mouth: { x: 0.5008, y: 0.7538 } },
-  { p: 0.1125, kind: 'egg', closed: e27, open: null, blink: null, mouth: { x: 0.5008, y: 0.7531 } },
-  { p: 0.11667, kind: 'egg', closed: e28, open: null, blink: null, mouth: { x: 0.5008, y: 0.7531 } },
-  { p: 0.12083, kind: 'egg', closed: e29, open: null, blink: null, mouth: { x: 0.5008, y: 0.7531 } },
-  { p: 0.125, kind: 'egg', closed: e30, open: null, blink: null, mouth: { x: 0.5008, y: 0.7531 } },
-  { p: 0.12917, kind: 'egg', closed: e31, open: null, blink: null, mouth: { x: 0.5008, y: 0.7531 } },
-  { p: 0.13333, kind: 'egg', closed: e32, open: null, blink: null, mouth: { x: 0.5008, y: 0.7523 } },
-  { p: 0.1375, kind: 'egg', closed: e33, open: null, blink: null, mouth: { x: 0.5008, y: 0.7515 } },
-  { p: 0.14167, kind: 'egg', closed: e34, open: null, blink: null, mouth: { x: 0.5013, y: 0.7449 } },
-  { p: 0.14583, kind: 'egg', closed: e35, open: null, blink: null, mouth: { x: 0.5000, y: 0.7520 } },
-  { p: 0.15, kind: 'egg', closed: e36, open: null, blink: null, mouth: { x: 0.5000, y: 0.7520 } },
-  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, mouth: { x: 0.5000, y: 0.7525 } },
-  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, mouth: { x: 0.4933, y: 0.7251 } },
-  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, mouth: { x: 0.4726, y: 0.6931 } },
-  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, mouth: { x: 0.4966, y: 0.6598 } },
-  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, mouth: { x: 0.5021, y: 0.6339 } },
-  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, mouth: { x: 0.4895, y: 0.6043 } },
-  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, mouth: { x: 0.5135, y: 0.5721 } },
-  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, mouth: { x: 0.5008, y: 0.4946 } },
-  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, mouth: { x: 0.4945, y: 0.5060 } },
-  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, mouth: { x: 0.4836, y: 0.4723 } },
-  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: f10b, mouth: { x: 0.7676, y: 0.4578 } },
-  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, mouth: { x: 0.7926, y: 0.4004 } },
-  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, mouth: { x: 0.8846, y: 0.3843 } },
-  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: f13b, mouth: { x: 0.6021, y: 0.6565 } },
-  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: f14b, mouth: { x: 0.6051, y: 0.6567 } },
-  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: f15b, mouth: { x: 0.6082, y: 0.6567 } },
-  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: f16b, mouth: { x: 0.6131, y: 0.6524 } },
+  { p: 0.0, kind: 'egg', closed: e0, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7467 } },
+  { p: 0.00417, kind: 'egg', closed: e1, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7467 } },
+  { p: 0.00833, kind: 'egg', closed: e2, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7467 } },
+  { p: 0.0125, kind: 'egg', closed: e3, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.6028 } },
+  { p: 0.01667, kind: 'egg', closed: e4, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.6189 } },
+  { p: 0.02083, kind: 'egg', closed: e5, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7467 } },
+  { p: 0.025, kind: 'egg', closed: e6, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7329 } },
+  { p: 0.02917, kind: 'egg', closed: e7, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.5860 } },
+  { p: 0.03333, kind: 'egg', closed: e8, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.5860 } },
+  { p: 0.0375, kind: 'egg', closed: e9, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.6212 } },
+  { p: 0.04167, kind: 'egg', closed: e10, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7283 } },
+  { p: 0.04583, kind: 'egg', closed: e11, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.05, kind: 'egg', closed: e12, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7459 } },
+  { p: 0.05417, kind: 'egg', closed: e13, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7459 } },
+  { p: 0.05833, kind: 'egg', closed: e14, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7459 } },
+  { p: 0.0625, kind: 'egg', closed: e15, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7459 } },
+  { p: 0.06667, kind: 'egg', closed: e16, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7459 } },
+  { p: 0.07083, kind: 'egg', closed: e17, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.075, kind: 'egg', closed: e18, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.07917, kind: 'egg', closed: e19, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.08333, kind: 'egg', closed: e20, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.0875, kind: 'egg', closed: e21, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.09167, kind: 'egg', closed: e22, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.09583, kind: 'egg', closed: e23, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.1, kind: 'egg', closed: e24, open: null, blink: null, idle: [], mouth: { x: 0.5004, y: 0.7459 } },
+  { p: 0.10417, kind: 'egg', closed: e25, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7459 } },
+  { p: 0.10833, kind: 'egg', closed: e26, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7459 } },
+  { p: 0.1125, kind: 'egg', closed: e27, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7452 } },
+  { p: 0.11667, kind: 'egg', closed: e28, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7452 } },
+  { p: 0.12083, kind: 'egg', closed: e29, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7452 } },
+  { p: 0.125, kind: 'egg', closed: e30, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7452 } },
+  { p: 0.12917, kind: 'egg', closed: e31, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7452 } },
+  { p: 0.13333, kind: 'egg', closed: e32, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7444 } },
+  { p: 0.1375, kind: 'egg', closed: e33, open: null, blink: null, idle: [], mouth: { x: 0.5009, y: 0.7436 } },
+  { p: 0.14167, kind: 'egg', closed: e34, open: null, blink: null, idle: [], mouth: { x: 0.5013, y: 0.7370 } },
+  { p: 0.14583, kind: 'egg', closed: e35, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7441 } },
+  { p: 0.15, kind: 'egg', closed: e36, open: null, blink: null, idle: [], mouth: { x: 0.5000, y: 0.7441 } },
+  { p: 0.2, kind: 'dragon', closed: f00, open: f00o, blink: f00b, idle: [], mouth: { x: 0.4926, y: 0.7459 } },
+  { p: 0.25, kind: 'dragon', closed: f01, open: f01o, blink: f01b, idle: [], mouth: { x: 0.4877, y: 0.7022 } },
+  { p: 0.3, kind: 'dragon', closed: f02, open: f02o, blink: f02b, idle: [], mouth: { x: 0.4961, y: 0.6805 } },
+  { p: 0.35, kind: 'dragon', closed: f03, open: f03o, blink: f03b, idle: [], mouth: { x: 0.4877, y: 0.6533 } },
+  { p: 0.4, kind: 'dragon', closed: f04, open: f04o, blink: f04b, idle: [], mouth: { x: 0.4965, y: 0.6270 } },
+  { p: 0.45, kind: 'dragon', closed: f05, open: f05o, blink: f05b, idle: [], mouth: { x: 0.5039, y: 0.5949 } },
+  { p: 0.5, kind: 'dragon', closed: f06, open: f06o, blink: f06b, idle: [], mouth: { x: 0.4790, y: 0.5806 } },
+  { p: 0.55, kind: 'dragon', closed: f07, open: f07o, blink: f07b, idle: [], mouth: { x: 0.4912, y: 0.5317 } },
+  { p: 0.6, kind: 'dragon', closed: f08, open: f08o, blink: f08b, idle: [], mouth: { x: 0.4772, y: 0.4847 } },
+  { p: 0.65, kind: 'dragon', closed: f09, open: f09o, blink: f09b, idle: [], mouth: { x: 0.4952, y: 0.4770 } },
+  { p: 0.7, kind: 'dragon', closed: f10, open: f10o, blink: null, idle: [], mouth: { x: 0.7468, y: 0.4947 } },
+  { p: 0.75, kind: 'dragon', closed: f11, open: f11o, blink: f11b, idle: [], mouth: { x: 0.8630, y: 0.4635 } },
+  { p: 0.8, kind: 'dragon', closed: f12, open: f12o, blink: f12b, idle: [], mouth: { x: 0.9017, y: 0.4440 } },
+  { p: 0.85, kind: 'dragon', closed: f13, open: f13o, blink: null, idle: [], mouth: { x: 0.6115, y: 0.6605 } },
+  { p: 0.9, kind: 'dragon', closed: f14, open: f14o, blink: null, idle: [], mouth: { x: 0.6128, y: 0.6497 } },
+  { p: 0.95, kind: 'dragon', closed: f15, open: f15o, blink: null, idle: [], mouth: { x: 0.6129, y: 0.6538 } },
+  { p: 1.0, kind: 'dragon', closed: f16, open: f16o, blink: null, idle: [], mouth: { x: 0.6124, y: 0.6555 } },
 ];
 
-export default { aspect: 1.5492, width: 1024, height: 661, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES };
+export default { aspect: 1.5059, width: 1024, height: 680, mirrored: true, eggPortrait: eggPortrait, remnants: remnants, frames: FRAMES };

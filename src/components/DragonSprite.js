@@ -162,6 +162,20 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
       : { scale: [1, 1.02, 1], transition: { duration: 0.6, ease: 'easeInOut' } });
   }, [frame.p, isHatch, pulse]);
 
+  // Idle life from generated clips: the frame's idle frames play back and forth at rest.
+  const idleFrames = (!isEgg && frame.idle && frame.idle.length > 1) ? frame.idle : null;
+  const [idleK, setIdleK] = useState(0);
+  useEffect(() => {
+    if (!idleFrames || chomping) return undefined;
+    let k = 0, dir = 1;
+    const t = setInterval(() => {
+      k += dir;
+      if (k >= idleFrames.length - 1 || k <= 0) dir = -dir;
+      setIdleK(k);
+    }, 140);
+    return () => clearInterval(t);
+  }, [idleFrames, chomping]);
+
   // Idle life: a blink every 3-7 s (the eyes-closed twin, when the set has one) and a rare stretch.
   const [blinking, setBlinking] = useState(false);
   useEffect(() => {
@@ -253,6 +267,14 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               style={{ ...FILL, filter: isEgg ? `drop-shadow(0 8px ${glowPx}px ${glow}${eggIndex > 1 ? '88' : '55'})` : 'none' }}
             />
           </AnimatePresence>
+          {idleFrames && (
+            <img
+              src={idleFrames[idleK]}
+              alt=""
+              aria-hidden="true"
+              style={{ ...FILL, opacity: chomping || blinking ? 0 : 1, zIndex: 1 }}
+            />
+          )}
           {frame.open && (
             <img
               src={frame.open}

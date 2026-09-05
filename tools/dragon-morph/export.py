@@ -78,6 +78,15 @@ def export_dragon(pl):
         if bsrc and os.path.exists(bsrc):
             bname = write(bsrc, f"{fid}b.webp")
             imports.append(f"import {fid}b from './{bname}';")
+        # idle life: k frames played back and forth at rest (LTX clips, thinned)
+        idle_names = []
+        if kind == "dragon":
+            k = 0
+            while os.path.exists(pl.p("idle", f"{fid}_{k}_rgba.png")):
+                nm = write(pl.p("idle", f"{fid}_{k}_rgba.png"), f"{fid}i{k}.webp")
+                imports.append(f"import {fid}i{k} from './{nm}';")
+                idle_names.append(f"{fid}i{k}")
+                k += 1
         # mouth anchor as a fraction of the exported crop
         if kind == "dragon" and fid[1:] in mouths:
             mi = mouths[fid[1:]]
@@ -89,7 +98,8 @@ def export_dragon(pl):
         if mirror:
             mx = 1 - mx
         entries.append(f"  {{ p: {p}, kind: '{kind}', closed: {fid}, open: {fid + 'o' if oname else 'null'}, "
-                       f"blink: {fid + 'b' if bname else 'null'}, mouth: {{ x: {mx:.4f}, y: {my:.4f} }} }},")
+                       f"blink: {fid + 'b' if bname else 'null'}, idle: [{', '.join(idle_names)}], "
+                       f"mouth: {{ x: {mx:.4f}, y: {my:.4f} }} }},")
         total += os.path.getsize(os.path.join(out_dir, cname)) + (os.path.getsize(os.path.join(out_dir, oname)) if oname else 0)
 
     # the select-screen portrait = the solid crust egg (frame 0) at generation size, so the egg the

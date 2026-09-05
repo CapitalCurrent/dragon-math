@@ -1023,6 +1023,10 @@ class Pipeline:
             if not mi or not os.path.exists(src):
                 log(f"  {i:02d}: no chomp record yet (run chomp first) - skipping")
                 continue
+            if not mi.get("eye"):
+                # no located eye = no blink twin: a guessed eyelid patch reads as a glitch (Iona 9/5)
+                log(f"  {i:02d}: eye not located -> no blink twin for this frame")
+                continue
             made += 1
             hx0, hy0, hx1, hy1 = mi["head"]
             mx0, my0, mx1, my1 = mi["mouth"]

@@ -227,7 +227,8 @@ def vet_dragon(pl):
         f = []
         if M.edge_contact(im):
             f.append("edge")
-        if abs(bb[3] / M.H - M.FLOOR) > 0.03:
+        # clip-authored egg frames (LTX) shed chunks and spurt lava by design: no floor/step checks
+        if len(M.EGG_P) <= 13 and abs(bb[3] / M.H - M.FLOOR) > 0.03:
             f.append(f"floor:{bb[3]/M.H:.2f}")
         egg_thumbs[i] = thumb(im)
         egg_rows.append({"i": i, "flags": f})
@@ -258,7 +259,7 @@ def vet_dragon(pl):
         egg_crack_notes.append(egg_rows_note)
     egg_d = {(a, b): step_distance(egg_thumbs[a], egg_thumbs[b])
              for a, b in zip(sorted(egg_thumbs), sorted(egg_thumbs)[1:])}
-    if len(egg_d) >= 2:
+    if len(egg_d) >= 2 and len(M.EGG_P) <= 13:
         emed = float(np.median(list(egg_d.values())))
         for (a, b), d in egg_d.items():
             if emed > 0 and d > EGG_JUMP * emed:

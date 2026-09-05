@@ -100,6 +100,17 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   dragon's cave: nest ledge left third at floor y≈0.86, x≈0.30; wingspan headroom; mouth/light on the
   right; no lava/water under the nest. Exported `src/assets/art/cave-ember.webp`; per-dragon cave map
   in GameScreen's CaveBackground with cave-bg fallback. Other five caves: same recipe, one batch.**
+- **16:10 v2.8.3 DEPLOYED. LTX-VIDEO IS IN THE STACK** (`ltx.py`; checkpoint ltxv-2b-0.9.8-distilled +
+  the T5 GGUF via CLIPLoaderGGUF type ltxv; 6-16 s per 33-49-frame clip on the Arc; OpenRAIL-M). Proven:
+  egg transitions between our states with first+last-frame guidance (`eggltx.py` → 37 egg frames,
+  EGG_P has 37 entries, 12 per rumble, ONE fixed transform so the egg never rescales); subtle idle
+  breathing clips (33 frames, cutouts clean); powers = EFFECT-ONLY extraction (clip on black, lift what
+  brightened in front of the mouth, screen-blend over our still frame + open-mouth twin; chroma green
+  spilled into the fire and the clip's dragon drifts, so never show the clip's dragon). Big motion
+  smears the 2B distilled model: keep clips short/subtle. Powers rule (Ryan): auto-perform at unlock,
+  one tap replay each, no recharge; retire the skill bar.
+  NEXT: realistic rebuild (5th leg inpaint on the realistic adult; newborn with wing nubs; blink only
+  where the eye is found - coded) → idle loops per growth frame (8-frame ping-pong from LTX) → powers.**
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

@@ -27,6 +27,12 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   itself; every change gradual and organic.** Enforced by: chained low-denoise crack frames (the crack
   pattern is inherited and grows), vet `jump` (1.8× median step) + `detour` flags on growth AND egg
   steps, and in the app a 0.6 s crossfade with a 2 % swell per advance; the hatch alone gets the pop.
+- **CRACK PERSISTENCE (Ryan, 9/5): a crack can never vanish or move.** By construction: crack frames
+  1-3 are INPAINTS of the previous frame whose paintable region is the existing crack (diff vs the
+  intact frame 0) grown by 44/70 px, clipped to the egg; the first crack is seeded in a fixed
+  upper-shell patch. Outside the mask every pixel is byte-identical. Vet: `crack:lost` if < 85 % of
+  frame i's crack pixels survive in i+1, `crack:nogrowth` if the area doesn't grow ≥ 5 %. Mask logic
+  and the metric were proven offline on synthetic cracks (100 % kept / moved crack → 0 % kept).
 - Open risks to watch on the first live run: LatentBlend ghosting at mid-f (raise denoise or switch to
   pixel init); the hybrid hatchling graph once crashed the XPU (runner restarts and resumes);
   Florence "dragon head" grounding may return the whole body (fallback = alpha top third);
@@ -35,3 +41,4 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
 ## LOG
 - 2026-09-04 night — design + full build under the hub's hold (no GPU/CPU-heavy work). Checkpoint 1 committed.
 - 2026-09-05 — the gradual law folded in (chained cracks, jump/detour vet, slow crossfade + hatch pop). Checkpoint 2.
+- 2026-09-05 — crack persistence by construction (masked inpaint growth) + vet metric, proven offline. Checkpoint 3.

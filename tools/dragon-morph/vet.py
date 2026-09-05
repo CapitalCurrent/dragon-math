@@ -22,6 +22,8 @@ THUMB = 160
 JUMP_RATIO = 1.8      # a step this many times the median step is a jump (was 2.2 before the gradual law)
 DETOUR_RATIO = 1.15   # frame b is a detour when a->b and b->c both exceed a->c by this factor
 EGG_JUMP = 1.8        # the crack frames must also creep: same ratio on the 3 egg steps
+CRACK_KEEP = 0.85     # share of frame i's crack pixels that must still be crack in frame i+1
+CRACK_GROW = 1.05     # frame i+1's crack area must be at least this times frame i's
 BANNED = ("person", "people", "man ", "woman", "child", "human", "two dragons", "three dragons", "dragons ",
           "figure", "toy", "statue")
 
@@ -184,8 +186,8 @@ def vet_dragon(pl):
                         flags_by_idx[i].append(f"caption:{w.strip()}")
                         break
 
-    # eggs: geometry + the gradual law on the crack steps
-    egg_rows, egg_thumbs = [], {}
+    # eggs: geometry + the gradual law on the crack steps + crack persistence
+    egg_rows, egg_thumbs, egg_crack_notes = [], {}, []
     for i in range(len(M.EGG_P)):
         p = pl.p("eggs", f"egg_{i}_rgba.png")
         if not os.path.exists(p):
@@ -199,6 +201,29 @@ def vet_dragon(pl):
             f.append(f"floor:{bb[3]/M.H:.2f}")
         egg_thumbs[i] = thumb(im)
         egg_rows.append({"i": i, "flags": f})
+    # crack persistence: frame i's crack pixels must still differ from the intact egg in frame i+1
+    # (>= CRACK_KEEP of them), and the crack must GROW (area up by >= CRACK_GROW)
+    intact = pl.p("eggs", "egg_0.png")
+    cracks = {}
+    for i in range(1, len(M.EGG_P)):
+        p = pl.p("eggs", f"egg_{i}.png")
+        if os.path.exists(p) and os.path.exists(intact):
+            cracks[i] = M.crack_pixels(p, intact)
+    for i in sorted(cracks):
+        j = i + 1
+        if j not in cracks:
+            continue
+        ci, cj = cracks[i], cracks[j]
+        keep = float((ci & cj).sum()) / max(1, ci.sum())
+        growth_ratio = float(cj.sum()) / max(1, ci.sum())
+        for r in egg_rows:
+            if r["i"] == j:
+                if keep < CRACK_KEEP:
+                    r["flags"].append(f"crack:lost({keep*100:.0f}%kept)")
+                if growth_ratio < CRACK_GROW:
+                    r["flags"].append(f"crack:nogrowth(x{growth_ratio:.2f})")
+        egg_rows_note = f"egg {i}->{j}: {keep*100:.0f}% of the crack kept, area x{growth_ratio:.2f}"
+        egg_crack_notes.append(egg_rows_note)
     egg_d = {(a, b): float(np.abs(egg_thumbs[a] - egg_thumbs[b]).mean())
              for a, b in zip(sorted(egg_thumbs), sorted(egg_thumbs)[1:])}
     if len(egg_d) >= 2:
@@ -228,6 +253,8 @@ def vet_dragon(pl):
                 f.write(f"- egg {r['i']}: {' '.join(r['flags']) or 'ok'}\n")
             for (a, b), d in egg_d.items():
                 f.write(f"- egg {a}->{b}: {d:.1f}\n")
+            for n in egg_crack_notes:
+                f.write(f"- {n}\n")
         if caps:
             f.write("\n## captions\n")
             for i, c in caps.items():

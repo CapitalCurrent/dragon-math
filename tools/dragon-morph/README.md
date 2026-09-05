@@ -8,8 +8,10 @@ neighbours reads as the dragon actually growing.
 Brief (9/3): realistic, serious-looking dragons (not cute-and-cartoony); a little softness in the
 hatchling that drains away with age; the existing eggs stay (she likes them).
 **The gradual law (9/5): no sudden change of egg or dragon anywhere except the hatch; every step
-gradual and organic.** The vet's `jump` and `detour` flags are its teeth; the crack frames are chained
-so cracks grow rather than get redrawn; the app crossfades slowly and pops only at the hatch.
+gradual and organic.** The vet's `jump` and `detour` flags are its teeth; the app crossfades slowly and
+pops only at the hatch. **A crack can never vanish or move:** crack frames are masked inpaints of the
+previous frame where only the existing crack plus a margin may be painted (everything else is
+byte-identical), and the vet's `crack:lost` / `crack:nogrowth` flags measure it.
 
 ## Why this design
 | v2.7 problem | v2.8 answer |

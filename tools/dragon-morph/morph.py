@@ -309,6 +309,37 @@ def place_on_canvas(rgba, height_frac, floor=FLOOR, bg=(255, 255, 255)):
 def height_for(m):
     return H_HATCH + (H_ADULT - H_HATCH) * m
 
+CRACK_THR = 28          # mean |RGB diff| vs the intact egg above this = crack (or its glow)
+CRACK_SEED = (0.40, 0.16, 0.60, 0.50)   # first crack's seed patch, fractions of the egg's alpha bbox
+
+def crack_pixels(frame_path, intact_path):
+    """Boolean map of where a crack frame differs from the intact egg (frame 0)."""
+    a = np.asarray(Image.open(frame_path).convert("RGB")).astype(float)
+    b = np.asarray(Image.open(intact_path).convert("RGB")).astype(float)
+    return np.abs(a - b).mean(axis=2) > CRACK_THR
+
+def crack_mask(prev_path, intact_path, grow):
+    """Paintable region for the next crack frame: the existing crack grown by `grow` px - or, when
+    there is no crack yet (grow == 0 / nothing differs), a fixed seed patch on the upper shell.
+    Always clipped to the egg's own alpha so the background never gets painted."""
+    from PIL import ImageFilter
+    egg_alpha = np.asarray(Image.open(os.path.splitext(intact_path)[0] + "_rgba.png").convert("RGBA"))[:, :, 3] > 128
+    changed = crack_pixels(prev_path, intact_path) & egg_alpha if grow else np.zeros_like(egg_alpha)
+    if changed.sum() < 200:
+        ys, xs = np.where(egg_alpha)
+        x0, y0, x1, y1 = xs.min(), ys.min(), xs.max(), ys.max()
+        sx0, sy0, sx1, sy1 = CRACK_SEED
+        changed = np.zeros_like(egg_alpha)
+        changed[int(y0 + (y1 - y0) * sy0):int(y0 + (y1 - y0) * sy1),
+                int(x0 + (x1 - x0) * sx0):int(x0 + (x1 - x0) * sx1)] = True
+        changed &= egg_alpha
+        grow = 6
+    m = Image.fromarray((changed * 255).astype(np.uint8), "L")
+    if grow:
+        m = m.filter(ImageFilter.MaxFilter(grow * 2 + 1))
+    m = Image.fromarray(((np.asarray(m) > 0) & egg_alpha).astype(np.uint8) * 255, "L")
+    return m
+
 def rembg_rgba(png, model="birefnet-general"):
     return Image.open(cc().remove_bg(png, model)).convert("RGBA")
 
@@ -477,31 +508,46 @@ class Pipeline:
         plate_path = save_png(plate, self.p("eggs", "egg_plate.png"))
         name = "egg_plate.png" if self.a.dry_run else stage(plate_path)
         base = f"{self.d['shell']}, a single dragon egg sitting upright, {EGG_STYLE}"
-        # CHAINED on purpose (the one place chaining is right): each crack frame is a LOW-denoise pass
-        # over the previous frame, so the crack pattern is inherited and GROWS instead of being redrawn
-        # - "no sudden changes except the hatch" (Ryan 9/5). Three steps are too few to drift.
-        steps = [
-            (0.22, f"{base}, intact smooth shell, faint inner glow"),
-            (0.32, f"{base}, (a thin hairline crack:1.3) on the shell, faint light leaking from the crack"),
-            (0.36, f"{base}, (the same cracks spreading wider across the shell:1.4), small chips loosening, "
-                   "bright light leaking out"),
-            (0.40, f"{base}, (the cracks bursting open:1.4), shell pieces breaking away, blazing light pouring out"),
-        ]
+        # A CRACK CAN ONLY GROW WHERE IT ALREADY IS (Ryan 9/5: "you can't have a crack start to form
+        # and in the next image that crack is gone and somewhere else"). Frame 0 is one whole-egg pass.
+        # Every later frame is an INPAINT of the previous frame whose paintable region is the existing
+        # crack (pixels that differ from frame 0) grown outward by a margin - everything outside that
+        # region is byte-identical to the previous frame, so a crack cannot vanish or move; it can only
+        # extend at its edges. The first crack is seeded in a fixed patch on the upper shell.
         neg = self.neg + ", dragon, creature, hatchling, animal"
-        prev = name
-        for i, (dn, prompt) in enumerate(steps):
+        steps = [
+            (0.22, None, f"{base}, intact smooth shell, faint inner glow"),
+            (0.70, 0,    f"{base}, (a thin jagged hairline crack in the shell:1.4), faint light leaking from the crack"),
+            (0.62, 44,   f"{base}, (the crack spreading, branching wider across the shell:1.4), small chips "
+                         "loosening, bright light leaking out"),
+            (0.62, 70,   f"{base}, (the cracks bursting open:1.4), shell pieces breaking away, blazing light "
+                         "pouring out of the cracks"),
+        ]
+        prev_path, prev = plate_path, name
+        for i, (dn, grow, prompt) in enumerate(steps):
             dest = self.p("eggs", f"egg_{i}.png")
             if self.skip(i, self.p("eggs", f"egg_{i}_rgba.png")):
-                prev = f"egg_{i}.png" if self.a.dry_run else stage(dest)
+                prev_path, prev = dest, (f"egg_{i}.png" if self.a.dry_run else stage(dest))
                 continue
-            out = run(cc().build_img2img(t, prompt, neg, prev, dn, self.seed, f"dm_egg_{i}"),
-                      f"egg {i} d={dn} <- {prev}", self.a.dry_run, self.dry_dir)
+            if grow is None:
+                wf = cc().build_img2img(t, prompt, neg, prev, dn, self.seed, f"dm_egg_{i}")
+            else:
+                mask_path = self.p("eggs", f"egg_{i}_mask.png")
+                if not self.a.dry_run:
+                    mask = crack_mask(prev_path, self.p("eggs", "egg_0.png"), grow)
+                    save_png(mask, mask_path)
+                    mname = stage(mask_path)
+                else:
+                    mname = f"egg_{i}_mask.png"
+                wf = cc().build_sdxl_inpaint(t, prompt, neg, prev, mname, dn, self.seed, f"dm_egg_{i}", grow=4)
+            out = run(wf, f"egg {i} d={dn} <- {prev}" + (f" mask grow {grow}" if grow is not None else ""),
+                      self.a.dry_run, self.dry_dir)
             got = copy_out(out, dest)
             if got:
                 save_png(rembg_rgba(got), self.p("eggs", f"egg_{i}_rgba.png"))
-                prev = stage(got)
+                prev_path, prev = got, stage(got)
             else:
-                prev = f"egg_{i}.png"
+                prev_path, prev = dest, f"egg_{i}.png"
 
     # -- stage: morph
     def morph(self):

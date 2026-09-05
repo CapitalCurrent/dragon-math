@@ -13,7 +13,7 @@ Every stage is a separate morph.py process with --resume, so a crash (the Arc's 
 costs one stage: the runner restarts ComfyUI (its own portable python only) and continues where
 the outputs stop. Everything is logged to work/<dragon>/run.log.
 """
-import argparse, datetime, json, os, subprocess, sys, time, urllib.request
+import argparse, datetime, json, os, shutil, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -23,11 +23,23 @@ SERVER = "http://127.0.0.1:8188"
 PY = sys.executable
 MORPH = os.path.join(HERE, "morph.py")
 ORDER = ["ember", "frost", "stone", "shadow", "glimmer", "storm"]
-PIPELINE = ["keys", "plates", "eggs", "morph", "chomp"]
+PIPELINE = ["keys", "plates", "eggs", "subdivide", "morph", "chomp"]
+SUBDIVIDE = [[0.5], [0.25, 0.75]]   # midpoint first, then the quarter points: every frame descends from the 2 anchors
+KEY_TRIES = 3                       # seeds tried per subdivision key; the cleanest cutout wins
+CHUNK = 3                           # frames per studio session before a proactive restart (wedge avoidance)
+
+
+def ghost_score(rgba_path):
+    """Unresolved blends leave translucent ghosts: the share of semi-transparent pixels after
+    background removal, relative to the opaque body. Lower is cleaner."""
+    import numpy as np
+    from PIL import Image
+    a = np.asarray(Image.open(rgba_path).convert("RGBA"))[:, :, 3]
+    return float(((a > 20) & (a <= 230)).sum()) / max(1, (a > 230).sum())
 WORK = os.path.join(HERE, "work")
 SETTINGS = os.path.join(WORK, "settings.json")       # the tuned knobs, persisted across sessions
 CHECKPOINT = os.path.join(WORK, "checkpoint.json")   # where the runner was, updated at every step
-KNOBS = ("tier", "denoise", "open_denoise", "init", "ipa", "rounds", "no_caption")
+KNOBS = ("tier", "style", "denoise", "open_denoise", "init", "ipa", "rounds", "no_caption")
 
 
 def load_settings(args, argv):
@@ -77,20 +89,55 @@ def wait_up(timeout=300):
     return False
 
 
+def launch_comfy():
+    """Boot ComfyUI OURSELVES with the studio's environment but WITHOUT --disable-smart-memory.
+    That flag (right for the interactive studio) unloads every model after each prompt, so a batch
+    reloads ~6.5 GB per frame and the Arc dies during the load (UR_RESULT_ERROR_DEVICE_LOST, every
+    2-3 frames on 9/5). With models resident the load happens once per session."""
+    env = dict(os.environ)
+    env.update({
+        "HF_HUB_CACHE": os.path.join(STUDIO, "HuggingFaceHub"),
+        "TORCH_HOME": os.path.join(STUDIO, "TorchHome"),
+        "PYTHONPYCACHEPREFIX": os.path.join(STUDIO, "pycache"),
+        "ONEAPI_DEVICE_SELECTOR": "level_zero:0",
+        "PYTORCH_ALLOC_CONF": "expandable_segments:True",
+        "PATH": env.get("PATH", "") + ";" + os.path.join(STUDIO, "MinGit", "cmd") + ";"
+                + os.path.join(STUDIO, "python_standalone", "Scripts"),
+    })
+    out = open(os.path.join(WORK, "comfy.out"), "a", encoding="utf-8")
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "DETACHED_PROCESS", 0)
+    subprocess.Popen([os.path.join(STUDIO, "python_standalone", "python.exe"), "-s",
+                      os.path.join("ComfyUI", "main.py"), "--windows-standalone-build", "--disable-smart-memory", "--disable-auto-launch"],
+                     cwd=STUDIO, env=env, stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                     creationflags=flags)
+
+
 def start_comfy(log):
     if up():
         return True
-    log("ComfyUI not running -> starting Start-ComfyUI.bat")
-    subprocess.Popen(["cmd", "/c", "start", "", "/min", os.path.join(STUDIO, "Start-ComfyUI.bat")], cwd=STUDIO)
+    log("ComfyUI not running -> launching it (models resident, no --disable-smart-memory)")
+    launch_comfy()
     ok = wait_up()
     log("ComfyUI is up" if ok else "ComfyUI did not come up in 5 min")
     return ok
 
 
 def restart_comfy(log):
-    log("restarting ComfyUI (Restart-ComfyUI.bat: kills ONLY the studio's portable python)")
-    subprocess.Popen(["cmd", "/c", os.path.join(STUDIO, "Restart-ComfyUI.bat")], cwd=STUDIO)
-    time.sleep(8)
+    """Stop ONLY the ComfyUI server process (matched on its main.py command line) and start it again.
+    NEVER Restart-ComfyUI.bat from here: it kills every process on the studio's portable python,
+    and this runner IS one of those - it killed itself that way at 03:34 on 9/5 and sat dead 5 hours."""
+    log("restarting ComfyUI (targeted: the ComfyUI main.py process only)")
+    ps = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'python.exe' -and "
+          "$_.CommandLine -like '*ComfyUI*main.py*' } | ForEach-Object { "
+          "Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $_.ProcessId }")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True,
+                             timeout=60).stdout.split()
+    except Exception as e:
+        out = [f"(kill failed: {e})"]
+    log(f"  stopped ComfyUI pid(s): {' '.join(out) or 'none found'}")
+    time.sleep(5)
+    launch_comfy()
     ok = wait_up()
     log("ComfyUI is back" if ok else "ComfyUI did not come back")
     return ok
@@ -99,7 +146,7 @@ def restart_comfy(log):
 class Runner:
     def __init__(self, dragon, args):
         self.dragon, self.args = dragon, args
-        self.work = os.path.join(HERE, "work", dragon)
+        self.work = os.path.join(HERE, "work", dragon + (f"-{args.variant}" if getattr(args, "variant", "") else ""))
         os.makedirs(os.path.join(self.work, "review"), exist_ok=True)
         self.logf = open(os.path.join(self.work, "run.log"), "a", encoding="utf-8")
 
@@ -113,7 +160,13 @@ class Runner:
         a = self.args
         cmd = [PY, MORPH, "--dragon", self.dragon, "--stage", name, "--resume", "--tier", a.tier,
                "--denoise", str(a.denoise), "--init", a.init, "--ipa", str(a.ipa),
-               "--open-denoise", str(a.open_denoise)] + list(extra)
+               "--open-denoise", str(a.open_denoise), "--style", a.style] + list(extra)
+        if a.adult_ref and name == "keys":
+            cmd += ["--adult-ref", a.adult_ref, "--adult-ipa", str(a.adult_ipa)]
+        if getattr(a, "variant", ""):
+            cmd += ["--variant", a.variant]
+        if a.seed_bump and "--seed-bump" not in extra:
+            cmd += ["--seed-bump", str(a.seed_bump)]
         self.log("> " + " ".join(cmd[2:]))
         proc = subprocess.Popen(cmd, cwd=HERE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                 encoding="utf-8", errors="replace")
@@ -158,10 +211,68 @@ class Runner:
             seg = [i for i, p in enumerate(M.GROWTH_P) if lo < M.maturity(p) < hi]
             bad = [i for i in seg if i in flagged]
             clean = [i for i in seg if i not in flagged]
-            if len(bad) >= 2 and (hi - lo) > MIN_SEG and clean:
+            if len(bad) >= 2 and (hi - lo) > MIN_SEG and seg:
+                # prefer a clean frame; when the whole segment is flagged (a wing-unfurl segment on
+                # 9/5) the midpoint frame is still a real, resolved frame - halving the gap is the fix
                 mid = (lo + hi) / 2
-                out.append(min(clean, key=lambda i: abs(M.maturity(M.GROWTH_P[i]) - mid)))
+                out.append(min(clean or seg, key=lambda i: abs(M.maturity(M.GROWTH_P[i]) - mid)))
         return out
+
+    def subdivide(self):
+        """Build the family tree between the two anchors: morph the midpoint frame from adult+newborn,
+        promote it to a keyframe, then the quarter points from their halves. Every later frame then
+        morphs between keys that are themselves descendants of the same two images."""
+        for level in SUBDIVIDE:
+            keys = self.keys()
+            for m in level:
+                if any(abs(k - m) < 1e-6 for k in keys):
+                    self.log(f"subdivide: key at m={m} already exists")
+                    continue
+                idx = min(range(len(M.GROWTH_P)), key=lambda i: abs(M.maturity(M.GROWTH_P[i]) - m))
+                # a key is the root of everything below it: try KEY_TRIES seeds, keep the cleanest cutout
+                best, best_score = None, 1e9
+                src = os.path.join(self.work, "morph", f"f{idx:02d}")
+                for bump in range(KEY_TRIES):
+                    if not self.attempt("morph", ["--only", str(idx), "--seed-bump", str(bump)]):
+                        return False
+                    if not os.path.exists(src + "_rgba.png"):
+                        self.log(f"subdivide m={m} seed+{bump}: no output - skipping this try")
+                        continue
+                    score = ghost_score(src + "_rgba.png")
+                    self.log(f"subdivide m={m} seed+{bump}: ghost score {score:.3f}")
+                    if score < best_score:
+                        best_score = score
+                        for ext in (".png", "_rgba.png"):
+                            shutil.copyfile(src + ext, src + "_best" + ext)
+                if best_score >= 1e9:
+                    self.log(f"subdivide m={m}: every try failed")
+                    return False
+                for ext in (".png", "_rgba.png"):
+                    shutil.copyfile(src + "_best" + ext, src + ext)
+                    os.remove(src + "_best" + ext)
+                self.log(f"subdivide m={m}: kept the cleanest (score {best_score:.3f})")
+                if not self.attempt("promote", ["--only", str(idx)]):
+                    return False
+        self.log(f"subdivide: keys now {self.keys()}")
+        return True
+
+    def remaining(self, stage):
+        sub, suffix = ("morph", "_rgba.png") if stage == "morph" else ("chomp", "_open_rgba.png")
+        return [i for i in range(len(M.GROWTH_P))
+                if not os.path.exists(os.path.join(self.work, sub, f"f{i:02d}{suffix}"))]
+
+    def chunked(self, stage):
+        """The Arc wedges every few IPAdapter+img2img frames: run the stage CHUNK frames at a time and
+        restart the studio between chunks, before it can wedge (a wedge costs 150 s + a restart)."""
+        guard = 0
+        while self.remaining(stage) and guard < 12:
+            guard += 1
+            if not self.attempt(stage, ["--chunk", str(CHUNK)]):
+                return False
+            if self.remaining(stage):
+                self.log(f"{stage}: {len(self.remaining(stage))} frames left - proactive studio restart")
+                restart_comfy(self.log)
+        return not self.remaining(stage)
 
     def reload_settings(self):
         if os.path.exists(SETTINGS):
@@ -191,8 +302,14 @@ class Runner:
                 self.reload_settings()
                 self.log(f"sweep picked denoise {self.args.denoise} init {self.args.init} ipa {self.args.ipa}")
         for s in PIPELINE:
-            if not self.attempt(s):
+            ok = self.subdivide() if s == "subdivide" else \
+                 self.chunked(s) if s in ("morph", "chomp") else self.attempt(s)
+            if not ok:
                 status["failed_stage"] = s
+                return self.finish(status)
+            if s == self.args.stop_after:
+                self.log(f"stopping after '{s}' for Claude's review (re-run the same command to continue)")
+                status["failed_stage"] = f"paused-after-{s}"
                 return self.finish(status)
         vet_extra = ["--no-caption"] if self.args.no_caption else []
         for r in range(1, self.args.rounds + 1):
@@ -294,12 +411,19 @@ def main():
     ap.add_argument("--approve", default="", help="dragon to export after Claude's review")
     ap.add_argument("--rounds", type=int, default=3, help="max vet/reroll rounds per dragon")
     ap.add_argument("--tier", default="photoreal", choices=["photoreal", "daily"])
+    ap.add_argument("--style", default="realistic", choices=["graphic-novel", "realistic", "painterly"])
     ap.add_argument("--denoise", type=float, default=0.5)
     ap.add_argument("--open-denoise", type=float, default=0.72)
     ap.add_argument("--init", default="latent", choices=["latent", "pixel"])
     ap.add_argument("--ipa", type=float, default=0.45)
     ap.add_argument("--no-caption", action="store_true", help="skip Florence captions in vet (faster)")
     ap.add_argument("--force", action="store_true", help="re-run dragons already marked clean")
+    ap.add_argument("--seed-bump", type=int, default=0, help="forwarded to every stage (reroll the whole dragon)")
+    ap.add_argument("--adult-ref", default="", help="an existing image as the adult's identity reference (keys stage)")
+    ap.add_argument("--adult-ipa", type=float, default=0.6)
+    ap.add_argument("--variant", default="", help="work folder suffix: work/<dragon>-<variant> (one per style set)")
+    ap.add_argument("--stop-after", default="", choices=["", "keys", "plates", "eggs", "morph", "chomp"],
+                    help="pause after this stage so Claude can review (keys = approve the 4 keyframes first)")
     ap.add_argument("--sweep", action="store_true",
                     help="before the first dragon: auto-tune denoise/init/ipa on a 3-frame grid and persist the winner")
     ap.add_argument("--status", action="store_true", help="print the last checkpoint + per-dragon status and exit")

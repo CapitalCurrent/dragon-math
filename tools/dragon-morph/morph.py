@@ -39,43 +39,94 @@ sys.path.insert(0, HERE)
 W, H = 1216, 832          # SDXL-native landscape (multiples of 64); wide enough for spread wings
 FLOOR = 0.94              # bottom of the subject's alpha sits at 94% of canvas height
 EDGE_MARGIN = 0.02        # a keyframe whose alpha touches within 2% of an edge is CROPPED -> reroll
-H_HATCH, H_ADULT = 0.38, 0.95   # subject height fractions at maturity 0 and 1
+H_HATCH, H_ADULT = 0.30, 0.93   # subject height fractions at maturity 0 and 1 (newborn ~1/10 the adult's area)
 H_EGG = 0.36
-KEY_M = [0.0, 1/3, 2/3, 1.0]    # keyframe maturities
+KEY_M = [0.0, 1.0]              # TWO anchors only (Ryan 9/5): the adult, and the newborn generated AS ITS BABY.
+                                # Every other frame is a morph descendant of those two (run.py subdivides:
+                                # the midpoint is morphed and promoted to a key, then the quarter points).
 GROWTH_P = [round(0.20 + 0.05 * i, 2) for i in range(17)]   # progress values that show a dragon
-EGG_P = [0.0, 0.05, 0.10, 0.15]
+EGG_P = [0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15]   # crust + 6 crack steps (two per answer; the .x25 ones
+                                                       # are the mid-rumble frames the app shows on the way)
 
 # The daughter's brief (9/3): REALISTIC, serious-looking dragons - not cute-and-cartoony. A little
 # softness is allowed in the hatchling and it drains away with age. The eggs she already likes stay.
 # Guard rails learned the hard way: a bare "fierce dragon" prompt drifts demonic / humanoid, so the
 # anatomy tokens ("natural quadruped dragon anatomy", "noble") and the negatives below stay in.
-STYLE = ("realistic fantasy creature concept art, film-quality creature design, natural quadruped dragon "
-         "anatomy, highly detailed scales, cinematic soft lighting, clean plain white background, full body, "
-         "the entire dragon fully inside the frame with generous empty space around it, centered, "
-         "facing the viewer at a three-quarter angle")
+FRAMING = ("wings rooted on the back at the shoulder blades behind the front legs, "     # Ryan 9/5 09:10
+           "clean plain white background, full body, the entire dragon fully inside the frame with generous "
+           "empty space around it, centered, facing the viewer at a three-quarter angle")
+STYLES = {
+    # Ryan 9/5 03:30: "drawn in somewhat of a graphic novel style" - realistic anatomy and detail, but
+    # rendered as inked comic art. (The 'realistic' preset is the photoreal look of the first run.)
+    "graphic-novel": ("graphic novel illustration, bold confident ink linework, cel shaded with rich painted "
+                      "colour, dramatic comic-book lighting and deep shadows, realistic dragon anatomy, "
+                      "natural quadruped dragon anatomy, detailed scales, serious mature comic art style, "
+                      + FRAMING),
+    "realistic": ("realistic fantasy creature concept art, film-quality creature design, natural quadruped "
+                  "dragon anatomy, highly detailed scales, cinematic soft lighting, " + FRAMING),
+    # The v2.7 adult Iona liked (ember-adult2.webp): DreamShaper's painterly game-illustration look, the
+    # original recipe's tokens verbatim + realistic anatomy. Use with --tier daily.
+    "painterly": ("children's storybook fantasy game art, painterly, semi-realistic digital painting, "
+                  "collectible card splash art, soft brushwork, glowing rim light, natural quadruped dragon "
+                  "anatomy, detailed scales, " + FRAMING),
+}
+STYLE_NEG = {
+    "graphic-novel": "photograph, photorealistic, 3d render, blurry soft painting, chibi, plush toy, sketch, unfinished lines",
+    "realistic": "cartoon, chibi, plush toy",
+    "painterly": "photograph, 3d render, chibi, plush toy, flat vector",
+}
+STYLE = STYLES["realistic"]
 # The crack frames are low-denoise img2img of the egg she already likes, so the style tokens stay
 # neutral: the egg's own look (the frost egg is near-photoreal glass) must survive.
 EGG_STYLE = ("highly detailed realistic render, same style as the source, clean plain white background, "
              "centered, the whole egg fully inside the frame")
 NEG_BASE = ("cropped, cut off, out of frame, wings cut off by the edge, close-up, text, watermark, "
-            "signature, blurry, deformed, extra limbs, multiple dragons, two heads, human, humanoid, "
-            "person, demonic, gore, cartoon, chibi, plush toy, background scenery, cave, landscape, "
-            "ground shadow")
+            "signature, deformed, extra limbs, multiple dragons, two heads, human, humanoid, "
+            "person, demonic, gore, background scenery, cave, landscape, "
+            "ground shadow, head fin, head sail, ear flaps, fins on the head, jewelry, earring, pendant, necklace, chain, collar, saddle, harness, accessories, "
+            "rider")
 
-# Stage templates shared by every dragon: the cuteness drains out as maturity rises.
+# Stage templates shared by every dragon: the cuteness drains out as maturity rises, and every
+# feature is the SAME feature growing (Ryan 9/5: the baby's horns must become the adult's horns;
+# babies are plump, adults sleek and slender). {horns_*} come from each dragon's horn family.
+# Every feature is described as ONE feature at four ages (Ryan 9/5: snout, eyes, tail, legs, ridges,
+# ears, teeth - all of it must develop the way a real animal's would, never be reinvented per stage).
 STAGE_TEMPLATES = {
-    1.0: "(mighty adult {adult}:1.3), massive muscular body, {wings_adult}, long powerful neck, "
-         "serious menacing stare, noble and dangerous, weathered scales",
-    2/3: "adolescent {drake}, lean athletic body, {wings_drake}, serious alert expression, "
-         "slightly oversized head",
-    1/3: "juvenile {whelp}, compact rounded body, {wings_whelp}, big head, curious watchful expression, "
-         "soft young scales",
-    0.0: "(newborn {hatch}:1.3), tiny, very big round head, large round eyes, stubby legs, "
-         "(tiny underdeveloped wing nubs:1.3), sitting, still wet from the egg, wide-eyed and curious",
+    1.0: "(mighty adult {adult}:1.3), sleek slender powerful body, lean muscle, long elegant neck, "
+         "long tapered snout with a strong jaw and visible fangs, proportionate narrow eyes, long tail, "
+         "long powerful legs, tall sharp back ridges, {wings_adult}, "
+         "{horns_adult}, serious menacing stare, noble and dangerous, hard weathered scales",
+    2/3: "adolescent {drake}, lean body losing its baby fat, longer neck, lengthening snout with small "
+         "fangs, eyes a little large for the head, tail growing long, legs lengthening, back ridges "
+         "sharpening, {wings_drake}, {horns_drake}, serious alert expression, "
+         "slightly oversized head, firming scales",
+    1/3: "juvenile {whelp}, chubby round body, plump belly, short neck, short rounded snout, big eyes, "
+         "short thick tail, short sturdy legs, small soft back ridges, {wings_whelp}, "
+         "{horns_whelp}, big head, curious watchful expression, soft young scales",
+    0.0: "(newborn {hatch}:1.3), tiny, (frail weak wobbly newborn:1.2), skinny spindly little legs, soft "
+         "round belly, oversized head on a thin neck, short blunt button snout with no teeth, huge round "
+         "eyes, thin stubby little tail, soft tiny bumps where the back ridges will grow, "
+         "(tiny underdeveloped wing nubs:1.3), {horns_hatch}, sitting unsteadily, still wet from the egg, "
+         "wide-eyed and curious, soft translucent young scales",
 }
 WINGS = {   # wing phrasing per stage; "stubby" dragons never get spread wings
     "full":   ("huge fully grown wings spread wide", "large developing wings", "medium wings"),
     "stubby": ("small stubby wings held close to the body", "small stubby wings", "tiny stubby wings"),
+}
+# Horn families: (adult, drake, whelp, hatchling) - one shape, four sizes, never a different horn.
+HORNS = {
+    "ram":     ("large fully curved ram horns", "curving ram horns still growing", "short thick ram horn stubs "
+                "just beginning to curve", "two tiny rounded horn buds where ram horns will grow"),
+    "antler":  ("tall branching ice antlers", "branching antlers with their first tines", "short forked antler "
+                "stubs", "two tiny antler buds"),
+    "blunt":   ("short thick blunt stone horns", "short blunt horns", "small blunt horn stubs", "two tiny "
+                "blunt horn bumps"),
+    "sharp":   ("long thin sharp straight horns", "thin straight horns still growing", "short thin straight "
+                "horn spikes", "two tiny needle-like horn points"),
+    "spiral":  ("elegant long spiral horns", "spiral horns with their first twist", "short spiral horn stubs",
+                "two tiny smooth horn buds"),
+    "zigzag":  ("jagged zigzag lightning horns", "zigzag horns with their first jag", "short jagged horn stubs",
+                "two tiny jagged horn buds"),
 }
 
 # Per-dragon identity, straight from src/data/dragons.js (colours + physiology + stage names).
@@ -83,50 +134,49 @@ DRAGONS = {
     "ember": {
         "seed": 4100,
         "anchor": ("Ember the fire dragon, orange and red scales with lava-cracked texture, expressive "
-                   "golden eyes, curved ram-like horns, flame-shaped back ridges, fiery glowing tail tip, "
-                   "pointed bat-like wings"),
+                   "golden eyes, flame-shaped back ridges, fiery glowing tail tip, pointed bat-like wings"),
         "names": ("inferno dragon", "fire drake", "flame whelp", "spark hatchling dragon"),
-        "wings": "full",
-        "shell": "(dark red and orange lava egg shell with glowing cracks:1.3)",
+        "wings": "full", "horns": "ram",
+        "shell": "(dark red and orange cooled-lava crust egg shell with thin glowing seams:1.3)",
         "neg": "blue eyes, green",
     },
     "frost": {
         "seed": 4200,
         "anchor": ("Frost the ice dragon, pale icy blue and white crystalline scales, silver-white eyes, "
-                   "branching ice antler horns, fin-like ear frills, broad translucent frosted wings, "
-                   "thin whip tail with an ice shard tip, sleek streamlined body, frost mist"),
+                   "fin-like ear frills, broad translucent frosted wings, thin whip tail with an ice shard tip, "
+                   "frost mist"),
         "names": ("glacial dragon", "blizzard drake", "frost whelp", "snow hatchling dragon"),
-        "wings": "full",
+        "wings": "full", "horns": "antler",
         "shell": "(deep blue glassy egg shell with silver frost and snowflake patterns:1.3)",
         "neg": "orange, red, fire, warm colours",
     },
     "stone": {
         "seed": 4300,
         "anchor": ("Stone the earth dragon, mossy green and grey stone-textured scales, amber eyes, jagged "
-                   "rock plates along the back, short blunt horns, thick club tail with a boulder tip, "
-                   "thick trunk-like legs, wide stocky body, moss and vine patches"),
+                   "rock plates along the back, thick club tail with a boulder tip, thick trunk-like legs, "
+                   "moss and vine patches"),
         "names": ("titan stone dragon", "mountain drake", "boulder whelp", "sprout hatchling dragon"),
-        "wings": "stubby",
+        "wings": "stubby", "horns": "blunt",
         "shell": "(grey stone egg shell covered in soft green moss:1.3)",
         "neg": "fire, orange, blue",
     },
     "shadow": {
         "seed": 4400,
         "anchor": ("Shadow the night dragon, deep purple and black scales with edges dissolving into wisps "
-                   "of smoke, glowing violet eyes, long sinuous serpentine body, narrow head with long fangs, "
-                   "tall pointed ears, thin sharp straight horns, tall narrow bat wings, extra-long whip tail"),
+                   "of smoke, glowing violet eyes, sinuous serpentine build, narrow head with long fangs, "
+                   "tall pointed ears, tall narrow bat wings, extra-long whip tail"),
         "names": ("void dragon", "phantom drake", "night whelp", "shade hatchling dragon"),
-        "wings": "full",
+        "wings": "full", "horns": "sharp",
         "shell": "(dark purple egg shell with glowing violet vein patterns and wisps of smoke:1.3)",
         "neg": "bright colours, orange, fire, red eyes",
     },
     "glimmer": {
         "seed": 4500,
         "anchor": ("Glimmer the light dragon, luminous golden and white scales, radiant amber-gold eyes, "
-                   "feathered angel-like wings, a feather crest along the spine, elegant spiral horns, "
-                   "long flowing ear frills, long flowing tail with a plume, slim graceful body, soft sparkles"),
+                   "feathered angel-like wings, a feather crest along the spine, long flowing ear frills, "
+                   "long flowing tail with a plume, graceful build, soft sparkles"),
         "names": ("celestial light dragon", "solar drake", "radiant whelp", "sparkle hatchling dragon"),
-        "wings": "full",
+        "wings": "full", "horns": "spiral",
         "shell": "(glowing golden egg shell radiating warm light:1.3)",
         "neg": "dark, black, fire, red",
     },
@@ -134,10 +184,9 @@ DRAGONS = {
         "seed": 4600,
         "anchor": ("Storm the lightning dragon, electric blue and cyan scales with a crackling energy "
                    "texture, bright yellow eyes, lightning-bolt shaped spines, jagged storm wings, forked "
-                   "lightning tail, zigzag lightning horns, aerodynamic swept frills, muscular athletic build, "
-                   "small electric sparks"),
+                   "lightning tail, aerodynamic swept frills, small electric sparks"),
         "names": ("hurricane storm dragon", "tempest drake", "gale whelp", "breeze hatchling dragon"),
-        "wings": "full",
+        "wings": "full", "horns": "zigzag",
         "shell": "(stormy blue-grey egg shell crackling with static lightning:1.3)",
         "neg": "fire, orange, red",
     },
@@ -147,8 +196,10 @@ def _expand(d):
     """Fill the per-maturity descriptors from the templates (once, at import)."""
     adult, drake, whelp, hatch = d["names"]
     wa, wd, ww = WINGS[d["wings"]]
+    ha, hd, hw, hh = HORNS[d["horns"]]
     d["m"] = {m: tpl.format(adult=adult, drake=drake, whelp=whelp, hatch=hatch,
-                            wings_adult=wa, wings_drake=wd, wings_whelp=ww)
+                            wings_adult=wa, wings_drake=wd, wings_whelp=ww,
+                            horns_adult=ha, horns_drake=hd, horns_whelp=hw, horns_hatch=hh)
               for m, tpl in STAGE_TEMPLATES.items()}
     return d
 
@@ -178,6 +229,10 @@ def stage_prompt(d, m):
     descriptors is done in conditioning space (ConditioningAverage), never by string mixing."""
     k = min(d["m"], key=lambda km: abs(km - m))
     return f"{d['m'][k]}, {d['anchor']}, {STYLE}"
+
+def set_style(name):
+    global STYLE
+    STYLE = STYLES[name]
 
 def bracket(m, keys=None):
     """Bracketing keyframe maturities (a <= m <= b) and the fraction f toward b."""
@@ -301,8 +356,8 @@ def place_on_canvas(rgba, height_frac, floor=FLOOR, bg=(255, 255, 255)):
     bb = alpha_bbox(rgba)
     sub = rgba.convert("RGBA").crop(bb)
     s = height_frac * H / sub.height
-    if sub.width * s > W * 0.96:            # width-limited (spread wings)
-        s = W * 0.96 / sub.width
+    if sub.width * s > W * 0.92:            # width-limited (spread wings); 0.92 keeps clear of the 2% edge gate
+        s = W * 0.92 / sub.width
     sub = sub.resize((max(1, round(sub.width * s)), max(1, round(sub.height * s))), Image.LANCZOS)
     layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     x = (W - sub.width) // 2
@@ -315,6 +370,16 @@ def place_on_canvas(rgba, height_frac, floor=FLOOR, bg=(255, 255, 255)):
 def height_for(m):
     return H_HATCH + (H_ADULT - H_HATCH) * m
 
+# Mouth presets as fractions of the body's alpha bbox (facing LEFT), used when no eye is found.
+# Verified on Ember 9/5: 'adult' lands on the low-carried head of the profile adult; 'young' on the
+# whelp's muzzle. (Poses with the head carried high need the eye path.)
+MOUTH_PRESET = {"young": (0.02, 0.26, 0.32, 0.48), "adult": (0.30, 0.58, 0.47, 0.74)}
+
+EGG_GEN_H = 0.80           # egg frames are GENERATED at this height, then placed at H_EGG for the game
+EGG_BLEND_DENOISE = 0.52   # crack steps: the drawn crack is blended into the crust inside its own mask
+EGG_CRUST_DENOISE = 0.65  # frame 0: re-materialise the egg's plates as cooled crust (0.4/0.5 barely changed it 9/5)
+EGG_BRIGHTNESS = (1.0, 1.02, 1.05, 1.08, 1.12, 1.17, 1.22)   # the whole egg brightens a notch per crack step
+
 CRACK_THR = 28          # mean |RGB diff| vs the intact egg above this = crack (or its glow)
 CRACK_SEED = (0.40, 0.16, 0.60, 0.50)   # first crack's seed patch, fractions of the egg's alpha bbox
 
@@ -323,6 +388,73 @@ def crack_pixels(frame_path, intact_path):
     a = np.asarray(Image.open(frame_path).convert("RGB")).astype(float)
     b = np.asarray(Image.open(intact_path).convert("RGB")).astype(float)
     return np.abs(a - b).mean(axis=2) > CRACK_THR
+
+def draw_crack(rgba, step, seed=4242):
+    """Draw the crack GEOMETRY ourselves (the model repaints crust when asked for a fissure, 9/5):
+    a jagged path from the upper shell that extends and widens with each step - dark fracture, a
+    white-hot core, a soft orange glow - and from step 5 a wedge of shell missing showing magma.
+    Returns (rgba with the crack drawn, L mask of the drawn region grown for the blending inpaint)."""
+    import random
+    from PIL import ImageFilter
+    rnd = random.Random(seed)
+    im = rgba.convert("RGBA").copy()
+    x0, y0, x1, y1 = alpha_bbox(im)
+    w, h = x1 - x0, y1 - y0
+    # a fixed jagged path down the front of the egg (fractions of the bbox), 8 segments
+    pts = [(0.46, 0.16)]
+    for k in range(8):
+        px, py = pts[-1]
+        pts.append((min(0.9, max(0.1, px + rnd.uniform(-0.09, 0.09))), min(0.95, py + rnd.uniform(0.07, 0.11))))
+    branch = [pts[3], (pts[3][0] - 0.14, pts[3][1] + 0.05), (pts[3][0] - 0.22, pts[3][1] + 0.13)]
+    branch2 = [pts[5], (pts[5][0] + 0.13, pts[5][1] + 0.04), (pts[5][0] + 0.2, pts[5][1] + 0.12)]
+    to_px = lambda p: (x0 + p[0] * w, y0 + p[1] * h)
+    segs = {1: 3, 2: 5, 3: 7, 4: 9, 5: 9, 6: 9}[min(step, 6)]
+    main = [to_px(p) for p in pts[:segs]]
+    width = {1: 5, 2: 8, 3: 11, 4: 15, 5: 19, 6: 22}[min(step, 6)] * (w / 300)
+    layer = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    glow = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    d, g = ImageDraw.Draw(layer), ImageDraw.Draw(glow)
+    lines = [main]
+    if step >= 3:
+        lines.append([to_px(p) for p in branch])
+    if step >= 4:
+        lines.append([to_px(p) for p in branch2])
+    for ln in lines:
+        g.line(ln, fill=(255, 140, 30, 200), width=int(width * 3 + 6), joint="curve")
+        d.line(ln, fill=(20, 8, 4, 255), width=int(width + 2), joint="curve")
+        d.line(ln, fill=(255, 200, 90, 255), width=max(1, int(width * 0.45)), joint="curve")
+    if step >= 5:
+        # a wedge of shell gone around the middle of the path: dark rim, blazing core
+        cx, cy = to_px(pts[4])
+        r = (0.10 if step == 5 else 0.16) * w
+        poly = [(cx + r * math.cos(a) * rnd.uniform(0.7, 1.15), cy + r * 0.8 * math.sin(a) * rnd.uniform(0.7, 1.15))
+                for a in [i * math.pi / 5 for i in range(10)]]
+        g.polygon(poly, fill=(255, 160, 40, 230))
+        # a magma gradient: dark rim -> orange -> white-hot centre (concentric shrinking polygons)
+        for frac, col in ((1.0, (35, 12, 5, 255)), (0.82, (200, 60, 10, 255)), (0.62, (255, 140, 30, 255)),
+                          (0.40, (255, 210, 90, 255)), (0.18, (255, 245, 200, 255))):
+            d.polygon([(cx + (px - cx) * frac, cy + (py - cy) * frac) for px, py in poly], fill=col)
+        # lava DRIPS from the low point of the wedge: one at step 5, two at step 6 (Ryan 9/5: a little)
+        low = max(poly, key=lambda p: p[1])
+        for k in range(1 if step == 5 else 2):
+            dx = (k * 2 - 1) * r * 0.35 if step == 6 else 0
+            length = h * (0.09 if k == 0 else 0.06)
+            path = [(low[0] + dx, low[1]), (low[0] + dx + r * 0.08, low[1] + length * 0.5), (low[0] + dx, low[1] + length)]
+            dw = max(3, int(width * 0.5))
+            g.line(path, fill=(255, 150, 40, 220), width=dw * 3, joint="curve")
+            d.line(path, fill=(230, 80, 15, 255), width=dw + 2, joint="curve")
+            d.line(path, fill=(255, 215, 110, 255), width=max(1, dw // 2), joint="curve")
+            bead = (path[-1][0] - dw, path[-1][1] - dw * 0.4, path[-1][0] + dw, path[-1][1] + dw * 1.2)
+            d.ellipse(bead, fill=(255, 230, 150, 255), outline=(230, 80, 15, 255), width=1)
+    glow = glow.filter(ImageFilter.GaussianBlur(width * 1.5 + 4))
+    im.alpha_composite(glow)
+    im.alpha_composite(layer)
+    # keep the egg's own alpha: nothing is drawn outside the shell
+    im.putalpha(rgba.split()[3])
+    region = Image.fromarray((np.asarray(layer)[:, :, 3] > 0).astype(np.uint8) * 255, "L")
+    region = region.filter(ImageFilter.MaxFilter(int(width * 2) * 2 + 9))
+    return im, region
+
 
 def crack_mask(prev_path, intact_path, grow):
     """Paintable region for the next crack frame: the existing crack grown by `grow` px - or, when
@@ -357,6 +489,71 @@ def save_png(im, path):
 def stage(path):
     return cc().stage_image(path)
 
+GEN_TIMEOUT = 150   # s; a photoreal frame takes 12-40 s. Past this the GPU has wedged (seen 9/5 twice: the
+                    # server kept answering HTTP while one prompt sat "running" for 30 min).
+
+def free_vram():
+    """ComfyUI POST /free after every frame: the studio's health ladder found the Arc's allocator
+    fragments over a run; a 1 s flush between frames keeps it from wedging. Empty response body."""
+    try:
+        import urllib.request
+        req = urllib.request.Request(cc().SERVER + "/free", data=json.dumps({"free_memory": True}).encode(),
+                                     headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=15).read()
+    except Exception as e:
+        log(f"  (free_vram skipped: {e})")
+
+def generate(wf, label):
+    """Queue one workflow and wait for its images. FAILS LOUDLY (SystemExit 3) on error or timeout so
+    the runner restarts the studio - cc-gen's own generate() waits 30 min and returns [] silently."""
+    c = cc()
+    comfy_log = os.path.join(STUDIO, "ComfyUI", "user", "comfyui.log")
+    log_pos = os.path.getsize(comfy_log) if os.path.exists(comfy_log) else 0
+    pid = c.post("/prompt", {"prompt": wf})["prompt_id"]
+    log(f"  queued {label} (prompt {pid[:8]})...")
+    t0 = time.time()
+    while time.time() - t0 < GEN_TIMEOUT:
+        time.sleep(2)
+        # the Arc's device loss leaves the executor hung with the prompt still "running": the only
+        # prompt signal is the studio's own log line - watch the bytes written since we queued
+        try:
+            with open(comfy_log, "rb") as lf:
+                lf.seek(log_pos)
+                fresh = lf.read().decode("utf-8", "ignore")
+            if "DEVICE_LOST" in fresh or "Exception during processing" in fresh:
+                raise SystemExit(f"generation DEVICE LOST (studio log): {label}")
+        except (OSError, ValueError):
+            pass
+        h = c.get(f"/history/{pid}")
+        if pid in h and h[pid].get("outputs"):
+            imgs = [os.path.join(c.OUTPUT_DIR, im.get("subfolder", ""), im["filename"])
+                    for node in h[pid]["outputs"].values() for im in node.get("images", [])]
+            log(f"  done in {time.time()-t0:.0f}s -> {imgs[0] if imgs else '?'}")
+            if not imgs:
+                raise SystemExit(f"generation produced no image: {label}")
+            # NO /free flush here: unloading every model per frame forces a full reload each prompt,
+            # and UR_RESULT_ERROR_DEVICE_LOST hits exactly during those loads (studio log 9/5 09:03).
+            return imgs
+        if pid in h and h[pid].get("status", {}).get("status_str") == "error":
+            raise SystemExit(f"generation ERROR: {label}: {json.dumps(h[pid]['status'])[:300]}")
+        if time.time() - t0 > 8 and pid not in h:
+            # a prompt that is in neither history nor the queue died without a record (device loss)
+            try:
+                q = c.get("/queue")
+                live = [x[1] for x in q.get("queue_running", []) + q.get("queue_pending", [])]
+                if pid not in live:
+                    raise SystemExit(f"generation VANISHED (device lost?): {label}")
+            except SystemExit:
+                raise
+            except Exception:
+                pass
+    try:
+        c.post("/interrupt", {})
+    except Exception:
+        pass
+    raise SystemExit(f"generation TIMEOUT after {GEN_TIMEOUT}s (GPU wedged?): {label}")
+
+
 def run(wf, label, dry, dry_dir):
     """Queue one workflow (or, in --dry-run, write its JSON). Returns the output image paths."""
     if dry:
@@ -366,7 +563,7 @@ def run(wf, label, dry, dry_dir):
             json.dump(wf, f, indent=1)
         log(f"  [dry] wrote {os.path.relpath(p, HERE)}")
         return []
-    return cc().generate(wf, label)
+    return generate(wf, label)
 
 def copy_out(paths, dest):
     if not paths:
@@ -392,13 +589,17 @@ class Pipeline:
         self.a = args
         self.d = DRAGONS[args.dragon]
         self.name = args.dragon
-        self.work = os.path.join(HERE, "work", self.name)
+        variant = getattr(args, "variant", "") or ""
+        self.work = os.path.join(HERE, "work", self.name + (f"-{variant}" if variant else ""))
         self.dry_dir = os.path.join(self.work, "dry")
         self.seed = self.d["seed"] + args.seed_bump
+        self.egg_seed = self.d.get("egg_seed", 4242) + args.seed_bump   # the eggs' own seed (v2.5 recipe: 4242)
         os.makedirs(self.work, exist_ok=True)
-        self.neg = NEG_BASE + ", " + self.d["neg"] + (", " + args.neg if args.neg else "")
+        self.neg = NEG_BASE + ", " + STYLE_NEG[args.style] + ", " + self.d["neg"] + (", " + args.neg if args.neg else "")
+        # every frame except the mouth inpaint is the CLOSED-mouth frame (the gn adult came out roaring 9/5)
+        self.closed_neg = self.neg + ", open mouth, roaring, bared teeth, gaping jaws"
         # keyframe maturities: the four fixed ones plus any promoted mid-keys (keys/keys.json)
-        self.keys = sorted(set(KEY_M) | set(load_json(self.p("keys", "keys.json"), [])))
+        self.key_ms = sorted(set(KEY_M) | set(load_json(self.p("keys", "keys.json"), [])))
 
     def p(self, *parts):
         return os.path.join(self.work, *parts)
@@ -412,20 +613,35 @@ class Pipeline:
             return idx not in self.a.only
         return self.a.resume and all(os.path.exists(o) for o in outputs)
 
+    def pair_plates(self, rgba_a, rgba_b, m, tag):
+        """THE SAME-SIZE RULE: both bracketing keyframes are placed at THIS frame's target height
+        before they are blended, so their silhouettes overlap and the sampler resolves ONE dragon
+        (a blend of two different-sized plates leaves the bigger one as an unresolved ghost - seen
+        live 9/5). Size growth is therefore an exact per-frame curve, height_for(m), not something
+        the blend has to invent. Returns the two staged input names."""
+        pa, _ = place_on_canvas(rgba_a, height_for(m))
+        pb, _ = place_on_canvas(rgba_b, height_for(m))
+        pa_path = save_png(pa, self.p("pairs", f"{tag}_a.png"))
+        pb_path = save_png(pb, self.p("pairs", f"{tag}_b.png"))
+        if self.a.dry_run:
+            return f"{tag}_a.png", f"{tag}_b.png", pa_path, pb_path
+        return stage(pa_path), stage(pb_path), pa_path, pb_path
+
+    def key_rgba(self, m):
+        return Image.open(self.p("keys", f"{key_tag(m)}_rgba.png")).convert("RGBA")
+
     # -- stage: probe (uses the EXISTING sprites, proves the morph pass before any keyframe work)
     def probe(self):
         log("== probe: morph pass between the existing whelp2 and drake sprites")
         a = Image.open(os.path.join(ART, "ember-whelp2.webp")).convert("RGBA")
         b = Image.open(os.path.join(ART, "ember-drake.webp")).convert("RGBA")
-        pa, _ = place_on_canvas(a, height_for(1/3))
-        pb, _ = place_on_canvas(b, height_for(2/3))
-        pa_path = save_png(pa, self.p("probe", "plate_a.png"))
-        pb_path = save_png(pb, self.p("probe", "plate_b.png"))
-        na, nb = ("plate_a.png", "plate_b.png") if self.a.dry_run else (stage(pa_path), stage(pb_path))
+        pa_path = save_png(place_on_canvas(a, height_for(1/3))[0], self.p("probe", "plate_a.png"))
+        pb_path = save_png(place_on_canvas(b, height_for(2/3))[0], self.p("probe", "plate_b.png"))
         pra, prb = stage_prompt(self.d, 1/3), stage_prompt(self.d, 2/3)
         outs = []
         for f in (0.0, 0.25, 0.5, 0.75, 1.0):
-            wf = build_morph(tier(), pra, prb, f, self.neg, na, nb, self.a.denoise, self.seed,
+            na, nb, _, _ = self.pair_plates(a, b, 1/3 + f/3, f"probe_{int(f*100):03d}")
+            wf = build_morph(tier(), pra, prb, f, self.closed_neg, na, nb, self.a.denoise, self.seed,
                              f"dm_probe_{int(f*100):03d}", ipa_w=self.a.ipa, init=self.a.init)
             out = run(wf, f"probe f={f}", self.a.dry_run, self.dry_dir)
             dest = copy_out(out, self.p("probe", f"morph_{int(f*100):03d}.png"))
@@ -443,42 +659,63 @@ class Pipeline:
         if self.a.resume and all(os.path.exists(self.p("keys", f"{key_tag(m)}_rgba.png")) for m in KEY_M):
             log("  all four keyframes exist - resume, skipping")
             return
-        adult = self.gated_txt2img(stage_prompt(self.d, 1.0), "adult")
+        # EVERY keyframe is its own txt2img at the SHARED seed with the same anchor tokens - that alone
+        # gives one pose, one lighting, one facing (seen live 9/5: the hatchling init matched the adult's
+        # side view exactly). The old de-age img2img chain is DEAD on Juggernaut: a second img2img pass
+        # degenerates into a posterized ink outline, and the composition lock never made it younger.
+        paths = {}
+        for m in KEY_M[::-1]:            # the adult first: the newborn is generated as ITS baby
+            done = self.p("keys", f"{key_tag(m)}.png")
+            if self.a.resume and os.path.exists(done) and os.path.exists(self.p("keys", f"{key_tag(m)}_rgba.png")):
+                log(f"  {key_tag(m)}: kept (resume)")
+                paths[m] = done
+                continue
+            if m < 1.0:
+                paths[m] = self.gated_txt2img(stage_prompt(self.d, m), key_tag(m), ref=paths.get(1.0))
+            else:
+                # --adult-ref: an existing picture (e.g. the v2.7 adult Iona liked) is the adult's identity
+                # reference - the new adult is THAT dragon, regenerated whole on our canvas
+                paths[m] = self.gated_txt2img(stage_prompt(self.d, m), "adult", ref=self.a.adult_ref or None,
+                                              ipa_w=self.a.adult_ipa, start_at=0.15)
         if self.a.dry_run:
-            run(cc().build_img2img(t, stage_prompt(self.d, 2/3), self.neg, "adult.png", 0.62, self.seed, "dm_key_drake"),
-                "key drake", True, self.dry_dir)
-            run(cc().build_img2img(t, stage_prompt(self.d, 1/3), self.neg, "drake.png", 0.62, self.seed, "dm_key_whelp"),
-                "key whelp", True, self.dry_dir)
-            run(cc().build_sdxl(t, stage_prompt(self.d, 0.0), self.neg, W, H, self.seed, "dm_key_hatchinit"),
-                "key hatch-init", True, self.dry_dir)
-            run(build_hybrid(t, stage_prompt(self.d, 0.0), self.neg, "hatchinit.png", "adult.png", 0.55, 0.5,
-                             self.seed, "dm_key_hatch"), "key hatch hybrid", True, self.dry_dir)
             return
-        # de-age chain: composition is inherited from the init, so identity holds while proportions shift
-        drake = copy_out(cc().generate(cc().build_img2img(t, stage_prompt(self.d, 2/3), self.neg, stage(adult),
-                         0.62, self.seed, "dm_key_drake"), "key drake"), self.p("keys", "drake.png"))
-        whelp = copy_out(cc().generate(cc().build_img2img(t, stage_prompt(self.d, 1/3), self.neg, stage(drake),
-                         0.62, self.seed, "dm_key_whelp"), "key whelp"), self.p("keys", "whelp.png"))
-        # hatchling: pure img2img cannot change proportions (composition lock) and pure IPAdapter copies
-        # the composition too -> HYBRID: cute-proportioned init + identity from the adult ref.
-        # (This hybrid graph once crashed the XPU when run back-to-back with others: it runs LAST here.)
-        init = self.gated_txt2img(stage_prompt(self.d, 0.0), "hatchinit")
-        hatch = copy_out(cc().generate(build_hybrid(t, stage_prompt(self.d, 0.0), self.neg, stage(init), stage(adult),
-                         0.55, 0.5, self.seed, "dm_key_hatch"), "key hatch hybrid"), self.p("keys", "hatch.png"))
-        for tag, path in (("adult", adult), ("drake", drake), ("whelp", whelp), ("hatch", hatch)):
+        for m, path in paths.items():
+            tag = key_tag(m)
             rgba = rembg_rgba(path)
             save_png(rgba, self.p("keys", f"{tag}_rgba.png"))
             log(f"  {tag}: alpha bbox {alpha_bbox(rgba)} edge-contact {edge_contact(rgba) or 'none'}")
-        self.contact([self.p("keys", f"{k}_rgba.png") for k in ("hatch", "whelp", "drake", "adult")],
+        self.contact([self.p("keys", f"{key_tag(m)}_rgba.png") for m in self.key_ms
+                      if os.path.exists(self.p("keys", f"{key_tag(m)}_rgba.png"))],
                      self.p("keys", "contact.png"), cols=4)
 
-    def gated_txt2img(self, prompt, tag, tries=8):
-        """txt2img on the shared canvas; reroll the seed until the subject is fully inside the frame."""
+    def gated_txt2img(self, prompt, tag, tries=8, ref=None, ipa_w=None, start_at=0.3):
+        """txt2img on the shared canvas; reroll the seed until the subject is fully inside the frame.
+        With `ref`, the image is generated WITH that picture as an IPAdapter identity reference (the
+        adult for the newborn; an existing favourite for the adult itself)."""
         t = tier()
         for i in range(tries):
             seed = self.seed + i
-            out = run(cc().build_sdxl(t, prompt, self.neg, W, H, seed, f"dm_key_{tag}"),
-                      f"key {tag} seed={seed}", self.a.dry_run, self.dry_dir)
+            if ref:
+                if not self.a.dry_run:
+                    rpath = ref
+                    if not ref.lower().endswith(".png"):       # LoadImage wants png; flatten webp on white
+                        rpath = self.p("keys", f"ref_{tag}.png")
+                        im = Image.open(ref).convert("RGBA")
+                        bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
+                        bg.alpha_composite(im)
+                        save_png(bg.convert("RGB"), rpath)
+                    rname = stage(rpath)
+                else:
+                    rname = "ref.png"
+                # start_at: the first steps (composition, size, pose) are prompt-only; the reference
+                # only shapes the look after that - at 0.0 it copies the wingspan and gets cropped
+                wf = cc().build_ipadapter(t, prompt, self.closed_neg, rname, ipa_w or self.a.key_ipa, W, H, seed,
+                                          f"dm_key_{tag}")
+                wf["22"]["inputs"]["start_at"] = start_at
+            else:
+                wf = cc().build_sdxl(t, prompt, self.closed_neg, W, H, seed, f"dm_key_{tag}")
+            out = run(wf, f"key {tag} seed={seed}" + (f" ipa(adult)={self.a.key_ipa}" if ref else ""),
+                      self.a.dry_run, self.dry_dir)
             if self.a.dry_run:
                 return None
             raw = copy_out(out, self.p("keys", f"{tag}_try{i}.png"))
@@ -494,7 +731,7 @@ class Pipeline:
     # -- stage: plates
     def plates(self):
         log("== plates: keyframes onto the shared canvas")
-        for m in self.keys:
+        for m in self.key_ms:
             tag = key_tag(m)
             if m not in KEY_M and os.path.exists(self.p("plates", f"{tag}.png")):
                 continue        # a promoted mid-key is already a plate (it came from a canvas frame)
@@ -514,7 +751,9 @@ class Pipeline:
         log("== eggs: the picked egg on the canvas + 3 crack frames (daily tier = the recipe that made it)")
         t = cc().TIERS["daily"]          # the eggs she likes came from DreamShaper; keep their look
         egg = Image.open(os.path.join(ART, f"egg-{self.name}.webp")).convert("RGBA")
-        plate, _ = place_on_canvas(egg, H_EGG)
+        # generate LARGE (the crust/crack detail needs the pixels - at the game's 0.36H the crust pass
+        # produced a molten blob 9/5), then place the results at the game's egg size below
+        plate, _ = place_on_canvas(egg, EGG_GEN_H)
         plate_path = save_png(plate, self.p("eggs", "egg_plate.png"))
         name = "egg_plate.png" if self.a.dry_run else stage(plate_path)
         base = f"{self.d['shell']}, a single dragon egg sitting upright, {EGG_STYLE}"
@@ -524,15 +763,30 @@ class Pipeline:
         # crack (pixels that differ from frame 0) grown outward by a margin - everything outside that
         # region is byte-identical to the previous frame, so a crack cannot vanish or move; it can only
         # extend at its edges. The first crack is seeded in a fixed patch on the upper shell.
-        neg = self.neg + ", dragon, creature, hatchling, animal"
+        # Ryan 9/5 12:10: frame 0 must read SOLID - a cooled lava crust skinned over the magma (the
+        # original's translucent plates looked hollow) - and the cracks are the crust FAILING, not more
+        # glowing veins: a dark fissure with a lifted edge, a chip falling, white-hot magma through the
+        # gap, and at the burst a glimpse of the hatchling's scaled skin inside.
+        neg = self.neg + ", dragon, creature, hatchling, animal, translucent, glass, hollow, see-through, stained glass, lantern"
+        crust = ("(cooled lava crust:1.4): dark matte basalt crust plates skinned over molten magma, smooth polished "
+                 "plate faces, thin glowing orange seams between the crust plates, magma glowing faintly through the "
+                 "thin dark crust, (glossy specular highlights, bright rim light catching the plate edges:1.4), "
+                 "cinematic lighting, highly detailed")
+        egg_only = f"a single dragon egg, {crust}, clean plain white background, centered, the whole egg in frame"
+        # SIX crack steps = two per answer (Ryan 9/5 12:40: the egg rumbles and cracks cumulatively with each
+        # question): hairline -> hairline widening, branch -> chip lifting, gap -> burst with a glimpse inside.
+        # High in-mask strength: at 0.7 the small patch just repainted the crust texture (9/5).
         steps = [
-            (0.22, None, f"{base}, intact smooth shell, faint inner glow"),
-            (0.70, 0,    f"{base}, (a thin jagged hairline crack in the shell:1.4), faint light leaking from the crack"),
-            (0.62, 44,   f"{base}, (the crack spreading, branching wider across the shell:1.4), small chips "
-                         "loosening, bright light leaking out"),
-            (0.62, 70,   f"{base}, (the cracks bursting open:1.4), shell pieces breaking away, blazing light "
-                         "pouring out of the cracks"),
+            (EGG_CRUST_DENOISE, None, egg_only),
+            (0.40, 0,   f"{egg_only}, (a thin dark hairline fissure splitting the crust plate:1.5), white-hot light along the split"),
+            (0.44, 30,  f"{egg_only}, (the hairline fissure widening into a dark crack:1.5), white-hot magma glowing in the crack"),
+            (0.50, 44,  f"{egg_only}, (the crack branching across neighbouring plates:1.5), a plate edge lifting, magma glow"),
+            (0.52, 56,  f"{egg_only}, (a chip of crust broken loose, a small dark gap in the shell:1.5), white-hot magma through the gap"),
+            (0.52, 70,  f"{egg_only}, (a wide jagged opening in the crust, shell pieces breaking away, a drip of molten lava running down from the crack:1.5), blazing magma light pouring out"),
+            (0.55, 84,  f"{egg_only}, (the crust bursting open, large shell pieces falling away, drips of molten lava running down the shell:1.5), blazing magma light, "
+                        "(a glimpse of small glowing orange dragon scales and a closed eye inside the molten gap:1.3)"),
         ]
+        neg_burst = self.neg + ", translucent, glass, hollow, see-through"   # the burst MAY show the hatchling
         prev_path, prev = plate_path, name
         for i, (dn, grow, prompt) in enumerate(steps):
             dest = self.p("eggs", f"egg_{i}.png")
@@ -540,21 +794,36 @@ class Pipeline:
                 prev_path, prev = dest, (f"egg_{i}.png" if self.a.dry_run else stage(dest))
                 continue
             if grow is None:
-                wf = cc().build_img2img(t, prompt, neg, prev, dn, self.seed, f"dm_egg_{i}")
+                wf = cc().build_img2img(t, prompt, neg, prev, dn, self.egg_seed, f"dm_egg_{i}")
             else:
+                # draw the crack for THIS step onto the crust egg (frame 0's cutout, so the geometry is
+                # cumulative by construction), then let the model blend it in inside a tight mask
                 mask_path = self.p("eggs", f"egg_{i}_mask.png")
+                drawn_path = self.p("eggs", f"egg_{i}_drawn.png")
                 if not self.a.dry_run:
-                    mask = crack_mask(prev_path, self.p("eggs", "egg_0.png"), grow)
-                    save_png(mask, mask_path)
-                    mname = stage(mask_path)
+                    crust_rgba = Image.open(self.p("eggs", "egg_0_gen_rgba.png")).convert("RGBA")
+                    drawn, region = draw_crack(crust_rgba, i, seed=self.egg_seed)
+                    bg = Image.new("RGB", (W, H), (255, 255, 255))
+                    bg.paste(drawn, (0, 0), drawn)
+                    save_png(bg, drawn_path)
+                    save_png(region, mask_path)
+                    prev, mname = stage(drawn_path), stage(mask_path)
                 else:
                     mname = f"egg_{i}_mask.png"
-                wf = cc().build_sdxl_inpaint(t, prompt, neg, prev, mname, dn, self.seed, f"dm_egg_{i}", grow=4)
+                wf = cc().build_sdxl_inpaint(t, prompt, neg_burst if i == len(steps) - 1 else neg, prev, mname,
+                                             dn, self.egg_seed, f"dm_egg_{i}", grow=2)
             out = run(wf, f"egg {i} d={dn} <- {prev}" + (f" mask grow {grow}" if grow is not None else ""),
                       self.a.dry_run, self.dry_dir)
             got = copy_out(out, dest)
             if got:
-                save_png(rembg_rgba(got), self.p("eggs", f"egg_{i}_rgba.png"))
+                rgba = rembg_rgba(got)
+                save_png(rgba, self.p("eggs", f"egg_{i}_gen_rgba.png"))      # generation-size cutout
+                if EGG_BRIGHTNESS[i] != 1.0:     # the brightness ramp: crust -> glow, applied to the alpha only
+                    from PIL import ImageEnhance
+                    rgb = ImageEnhance.Brightness(rgba.convert("RGB")).enhance(EGG_BRIGHTNESS[i])
+                    rgba = Image.merge("RGBA", (*rgb.split(), rgba.split()[3]))
+                # the game-size frame: the same egg placed at H_EGG on the shared floor line
+                save_png(place_on_canvas(rgba, H_EGG)[1], self.p("eggs", f"egg_{i}_rgba.png"))
                 prev_path, prev = got, stage(got)
             else:
                 prev_path, prev = dest, f"egg_{i}.png"
@@ -563,16 +832,25 @@ class Pipeline:
     def morph(self):
         log(f"== morph: {len(GROWTH_P)} growth frames (denoise {self.a.denoise}, init {self.a.init}, ipa {self.a.ipa})")
         t = tier()
-        names = {m: (f"{key_tag(m)}.png" if self.a.dry_run else stage(self.p("plates", f"{key_tag(m)}.png")))
-                 for m in self.keys}
+        rgbas = {} if self.a.dry_run else {m: self.key_rgba(m) for m in self.key_ms}
+        blank = Image.new("RGBA", (64, 64), (255, 0, 0, 255))
+        made = 0
         for i, p in enumerate(GROWTH_P):
             if self.skip(i, self.p("morph", f"f{i:02d}_rgba.png")):
                 continue
+            if self.a.chunk and made >= self.a.chunk:
+                log(f"  chunk of {self.a.chunk} done - exiting so the runner can restart the studio")
+                return
+            made += 1
             m = maturity(p)
-            a, b, f = bracket(m, self.keys)
-            wf = build_morph(t, stage_prompt(self.d, a), stage_prompt(self.d, b), f, self.neg, names[a], names[b],
-                             self.a.denoise, self.seed, f"dm_morph_{i:02d}", ipa_w=self.a.ipa, init=self.a.init)
-            out = run(wf, f"morph {i:02d} p={p} m={m:.3f} [{key_tag(a)}->{key_tag(b)} f={f:.2f}]",
+            a, b, f = bracket(m, self.key_ms)
+            na, nb, _, _ = self.pair_plates(rgbas.get(a, blank), rgbas.get(b, blank), m, f"f{i:02d}")
+            # the further a frame sits from both its keys, the less its blend resolves on its own
+            # (seen live 9/5: ghost wings + doubled legs at f=0.5) -> denoise rises toward the middle
+            dn = round(min(0.85, self.a.denoise + self.a.mid_boost * 4 * f * (1 - f)), 3)
+            wf = build_morph(t, stage_prompt(self.d, a), stage_prompt(self.d, b), f, self.closed_neg, na, nb,
+                             dn, self.seed, f"dm_morph_{i:02d}", ipa_w=self.a.ipa, init=self.a.init)
+            out = run(wf, f"morph {i:02d} p={p} m={m:.3f} [{key_tag(a)}->{key_tag(b)} f={f:.2f} d={dn}]",
                       self.a.dry_run, self.dry_dir)
             dest = copy_out(out, self.p("morph", f"f{i:02d}.png"))
             if dest:
@@ -588,36 +866,96 @@ class Pipeline:
         log("== chomp: Florence head box -> mouth mask -> inpaint per frame")
         t = tier()
         mouths = load_json(self.p("chomp", "mouth.json"), {})
+        made = 0
         for i, p in enumerate(GROWTH_P):
             if self.skip(i, self.p("chomp", f"f{i:02d}_open_rgba.png")):
                 continue
+            if self.a.chunk and made >= self.a.chunk:
+                log(f"  chunk of {self.a.chunk} done - exiting so the runner can restart the studio")
+                return
+            made += 1
             src = self.p("morph", f"f{i:02d}.png")
             name = f"f{i:02d}.png" if self.a.dry_run else stage(src)
-            box_out = run(build_head_box(name, f"dm_head_{i:02d}"), f"head box {i:02d}", self.a.dry_run, self.dry_dir)
+            box_out = run(build_head_box(name, f"dm_head_{i:02d}", phrase="eye"), f"eye box {i:02d}",
+                          self.a.dry_run, self.dry_dir)
             if self.a.dry_run:
                 run(cc().build_sdxl_inpaint(t, "prompt", self.neg, name, "mask.png", 0.72, self.seed, f"dm_open_{i:02d}", grow=10),
                     f"open {i:02d}", True, self.dry_dir)
                 log("  [dry] chomp graphs emitted for frame 00 only")
                 break
-            head = self.head_bbox(box_out)
-            if head is None:
-                log(f"  {i:02d}: Florence found no head -> falling back to the alpha top-third")
-                x0, y0, x1, y1 = alpha_bbox(Image.open(self.p("morph", f"f{i:02d}_rgba.png")))
-                head = (x0 + (x1 - x0) * 0.3, y0, x0 + (x1 - x0) * 0.8, y0 + (y1 - y0) * 0.38)
-            mouth = self.mouth_rect(head)
+            # Florence-2 grounds "eye" tightly on all but the biggest frames (9/5: 0-12 ok, 13-16 =
+            # whole body); every head/mouth/face phrase returns the whole dragon. So: the mouth sits in
+            # front of and below the EYE; when the eye is not found, a pose preset by maturity.
+            eye = self.head_bbox(box_out)
+            bx0, by0, bx1, by1 = alpha_bbox(Image.open(self.p("morph", f"f{i:02d}_rgba.png")))
+            bw, bh = bx1 - bx0, by1 - by0
+            votes = [m.get("facing") for m in mouths.values() if m.get("facing") in ("left", "right")]
+            left = votes.count("right") <= votes.count("left")
+            if self.a.mouth_frac:
+                fr = [float(v) for v in self.a.mouth_frac.split(",")]
+                mouth = (bx0 + fr[0] * bw, by0 + fr[1] * bh, bx0 + fr[2] * bw, by0 + fr[3] * bh)
+                head = (mouth[0], mouth[1] - bh * 0.1, mouth[2], mouth[3])
+                log(f"  {i:02d}: mouth box from --mouth-frac, facing {'left' if left else 'right'}")
+            elif eye is not None and (eye[2] - eye[0]) < 0.35 * bw and (eye[3] - eye[1]) < 0.3 * bh:
+                ex0, ey0, ex1, ey1 = eye
+                ew, eh = max(ex1 - ex0, 24), max(ey1 - ey0, 24)
+                left = (ex0 + ex1) / 2 < (bx0 + bx1) / 2
+                if left:
+                    mouth = (ex0 - 2.6 * ew, ey0 + 0.6 * eh, ex1 + 0.5 * ew, ey1 + 2.2 * eh)
+                else:
+                    mouth = (ex0 - 0.5 * ew, ey0 + 0.6 * eh, ex1 + 2.6 * ew, ey1 + 2.2 * eh)
+                head = (min(mouth[0], ex0), ey0 - eh, max(mouth[2], ex1), mouth[3])
+                log(f"  {i:02d}: eye found ({100*ew/bw:.0f}% of body width) -> mouth from the eye, facing {'left' if left else 'right'}")
+            else:
+                fr = MOUTH_PRESET["adult" if maturity(p) >= 0.8 else "young"]
+                if not left:
+                    fr = (1 - fr[2], fr[1], 1 - fr[0], fr[3])
+                mouth = (bx0 + fr[0] * bw, by0 + fr[1] * bh, bx0 + fr[2] * bw, by0 + fr[3] * bh)
+                head = (mouth[0], mouth[1] - bh * 0.1, mouth[2], mouth[3])
+                log(f"  {i:02d}: no usable eye box -> {'adult' if maturity(p) >= 0.8 else 'young'} pose preset, facing {'left' if left else 'right'}")
+            mouth = (max(0, mouth[0]), max(0, mouth[1]), min(W, mouth[2]), min(H, mouth[3]))
             mask = Image.new("L", (W, H), 0)
             ImageDraw.Draw(mask).rectangle(mouth, fill=255)
             mname = stage(save_png(mask, self.p("chomp", f"f{i:02d}_mask.png")))
-            prompt = f"(mouth wide open, roaring happily, open jaws, visible teeth:1.4), {stage_prompt(self.d, maturity(p))}"
-            neg = self.neg + ", closed mouth, smile with closed lips"
-            out = cc().generate(cc().build_sdxl_inpaint(t, prompt, neg, name, mname, self.a.open_denoise, self.seed,
-                                f"dm_open_{i:02d}", grow=10), f"open {i:02d}")
-            dest = copy_out(out, self.p("chomp", f"f{i:02d}_open.png"))
+            if self.a.swap_closed:
+                # the base frame ALREADY has its jaws open (DreamShaper ignored the closed-mouth negatives
+                # on the big frames 9/5): the base becomes the OPEN twin and a "mouth closed" inpaint of
+                # the same box becomes the closed growth frame
+                base_rgba = self.p("morph", f"f{i:02d}_rgba.png")
+                keep = self.p("morph", f"f{i:02d}_openbase_rgba.png")
+                if not os.path.exists(keep):
+                    shutil.copyfile(base_rgba, keep)
+                shutil.copyfile(keep, self.p("chomp", f"f{i:02d}_open_rgba.png"))
+                prompt = f"(mouth closed, jaws shut, lips sealed, calm expression:1.4), {stage_prompt(self.d, maturity(p))}"
+                neg = self.neg + ", open mouth, roaring, teeth, fangs, tongue, gaping jaws"
+                out = generate(cc().build_sdxl_inpaint(t, prompt, neg, name, mname, self.a.open_denoise, self.seed,
+                                    f"dm_closed_{i:02d}", grow=10), f"closed {i:02d}")
+                dest = copy_out(out, self.p("chomp", f"f{i:02d}_closed.png"))
+                if dest:
+                    # register against the ORIGINAL base so the closed frame differs only inside the box
+                    shutil.copyfile(keep, base_rgba)
+                    closed = self.register_open(i, rembg_rgba(dest), mouth)
+                    save_png(closed, base_rgba)
+            else:
+                prompt = f"(mouth wide open, roaring happily, open jaws, visible teeth:1.4), {stage_prompt(self.d, maturity(p))}"
+                neg = self.neg + ", closed mouth, smile with closed lips"
+                out = generate(cc().build_sdxl_inpaint(t, prompt, neg, name, mname, self.a.open_denoise, self.seed,
+                                    f"dm_open_{i:02d}", grow=10), f"open {i:02d}")
+                dest = copy_out(out, self.p("chomp", f"f{i:02d}_open.png"))
+                if dest:
+                    save_png(self.register_open(i, rembg_rgba(dest), mouth), self.p("chomp", f"f{i:02d}_open_rgba.png"))
             if dest:
-                save_png(rembg_rgba(dest), self.p("chomp", f"f{i:02d}_open_rgba.png"))
+                # facing: the head sits left or right of the body's centre -> export mirrors a
+                # left-facing dragon so it looks toward the questions on the right of the screen
+                bx0, _, bx1, _ = alpha_bbox(Image.open(self.p("morph", f"f{i:02d}_rgba.png")))
+                head_cx, body_cx = (head[0] + head[2]) / 2, (bx0 + bx1) / 2
+                facing = "left" if head_cx < body_cx - (bx1 - bx0) * 0.04 else \
+                         "right" if head_cx > body_cx + (bx1 - bx0) * 0.04 else "front"
                 mouths[str(i)] = {"head": [round(v) for v in head], "mouth": [round(v) for v in mouth],
                                   "cx": round((mouth[0] + mouth[2]) / 2 / W, 4),
-                                  "cy": round((mouth[1] + mouth[3]) / 2 / H, 4)}
+                                  "cy": round((mouth[1] + mouth[3]) / 2 / H, 4), "facing": facing,
+                                  "eye": [round(v) for v in eye] if (eye is not None and not self.a.mouth_frac
+                                          and (eye[2] - eye[0]) < 0.35 * bw) else None}
                 save_json(self.p("chomp", "mouth.json"), mouths)
 
     @staticmethod
@@ -630,6 +968,68 @@ class Pipeline:
             return None
         sy, sx = H / mask.shape[0], W / mask.shape[1]     # guard against a resized mask
         return (xs.min() * sx, ys.min() * sy, (xs.max() + 1) * sx, (ys.max() + 1) * sy)
+
+    def register_open(self, i, open_rgba, mouth, feather=14):
+        """The open twin differs from the closed frame ONLY inside the mouth box, by construction:
+        the inpaint's VAE round-trip shifts every pixel a little (vet saw 7-19 levels outside the
+        box), so everything outside a feathered mouth mask is copied back from the closed frame."""
+        from PIL import ImageFilter
+        closed = Image.open(self.p("morph", f"f{i:02d}_rgba.png")).convert("RGBA")
+        m = Image.new("L", (W, H), 0)
+        x0, y0, x1, y1 = [int(v) for v in mouth]
+        ImageDraw.Draw(m).rectangle((x0 - feather, y0 - feather, x1 + feather, y1 + feather), fill=255)
+        m = m.filter(ImageFilter.GaussianBlur(feather / 2))
+        return Image.composite(open_rgba, closed, m)
+
+    # -- stage: blink (eyes-closed twin, registered like the mouth twin; reuses chomp's eye/head box)
+    def blink(self):
+        log("== blink: eyes-closed twin per frame (inpaint of the eye box only)")
+        t = tier()
+        mouths = load_json(self.p("chomp", "mouth.json"), {})
+        made = 0
+        for i, p in enumerate(GROWTH_P):
+            if self.skip(i, self.p("blink", f"f{i:02d}_blink_rgba.png")):
+                continue
+            if self.a.chunk and made >= self.a.chunk:
+                log(f"  chunk of {self.a.chunk} done - exiting so the runner can restart the studio")
+                return
+            mi = mouths.get(str(i))
+            src = self.p("morph", f"f{i:02d}.png")
+            if not mi or not os.path.exists(src):
+                log(f"  {i:02d}: no chomp record yet (run chomp first) - skipping")
+                continue
+            made += 1
+            hx0, hy0, hx1, hy1 = mi["head"]
+            mx0, my0, mx1, my1 = mi["mouth"]
+            # the eye band: the head box above the mouth, trimmed to its front two thirds
+            eye = (hx0 + (hx1 - hx0) * (0.0 if mi.get("facing") != "right" else 0.33), hy0,
+                   hx0 + (hx1 - hx0) * (0.67 if mi.get("facing") != "right" else 1.0), my0 + (my1 - my0) * 0.15)
+            mask = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(mask).rectangle(eye, fill=255)
+            name = f"f{i:02d}.png" if self.a.dry_run else stage(src)
+            mname = f"f{i:02d}_blinkmask.png" if self.a.dry_run else stage(save_png(mask, self.p("blink", f"f{i:02d}_mask.png")))
+            prompt = f"(eyes closed, eyelids shut, blinking:1.4), {stage_prompt(self.d, maturity(p))}"
+            neg = self.closed_neg + ", open eyes, glowing eyes, wide eyes"
+            out = run(cc().build_sdxl_inpaint(t, prompt, neg, name, mname, 0.6, self.seed, f"dm_blink_{i:02d}", grow=6),
+                      f"blink {i:02d}", self.a.dry_run, self.dry_dir)
+            dest = copy_out(out, self.p("blink", f"f{i:02d}_blink.png"))
+            if dest:
+                save_png(self.register_open(i, rembg_rgba(dest), eye, feather=10), self.p("blink", f"f{i:02d}_blink_rgba.png"))
+
+    def fixopen(self):
+        """Apply register_open to the open twins that already exist (no GPU)."""
+        mouths = load_json(self.p("chomp", "mouth.json"), {})
+        n = 0
+        for i in range(len(GROWTH_P)):
+            raw, mi = self.p("chomp", f"f{i:02d}_open.png"), mouths.get(str(i))
+            if os.path.exists(raw) and mi and os.path.exists(self.p("morph", f"f{i:02d}_rgba.png")):
+                rgba_raw = self.p("chomp", f"f{i:02d}_open_raw_rgba.png")
+                if not os.path.exists(rgba_raw):
+                    save_png(rembg_rgba(raw), rgba_raw)
+                save_png(self.register_open(i, Image.open(rgba_raw).convert("RGBA"), mi["mouth"]),
+                         self.p("chomp", f"f{i:02d}_open_rgba.png"))
+                n += 1
+        log(f"  re-registered {n} open twins against their closed frames")
 
     @staticmethod
     def mouth_rect(head):
@@ -655,16 +1055,16 @@ class Pipeline:
         shutil.copyfile(src + "_rgba.png", self.p("plates", f"{tag}_rgba.png"))
         extra = sorted(set(load_json(self.p("keys", "keys.json"), [])) | {m})
         save_json(self.p("keys", "keys.json"), extra)
-        self.keys = sorted(set(KEY_M) | set(extra))
-        lo = max(k for k in self.keys if k < m)
-        hi = min(k for k in self.keys if k > m)
-        redo = [j for j, p in enumerate(GROWTH_P) if lo < maturity(p) < hi and j != i]
+        self.key_ms = sorted(set(KEY_M) | set(extra))
+        lo = max(k for k in self.key_ms if k < m)
+        hi = min(k for k in self.key_ms if k > m)
+        redo = [j for j, p in enumerate(GROWTH_P) if lo + 1e-6 < maturity(p) < hi - 1e-6 and j != i]
         for j in redo:
             for f in (self.p("morph", f"f{j:02d}.png"), self.p("morph", f"f{j:02d}_rgba.png"),
                       self.p("chomp", f"f{j:02d}_open.png"), self.p("chomp", f"f{j:02d}_open_rgba.png")):
                 if os.path.exists(f):
                     os.remove(f)
-        log(f"  frame {i} (m={m}) promoted to keyframe '{tag}'; keys now {self.keys}")
+        log(f"  frame {i} (m={m}) promoted to keyframe '{tag}'; keys now {self.key_ms}")
         log(f"  frames {redo} cleared - `--stage morph --resume` then `--stage chomp --resume` rebuild them")
         save_json(self.p("keys", "promoted.json"), {"last": {"frame": i, "m": m, "redo": redo}})
 
@@ -674,27 +1074,28 @@ class Pipeline:
         exist, else the probe plates from the old sprites). Score = how EVEN the four steps
         A->f25->f50->f75->B are (low spread) with a penalty for identity drift (hue vs A/B).
         The winner is written to work/settings.json so run.py picks it up."""
-        from vet import masked_hsv, thumb
-        if all(os.path.exists(self.p("plates", f"{key_tag(m)}.png")) for m in (1/3, 2/3)):
-            pa_path, pb_path = self.p("plates", "whelp.png"), self.p("plates", "drake.png")
-            log("== sweep on the REAL whelp/drake plates")
+        from vet import masked_hsv, thumb, step_distance
+        if all(os.path.exists(self.p("keys", f"{key_tag(m)}_rgba.png")) for m in (1/3, 2/3)):
+            a, b = self.key_rgba(1/3), self.key_rgba(2/3)
+            log("== sweep on the REAL whelp/drake keyframes")
         else:
             a = Image.open(os.path.join(ART, "ember-whelp2.webp")).convert("RGBA")
             b = Image.open(os.path.join(ART, "ember-drake.webp")).convert("RGBA")
-            pa_path = save_png(place_on_canvas(a, height_for(1/3))[0], self.p("sweep", "plate_a.png"))
-            pb_path = save_png(place_on_canvas(b, height_for(2/3))[0], self.p("sweep", "plate_b.png"))
             log("== sweep on the OLD sprites (no keyframes yet)")
-        na, nb = ("plate_a.png", "plate_b.png") if self.a.dry_run else (stage(pa_path), stage(pb_path))
+        pa_path = save_png(place_on_canvas(a, height_for(1/3))[1], self.p("sweep", "end_a_rgba.png"))
+        pb_path = save_png(place_on_canvas(b, height_for(2/3))[1], self.p("sweep", "end_b_rgba.png"))
         pra, prb = stage_prompt(self.d, 1/3), stage_prompt(self.d, 2/3)
         grid = [(dn, init, ipa) for dn in (0.45, 0.55) for init in ("latent", "pixel") for ipa in (0.35, 0.5)]
         results = []
         ta, tb = (thumb(Image.open(p).convert("RGBA")) for p in (pa_path, pb_path))
         ha, hb = masked_hsv(Image.open(pa_path).convert("RGBA"))[0], masked_hsv(Image.open(pb_path).convert("RGBA"))[0]
+        area_a, area_b = (int((np.asarray(Image.open(p).convert("RGBA"))[:, :, 3] > 128).sum()) for p in (pa_path, pb_path))
         for dn, init, ipa in grid:
             tag = f"d{int(dn*100)}_{init}_i{int(ipa*100)}"
             frames = []
             for f in (0.25, 0.5, 0.75):
-                wf = build_morph(tier(), pra, prb, f, self.neg, na, nb, dn, self.seed, f"dm_sweep_{tag}_{int(f*100)}",
+                na, nb, _, _ = self.pair_plates(a, b, 1/3 + f/3, f"sweep_{tag}_{int(f*100)}")
+                wf = build_morph(tier(), pra, prb, f, self.closed_neg, na, nb, dn, self.seed, f"dm_sweep_{tag}_{int(f*100)}",
                                  ipa_w=ipa, init=init)
                 out = run(wf, f"sweep {tag} f={f}", self.a.dry_run, self.dry_dir)
                 dest = copy_out(out, self.p("sweep", f"{tag}_{int(f*100)}.png"))
@@ -703,13 +1104,20 @@ class Pipeline:
             if len(frames) < 3:
                 continue
             th = [ta] + [thumb(Image.open(p).convert("RGBA")) for p in frames] + [tb]
-            steps = [float(np.abs(x - y).mean()) for x, y in zip(th, th[1:])]
+            steps = [step_distance(x, y) for x, y in zip(th, th[1:])]
             spread = max(steps) / max(1e-6, min(steps))
             hues = [masked_hsv(Image.open(p).convert("RGBA"))[0] for p in frames]
             drift = max(min(abs(h - ha), abs(h - hb)) for h in hues)
-            score = spread + drift / 10.0
+            # silhouette sanity: the in-betweens' alpha areas must climb from A's toward B's (a ghost
+            # of the other plate, or a collapsed frame, breaks this)
+            areas = [area_a] + [int((np.asarray(Image.open(p).convert("RGBA"))[:, :, 3] > 128).sum()) for p in frames] + [area_b]
+            lo, hi = min(area_a, area_b) * 0.85, max(area_a, area_b) * 1.15
+            area_bad = sum(1 for x in areas[1:-1] if not (lo <= x <= hi)) + \
+                sum(1 for x, y in zip(areas, areas[1:]) if (y - x) * (area_b - area_a) < -0.03 * abs(area_b - area_a))
+            score = spread + drift / 10.0 + area_bad * 1.5
             results.append({"denoise": dn, "init": init, "ipa": ipa, "steps": [round(s, 1) for s in steps],
-                            "spread": round(spread, 2), "hue_drift": round(drift, 1), "score": round(score, 2)})
+                            "spread": round(spread, 2), "hue_drift": round(drift, 1), "areas": areas,
+                            "area_bad": area_bad, "score": round(score, 2)})
             self.contact([pa_path] + frames + [pb_path], self.p("sweep", f"{tag}.png"), cols=5, cell=240)
             log(f"  {tag}: steps {[round(s,1) for s in steps]} spread {spread:.2f} drift {drift:.0f} -> score {score:.2f}")
         if not results:
@@ -792,22 +1200,34 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dragon", default="ember", choices=list(DRAGONS))
     ap.add_argument("--show-prompts", action="store_true", help="print every stage prompt for the dragon and exit")
+    ap.add_argument("--variant", default="", help="work folder suffix: work/<dragon>-<variant> (one per style set)")
     ap.add_argument("--stage", default="probe",
-                    choices=["probe", "sweep", "keys", "plates", "eggs", "morph", "chomp", "promote", "vet", "export", "all"])
+                    choices=["probe", "sweep", "keys", "plates", "eggs", "morph", "chomp", "blink", "fixopen", "promote", "vet", "export", "all"])
     ap.add_argument("--tier", default="photoreal", choices=["photoreal", "daily"])
+    ap.add_argument("--style", default="realistic", choices=list(STYLES))
     ap.add_argument("--dry-run", action="store_true", help="write workflow JSON only; never talks to ComfyUI")
     ap.add_argument("--validate", action="store_true", help="after a dry run, check every node class exists")
     ap.add_argument("--only", default="", help="comma list of frame indices to (re)generate")
     ap.add_argument("--seed-bump", type=int, default=0)
     ap.add_argument("--denoise", type=float, default=0.5, help="morph pass denoise (0.45 subtle .. 0.6 bolder)")
+    ap.add_argument("--mid-boost", type=float, default=0.15, help="extra denoise at a segment's midpoint (4f(1-f) shaped)")
     ap.add_argument("--open-denoise", type=float, default=0.72, help="mouth inpaint denoise")
     ap.add_argument("--init", default="latent", choices=["latent", "pixel"])
     ap.add_argument("--ipa", type=float, default=0.45, help="total IPAdapter identity weight in the morph pass")
     ap.add_argument("--neg", default="")
     ap.add_argument("--no-caption", action="store_true", help="vet: skip the Florence-2 caption pass")
     ap.add_argument("--resume", action="store_true", help="skip frames whose outputs already exist")
+    ap.add_argument("--chunk", type=int, default=0, help="morph/chomp: stop after N frames (the runner restarts the studio between chunks)")
+    ap.add_argument("--key-ipa", type=float, default=0.45,
+                    help="keys: IPAdapter weight of the adult reference when generating the newborn")
+    ap.add_argument("--adult-ref", default="", help="keys: an existing image used as the ADULT's identity reference")
+    ap.add_argument("--mouth-frac", default="", help="chomp: force the mouth box as x0,y0,x1,y1 fractions of the body bbox (use with --only)")
+    ap.add_argument("--swap-closed", action="store_true",
+                    help="chomp: the base frame's jaws are already open -> base becomes the open twin, inpaint a closed frame")
+    ap.add_argument("--adult-ipa", type=float, default=0.6, help="keys: IPAdapter weight for --adult-ref")
     args = ap.parse_args()
     TIER_NAME = args.tier
+    set_style(args.style)
     args.only = [int(x) for x in args.only.split(",") if x.strip()] if args.only else []
     pl = Pipeline(args)
     if args.show_prompts:

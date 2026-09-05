@@ -1,13 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { DRAGON_LIST } from '../data/dragons';
 
-import { EGG_ART } from '../components/DragonSprite';
+import { EGG_ART, stylesAvailable, morphSetFor } from '../components/DragonSprite';
+import { ART_STYLES, getArtStyle, setArtStyle } from '../utils/artStyle';
+
+// Art-style picker: only shown when at least one dragon has more than one style exported.
+function StylePicker({ style, onChange }) {
+  const available = new Set(DRAGON_LIST.flatMap(stylesAvailable));
+  const choices = ART_STYLES.filter(s => available.has(s.id));
+  if (choices.length < 2) return null;
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      <span className="text-xs uppercase tracking-wider text-gray-500">Art style</span>
+      {choices.map(s => (
+        <button
+          key={s.id}
+          onClick={() => onChange(s.id)}
+          className="px-3 py-1 rounded-full text-sm font-bold transition-all"
+          style={{
+            background: style === s.id ? '#ff6b35' : '#ffffff12',
+            color: style === s.id ? '#0a0a2a' : '#cbd5e1',
+            border: `2px solid ${style === s.id ? '#ff9800' : '#ffffff25'}`,
+          }}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function DragonSelectScreen() {
   const { selectDragon, level } = useGame();
   const isCounting = typeof level === 'string' && level.startsWith('0');
+  // the chosen art style lives here so the egg portraits below re-render with it
+  const [style, setStyle] = useState(getArtStyle());
+  const changeStyle = (id) => { setArtStyle(id); setStyle(id); };
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-8">
@@ -26,6 +56,8 @@ export default function DragonSelectScreen() {
       >
         {isCounting ? 'Count the trucks to hatch your dragon!' : 'Answer math facts to hatch your dragon and help it grow!'}
       </motion.p>
+
+      <StylePicker style={style} onChange={changeStyle} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl w-full">
         {DRAGON_LIST.map((dragon, index) => (
@@ -50,7 +82,7 @@ export default function DragonSelectScreen() {
             {/* Egg preview */}
             <div className="mb-3 h-[150px] flex items-end justify-center">
               <img
-                src={EGG_ART[dragon.id]}
+                src={morphSetFor(dragon, style)?.eggPortrait || EGG_ART[dragon.id]}
                 alt={`${dragon.name} egg`}
                 className="max-h-[150px] w-auto select-none pointer-events-none"
                 style={{ filter: `drop-shadow(0 6px 16px ${dragon.colors.glow}45)` }}

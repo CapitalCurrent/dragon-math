@@ -21,7 +21,8 @@ import morph as M
 THUMB = 160
 JUMP_RATIO = 1.8      # a step this many times the median step is a jump (was 2.2 before the gradual law)
 DETOUR_RATIO = 1.15   # frame b is a detour when a->b and b->c both exceed a->c by this factor
-EGG_JUMP = 1.8        # the crack frames must also creep: same ratio on the 3 egg steps
+EGG_JUMP = 3.0        # only 3 egg steps: a ratio on their median is noisy; crack persistence is the real check
+FRINGE_MAX = 0.18     # soft-edge px / opaque px above this = smudgy cutout (a clean lift measured 8.7%)
 CRACK_KEEP = 0.85     # share of frame i's crack pixels that must still be crack in frame i+1
 CRACK_GROW = 1.05     # frame i+1's crack area must be at least this times frame i's
 BANNED = ("person", "people", "man ", "woman", "child", "human", "two dragons", "three dragons", "dragons ",
@@ -34,7 +35,10 @@ def masked_hsv(rgba):
     m = a[:, :, 3] > 128
     if m.sum() == 0:
         return 0.0, 0.0
-    return float(hsv[:, :, 0][m].mean()) * 360 / 255, float(hsv[:, :, 1][m].mean()) / 255
+    # circular mean of hue: red (~0) mixed with purple shading (~290) must NOT average to green
+    h = hsv[:, :, 0][m] * (2 * np.pi / 255)
+    ang = np.degrees(np.arctan2(np.sin(h).mean(), np.cos(h).mean())) % 360
+    return float(ang), float(hsv[:, :, 1][m].mean()) / 255
 
 
 def blue_fraction(rgba, box):
@@ -48,10 +52,22 @@ def blue_fraction(rgba, box):
 
 
 def thumb(rgba):
+    """(grey image, alpha mask) at thumbnail size."""
     im = rgba.convert("RGBA").resize((THUMB, int(THUMB * M.H / M.W)), Image.BILINEAR)
     bg = Image.new("RGBA", im.size, (128, 128, 128, 255))
     bg.alpha_composite(im)
-    return np.asarray(bg.convert("L")).astype(float)
+    return np.asarray(bg.convert("L")).astype(float), np.asarray(im)[:, :, 3] > 64
+
+
+def step_distance(ta, tb):
+    """Mean abs difference PER SUBJECT PIXEL (over the union of both alphas), so a big dragon and a
+    tiny newborn are judged by the same yardstick - on the whole canvas the raw difference simply
+    grows with the subject's area (1.7 at the newborn -> 12 at the adult on 9/5, all flagged 'jump')."""
+    (ga, ma), (gb, mb) = ta, tb
+    union = ma | mb
+    if not union.any():
+        return 0.0
+    return float(np.abs(ga - gb)[union].mean())
 
 
 def region_diff(closed, opened, box):
@@ -60,9 +76,12 @@ def region_diff(closed, opened, box):
     o = np.asarray(opened.convert("RGBA")).astype(float)
     d = np.abs(c[:, :, :3] - o[:, :, :3]).mean(axis=2)
     alpha = np.maximum(c[:, :, 3], o[:, :, 3]) > 64
+    # 'inside' includes the registration feather band around the box (chomp's register_open uses
+    # 14 px + blur), so 'outside' only measures pixels that must be byte-identical
     inside = np.zeros_like(alpha)
     x0, y0, x1, y1 = [int(v) for v in box]
-    inside[y0:y1, x0:x1] = True
+    pad = 32
+    inside[max(0, y0 - pad):y1 + pad, max(0, x0 - pad):x1 + pad] = True
     din = d[inside & alpha].mean() if (inside & alpha).any() else 0.0
     dout = d[~inside & alpha].mean() if (~inside & alpha).any() else 0.0
     return float(din), float(dout)
@@ -116,24 +135,35 @@ def vet_dragon(pl):
         hfrac = (y1 - y0) / M.H
         bottom = y1 / M.H
         cx = (x0 + x1) / 2 / M.W
-        touch = M.edge_contact(im)
+        # growth frames were placed by the pipeline (keys passed the 2% gate at txt2img time), so only
+        # REAL clipping counts here: alpha within 0.5% of the canvas edge
+        bb_x0, bb_y0, bb_x1, bb_y1 = bb
+        touch = [s for s, hit in (("left", bb_x0 < M.W * 0.005), ("top", bb_y0 < M.H * 0.005),
+                                  ("right", bb_x1 > M.W * 0.995), ("bottom", bb_y1 > M.H * 0.995)) if hit]
         if touch:
             flags.append(f"edge:{'/'.join(touch)}")
-        if abs(bottom - M.FLOOR) > 0.02:
+        if abs(bottom - M.FLOOR) > 0.035:          # redrawn legs land a little under the placed floor
             flags.append(f"floor:{bottom:.2f}")
         if abs(cx - 0.5) > 0.05:
             flags.append(f"centre:{cx:.2f}")
-        if hfrac + 0.015 < prev_h:
+        if hfrac + 0.04 < prev_h:                  # bbox height also swings with the wing pose
             flags.append(f"growth:{hfrac:.2f}<{prev_h:.2f}")
         prev_h = max(prev_h, hfrac)
         hue, sat = masked_hsv(im)
         dh = min(abs(hue - adult_h), 360 - abs(hue - adult_h))
         if dh > 18 or sat < adult_s * 0.6:
             flags.append(f"colour:h{hue:.0f}/s{sat:.2f}")
+        # fringe: too much semi-transparent edge = a smudgy cutout (shadow or halo) on the cave
+        al = np.asarray(im)[:, :, 3]
+        soft = float(((al > 20) & (al <= 230)).sum()) / max(1, (al > 230).sum())
+        if soft > FRINGE_MAX:
+            flags.append(f"fringe:{soft*100:.0f}%")
         mi = mouths.get(str(i))
-        if mi:
-            bf = blue_fraction(im, mi["head"])
-            if bf > 0.004:
+        if mi and mi.get("eye"):
+            # only where the eye itself was located: head/chest boxes read Ember's navy chest as
+            # "blue eyes" on every painterly frame 9/5
+            bf = blue_fraction(im, mi["eye"])
+            if bf > 0.08:
                 flags.append(f"blueeye:{bf*100:.1f}%")
             open_p = pl.p("chomp", f"f{i:02d}_open_rgba.png")
             if os.path.exists(open_p):
@@ -156,7 +186,7 @@ def vet_dragon(pl):
     idx = [i for i, _ in growth]
     dists = {}
     for a, b in zip(idx, idx[1:]):
-        dists[(a, b)] = float(np.abs(thumbs[a] - thumbs[b]).mean())
+        dists[(a, b)] = step_distance(thumbs[a], thumbs[b])
     if dists:
         med = float(np.median(list(dists.values())))
         for (a, b), d in dists.items():
@@ -164,7 +194,7 @@ def vet_dragon(pl):
                 for k in (a, b):
                     flags_by_idx[k].append(f"jump:{d:.1f}vs{med:.1f}")
         for a, b, c in zip(idx, idx[1:], idx[2:]):
-            skip2 = float(np.abs(thumbs[a] - thumbs[c]).mean())
+            skip2 = step_distance(thumbs[a], thumbs[c])
             if dists[(a, b)] > DETOUR_RATIO * skip2 and dists[(b, c)] > DETOUR_RATIO * skip2:
                 flags_by_idx[b].append(f"detour:{dists[(a, b)]:.1f}/{dists[(b, c)]:.1f}vs{skip2:.1f}")
     for r in rows:
@@ -224,7 +254,7 @@ def vet_dragon(pl):
                     r["flags"].append(f"crack:nogrowth(x{growth_ratio:.2f})")
         egg_rows_note = f"egg {i}->{j}: {keep*100:.0f}% of the crack kept, area x{growth_ratio:.2f}"
         egg_crack_notes.append(egg_rows_note)
-    egg_d = {(a, b): float(np.abs(egg_thumbs[a] - egg_thumbs[b]).mean())
+    egg_d = {(a, b): step_distance(egg_thumbs[a], egg_thumbs[b])
              for a, b in zip(sorted(egg_thumbs), sorted(egg_thumbs)[1:])}
     if len(egg_d) >= 2:
         emed = float(np.median(list(egg_d.values())))

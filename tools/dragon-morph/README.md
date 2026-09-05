@@ -49,6 +49,10 @@ Manual stage-by-stage is still there (`morph.py --stage keys|plates|eggs|morph|c
 ## Claude's review checklist (per packet, in this order)
 1. `keys/contact.png`: one identity across hatch → adult; realistic and serious (softness only in the
    hatchling); every frame's whole body inside the canvas; the right element (no fire on Frost).
+   **Anatomy continuity (Ryan 9/5):** the horns are the SAME horns at four sizes (buds → stubs → growing →
+   full; ram stays ram, antler stays antler), never a different horn type on the baby; the body goes
+   plump baby → chubby whelp → lean drake → sleek slender adult; wings nubs → full. A keyframe that
+   breaks the family is a keyframe redo, not a reroll.
 2. `vet/contact.png`: read left to right like a flip-book. Each step grows a LITTLE. No frame looks like a
    different dragon, none shrinks, feet stay on one line, no blue-eye or colour drift. Flags under each frame.
 3. `vet/pairs.png`: in every pair the mouth is open in the second and nothing else moved.

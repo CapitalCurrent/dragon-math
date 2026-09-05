@@ -95,6 +95,11 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   Iona tests in the live app. NEXT (Ryan's asks): per-dragon custom CAVE (Ember first: lava cave, nest
   ledge on the left third at the floor line, mouth on the right - same layout contract as cave-bg);
   then his verdict on the styles; then the other five dragons.**
+- **12:55 EMBER CAVE approved (seed 4014, daily tier, 1344×768; prompt in `work/cave-ember/`):
+  warm ember glow on the left ledge, open floor, moonlit mouth right. LAYOUT CONTRACT for every
+  dragon's cave: nest ledge left third at floor y≈0.86, x≈0.30; wingspan headroom; mouth/light on the
+  right; no lava/water under the nest. Exported `src/assets/art/cave-ember.webp`; per-dragon cave map
+  in GameScreen's CaveBackground with cave-bg fallback. Other five caves: same recipe, one batch.**
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

@@ -21,6 +21,13 @@ import {
 } from '../components/SkillEffects';
 
 import caveArt from '../assets/art/cave-bg.webp';
+import caveEmber from '../assets/art/cave-ember.webp';
+
+// Per-dragon caves (studio-generated, same layout contract: nest ledge on the left third at the
+// floor line, headroom for the wingspan, the mouth on the right). Others fall back to the shared cave.
+const CAVE_ART = {
+  ember: caveEmber,
+};
 
 // Full-bleed cave background — studio-generated painting (local ComfyUI, Arc B580).
 // Dragon-colored lighting is layered on top in the same 1600x900 coordinate space
@@ -53,7 +60,7 @@ function CaveBackground({ dragon }) {
 
       {/* Painted cavern — moonlit opening on the right, dry open floor */}
       <image
-        href={caveArt}
+        href={CAVE_ART[dragon.id] || caveArt}
         x="0" y="0" width="1600" height="900"
         preserveAspectRatio="xMidYMid slice"
       />

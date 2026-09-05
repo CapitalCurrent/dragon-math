@@ -111,11 +111,18 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
     boxH = boxW / set.aspect;
   }
 
-  // A small pulse every time the frame advances (the "it grew" beat).
+  // Growth is gradual and organic: a slow crossfade and a barely-there swell on
+  // each advance. The HATCH is the one allowed jolt (egg -> hatchling): a bigger
+  // pop and a faster fade so it reads as a reveal, not a morph.
+  const isHatch = !isEgg && progress > 0 && set.frames.some(f => f.kind === 'egg') &&
+    frame === set.frames.find(f => f.kind === 'dragon');
+  const fade = isHatch ? 0.18 : 0.6;
   const pulse = useAnimation();
   useEffect(() => {
-    pulse.start({ scale: [1, 1.035, 1], transition: { duration: 0.45, ease: 'easeOut' } });
-  }, [frame.p, pulse]);
+    pulse.start(isHatch
+      ? { scale: [0.7, 1.12, 0.97, 1], y: [18, -10, 3, 0], transition: { duration: 0.7, ease: 'easeOut' } }
+      : { scale: [1, 1.02, 1], transition: { duration: 0.6, ease: 'easeInOut' } });
+  }, [frame.p, isHatch, pulse]);
 
   const glowPx = isEgg ? 14 + eggIndex * 10 : 0;
 
@@ -160,7 +167,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               initial={{ opacity: 0 }}
               animate={{ opacity: chomping && frame.open ? 0 : 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: fade }}
               style={{ ...FILL, filter: isEgg ? `drop-shadow(0 8px ${glowPx}px ${glow}${eggIndex > 1 ? '88' : '55'})` : 'none' }}
             />
           </AnimatePresence>

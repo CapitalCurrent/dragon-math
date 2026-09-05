@@ -19,6 +19,9 @@ from PIL import Image
 import morph as M
 
 THUMB = 160
+JUMP_RATIO = 1.8      # a step this many times the median step is a jump (was 2.2 before the gradual law)
+DETOUR_RATIO = 1.15   # frame b is a detour when a->b and b->c both exceed a->c by this factor
+EGG_JUMP = 1.8        # the crack frames must also creep: same ratio on the 3 egg steps
 BANNED = ("person", "people", "man ", "woman", "child", "human", "two dragons", "three dragons", "dragons ",
           "figure", "toy", "statue")
 
@@ -144,7 +147,10 @@ def vet_dragon(pl):
                      "hue": round(hue), "sat": round(sat, 2), "flags": flags})
         flags_by_idx[i] = flags
 
-    # neighbour distance outliers (a frame that looks like a different dragon)
+    # THE GRADUAL LAW (Ryan 9/5): no sudden change anywhere except the hatch. Two checks on the
+    # neighbour distances: a JUMP (one step much larger than the typical step) and a DETOUR (frame
+    # i+1 is far from BOTH its neighbours while they are close to each other = a frame that wandered
+    # off and came back - the morph pass produced something else for one step).
     idx = [i for i, _ in growth]
     dists = {}
     for a, b in zip(idx, idx[1:]):
@@ -152,9 +158,13 @@ def vet_dragon(pl):
     if dists:
         med = float(np.median(list(dists.values())))
         for (a, b), d in dists.items():
-            if med > 0 and d > 2.2 * med:
+            if med > 0 and d > JUMP_RATIO * med:
                 for k in (a, b):
                     flags_by_idx[k].append(f"jump:{d:.1f}vs{med:.1f}")
+        for a, b, c in zip(idx, idx[1:], idx[2:]):
+            skip2 = float(np.abs(thumbs[a] - thumbs[c]).mean())
+            if dists[(a, b)] > DETOUR_RATIO * skip2 and dists[(b, c)] > DETOUR_RATIO * skip2:
+                flags_by_idx[b].append(f"detour:{dists[(a, b)]:.1f}/{dists[(b, c)]:.1f}vs{skip2:.1f}")
     for r in rows:
         r["flags"] = flags_by_idx[r["i"]]
 
@@ -174,8 +184,8 @@ def vet_dragon(pl):
                         flags_by_idx[i].append(f"caption:{w.strip()}")
                         break
 
-    # eggs: only geometry
-    egg_rows = []
+    # eggs: geometry + the gradual law on the crack steps
+    egg_rows, egg_thumbs = [], {}
     for i in range(len(M.EGG_P)):
         p = pl.p("eggs", f"egg_{i}_rgba.png")
         if not os.path.exists(p):
@@ -187,7 +197,17 @@ def vet_dragon(pl):
             f.append("edge")
         if abs(bb[3] / M.H - M.FLOOR) > 0.03:
             f.append(f"floor:{bb[3]/M.H:.2f}")
+        egg_thumbs[i] = thumb(im)
         egg_rows.append({"i": i, "flags": f})
+    egg_d = {(a, b): float(np.abs(egg_thumbs[a] - egg_thumbs[b]).mean())
+             for a, b in zip(sorted(egg_thumbs), sorted(egg_thumbs)[1:])}
+    if len(egg_d) >= 2:
+        emed = float(np.median(list(egg_d.values())))
+        for (a, b), d in egg_d.items():
+            if emed > 0 and d > EGG_JUMP * emed:
+                for r in egg_rows:
+                    if r["i"] == b:
+                        r["flags"].append(f"jump:{d:.1f}vs{emed:.1f}")
 
     reroll = sorted(i for i, f in flags_by_idx.items() if any(not x.startswith("caption") for x in f))
     M.save_json(os.path.join(out_dir, "reroll.json"), {"growth": reroll,
@@ -206,6 +226,8 @@ def vet_dragon(pl):
             f.write("\n## eggs\n")
             for r in egg_rows:
                 f.write(f"- egg {r['i']}: {' '.join(r['flags']) or 'ok'}\n")
+            for (a, b), d in egg_d.items():
+                f.write(f"- egg {a}->{b}: {d:.1f}\n")
         if caps:
             f.write("\n## captions\n")
             for i, c in caps.items():

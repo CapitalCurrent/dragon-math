@@ -477,21 +477,31 @@ class Pipeline:
         plate_path = save_png(plate, self.p("eggs", "egg_plate.png"))
         name = "egg_plate.png" if self.a.dry_run else stage(plate_path)
         base = f"{self.d['shell']}, a single dragon egg sitting upright, {EGG_STYLE}"
+        # CHAINED on purpose (the one place chaining is right): each crack frame is a LOW-denoise pass
+        # over the previous frame, so the crack pattern is inherited and GROWS instead of being redrawn
+        # - "no sudden changes except the hatch" (Ryan 9/5). Three steps are too few to drift.
         steps = [
-            (0.25, f"{base}, intact smooth shell, faint inner glow"),
-            (0.40, f"{base}, (a thin hairline crack:1.3) on the shell, light leaking from the crack"),
-            (0.58, f"{base}, (cracks spreading across the shell:1.4), small chips falling, bright light leaking out"),
-            (0.62, f"{base}, (bursting open:1.4), large cracks, shell pieces breaking away, blazing light pouring out"),
+            (0.22, f"{base}, intact smooth shell, faint inner glow"),
+            (0.32, f"{base}, (a thin hairline crack:1.3) on the shell, faint light leaking from the crack"),
+            (0.36, f"{base}, (the same cracks spreading wider across the shell:1.4), small chips loosening, "
+                   "bright light leaking out"),
+            (0.40, f"{base}, (the cracks bursting open:1.4), shell pieces breaking away, blazing light pouring out"),
         ]
         neg = self.neg + ", dragon, creature, hatchling, animal"
+        prev = name
         for i, (dn, prompt) in enumerate(steps):
+            dest = self.p("eggs", f"egg_{i}.png")
             if self.skip(i, self.p("eggs", f"egg_{i}_rgba.png")):
+                prev = f"egg_{i}.png" if self.a.dry_run else stage(dest)
                 continue
-            out = run(cc().build_img2img(t, prompt, neg, name, dn, self.seed, f"dm_egg_{i}"),
-                      f"egg {i} d={dn}", self.a.dry_run, self.dry_dir)
-            dest = copy_out(out, self.p("eggs", f"egg_{i}.png"))
-            if dest:
-                save_png(rembg_rgba(dest), self.p("eggs", f"egg_{i}_rgba.png"))
+            out = run(cc().build_img2img(t, prompt, neg, prev, dn, self.seed, f"dm_egg_{i}"),
+                      f"egg {i} d={dn} <- {prev}", self.a.dry_run, self.dry_dir)
+            got = copy_out(out, dest)
+            if got:
+                save_png(rembg_rgba(got), self.p("eggs", f"egg_{i}_rgba.png"))
+                prev = stage(got)
+            else:
+                prev = f"egg_{i}.png"
 
     # -- stage: morph
     def morph(self):

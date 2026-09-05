@@ -23,6 +23,10 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   (dev server on a port ≥ 3200 only). (3) Version bump + deploy is a later, separate step.
 - Brief (Ryan, 9/3): realistic, serious dragons; softness only in the hatchling; the eggs stay as they
   are; every frame a new generation; Claude vets before Ryan sees pictures.
+- **THE GRADUAL LAW (Ryan, 9/5): no sudden change of the egg or the dragon anywhere except the hatch
+  itself; every change gradual and organic.** Enforced by: chained low-denoise crack frames (the crack
+  pattern is inherited and grows), vet `jump` (1.8× median step) + `detour` flags on growth AND egg
+  steps, and in the app a 0.6 s crossfade with a 2 % swell per advance; the hatch alone gets the pop.
 - Open risks to watch on the first live run: LatentBlend ghosting at mid-f (raise denoise or switch to
   pixel init); the hybrid hatchling graph once crashed the XPU (runner restarts and resumes);
   Florence "dragon head" grounding may return the whole body (fallback = alpha top third);
@@ -30,3 +34,4 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
 
 ## LOG
 - 2026-09-04 night — design + full build under the hub's hold (no GPU/CPU-heavy work). Checkpoint 1 committed.
+- 2026-09-05 — the gradual law folded in (chained cracks, jump/detour vet, slow crossfade + hatch pop). Checkpoint 2.

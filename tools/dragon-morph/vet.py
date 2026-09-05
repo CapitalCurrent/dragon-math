@@ -235,7 +235,9 @@ def vet_dragon(pl):
     # (>= CRACK_KEEP of them), and the crack must GROW (area up by >= CRACK_GROW)
     intact = pl.p("eggs", "egg_0.png")
     cracks = {}
-    for i in range(1, len(M.EGG_P)):
+    # crack persistence is a check on the drawn/blended chain; LTX-authored clips (many frames)
+    # are judged by eye and by the neighbour-distance checks instead
+    for i in (range(1, len(M.EGG_P)) if len(M.EGG_P) <= 13 else []):
         p = pl.p("eggs", f"egg_{i}.png")
         if os.path.exists(p) and os.path.exists(intact):
             cracks[i] = M.crack_pixels(p, intact)

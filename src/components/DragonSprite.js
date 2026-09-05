@@ -130,7 +130,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
     const path = to > from ? eggFrames.slice(from + 1, to + 1) : [target];
     setRumbling(true);
     // the reveal frames flip fast (a fracture runs in a burst), then the egg settles
-    const step = path.length > 2 ? 170 : 380;
+    const step = path.length > 8 ? 55 : path.length > 2 ? 170 : 380;   // LTX clip frames run at ~18 fps
     const timers = path.map((f, k) => setTimeout(() => setShown(f), 220 + k * step));
     timers.push(setTimeout(() => setRumbling(false), 220 + path.length * step + 350));
     return () => timers.forEach(clearTimeout);

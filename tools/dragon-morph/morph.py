@@ -45,7 +45,7 @@ KEY_M = [0.0, 1.0]              # TWO anchors only (Ryan 9/5): the adult, and th
                                 # Every other frame is a morph descendant of those two (run.py subdivides:
                                 # the midpoint is morphed and promoted to a key, then the quarter points).
 GROWTH_P = [round(0.20 + 0.05 * i, 2) for i in range(17)]   # progress values that show a dragon
-EGG_P = [round(i * 0.0125, 4) for i in range(13)]      # solid + 12 reveal frames (four per answer, played on the
+EGG_P = [round(i * 0.15 / 36, 5) for i in range(37)]      # solid + 36 LTX clip frames (twelve per answer, played on the
                                                        # rumble; the app lands on every 4th = each answer's state)
 
 # The daughter's brief (9/3): REALISTIC, serious-looking dragons - not cute-and-cartoony. A little

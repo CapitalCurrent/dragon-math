@@ -179,15 +179,21 @@ def stage_prompt(d, m):
     k = min(d["m"], key=lambda km: abs(km - m))
     return f"{d['m'][k]}, {d['anchor']}, {STYLE}"
 
-def bracket(m):
+def bracket(m, keys=None):
     """Bracketing keyframe maturities (a <= m <= b) and the fraction f toward b."""
-    for a, b in zip(KEY_M, KEY_M[1:]):
+    keys = keys or KEY_M
+    for a, b in zip(keys, keys[1:]):
         if a - 1e-9 <= m <= b + 1e-9:
             return a, b, 0.0 if b == a else (m - a) / (b - a)
-    return KEY_M[-2], KEY_M[-1], 1.0
+    return keys[-2], keys[-1], 1.0
 
+KEY_TAGS = {0.0: "hatch", 1/3: "whelp", 2/3: "drake", 1.0: "adult"}
 def key_tag(m):
-    return {0.0: "hatch", 1/3: "whelp", 2/3: "drake", 1.0: "adult"}[m]
+    """File tag for a keyframe maturity; promoted mid-keys are k0500 style."""
+    for k, tag in KEY_TAGS.items():
+        if abs(k - m) < 1e-6:
+            return tag
+    return f"k{round(m * 1000):04d}"
 
 def maturity(p):
     return (p - GROWTH_P[0]) / (GROWTH_P[-1] - GROWTH_P[0])
@@ -391,6 +397,8 @@ class Pipeline:
         self.seed = self.d["seed"] + args.seed_bump
         os.makedirs(self.work, exist_ok=True)
         self.neg = NEG_BASE + ", " + self.d["neg"] + (", " + args.neg if args.neg else "")
+        # keyframe maturities: the four fixed ones plus any promoted mid-keys (keys/keys.json)
+        self.keys = sorted(set(KEY_M) | set(load_json(self.p("keys", "keys.json"), [])))
 
     def p(self, *parts):
         return os.path.join(self.work, *parts)
@@ -486,8 +494,10 @@ class Pipeline:
     # -- stage: plates
     def plates(self):
         log("== plates: keyframes onto the shared canvas")
-        for m in KEY_M:
+        for m in self.keys:
             tag = key_tag(m)
+            if m not in KEY_M and os.path.exists(self.p("plates", f"{tag}.png")):
+                continue        # a promoted mid-key is already a plate (it came from a canvas frame)
             if not os.path.exists(self.p("keys", f"{tag}_rgba.png")):
                 log(f"  {tag}: no keyframe yet (run --stage keys){' - dry run, skipping' if self.a.dry_run else ''}")
                 if self.a.dry_run:
@@ -554,12 +564,12 @@ class Pipeline:
         log(f"== morph: {len(GROWTH_P)} growth frames (denoise {self.a.denoise}, init {self.a.init}, ipa {self.a.ipa})")
         t = tier()
         names = {m: (f"{key_tag(m)}.png" if self.a.dry_run else stage(self.p("plates", f"{key_tag(m)}.png")))
-                 for m in KEY_M}
+                 for m in self.keys}
         for i, p in enumerate(GROWTH_P):
             if self.skip(i, self.p("morph", f"f{i:02d}_rgba.png")):
                 continue
             m = maturity(p)
-            a, b, f = bracket(m)
+            a, b, f = bracket(m, self.keys)
             wf = build_morph(t, stage_prompt(self.d, a), stage_prompt(self.d, b), f, self.neg, names[a], names[b],
                              self.a.denoise, self.seed, f"dm_morph_{i:02d}", ipa_w=self.a.ipa, init=self.a.init)
             out = run(wf, f"morph {i:02d} p={p} m={m:.3f} [{key_tag(a)}->{key_tag(b)} f={f:.2f}]",
@@ -627,6 +637,91 @@ class Pipeline:
         x0, y0, x1, y1 = head
         hw, hh = x1 - x0, y1 - y0
         return (max(0, x0 - hw * 0.08), y0 + hh * 0.48, min(W, x1 + hw * 0.08), min(H, y1 + hh * 0.22))
+
+    # -- stage: promote (a clean growth frame becomes a keyframe; its two half-segments re-morph)
+    def promote(self):
+        """--only <i>: the growth frame i becomes a mid-keyframe, halving the two morph gaps around it.
+        The frames strictly between the new key's neighbours are deleted so --resume regenerates them."""
+        if len(self.a.only) != 1:
+            raise SystemExit("promote needs exactly one frame index: --only <i>")
+        i = self.a.only[0]
+        m = round(maturity(GROWTH_P[i]), 4)
+        src = self.p("morph", f"f{i:02d}")
+        if not os.path.exists(src + "_rgba.png"):
+            raise SystemExit(f"frame {i} has no morph output to promote")
+        tag = key_tag(m)
+        shutil.copyfile(src + "_rgba.png", self.p("keys", f"{tag}_rgba.png"))
+        shutil.copyfile(src + ".png", self.p("plates", f"{tag}.png"))
+        shutil.copyfile(src + "_rgba.png", self.p("plates", f"{tag}_rgba.png"))
+        extra = sorted(set(load_json(self.p("keys", "keys.json"), [])) | {m})
+        save_json(self.p("keys", "keys.json"), extra)
+        self.keys = sorted(set(KEY_M) | set(extra))
+        lo = max(k for k in self.keys if k < m)
+        hi = min(k for k in self.keys if k > m)
+        redo = [j for j, p in enumerate(GROWTH_P) if lo < maturity(p) < hi and j != i]
+        for j in redo:
+            for f in (self.p("morph", f"f{j:02d}.png"), self.p("morph", f"f{j:02d}_rgba.png"),
+                      self.p("chomp", f"f{j:02d}_open.png"), self.p("chomp", f"f{j:02d}_open_rgba.png")):
+                if os.path.exists(f):
+                    os.remove(f)
+        log(f"  frame {i} (m={m}) promoted to keyframe '{tag}'; keys now {self.keys}")
+        log(f"  frames {redo} cleared - `--stage morph --resume` then `--stage chomp --resume` rebuild them")
+        save_json(self.p("keys", "promoted.json"), {"last": {"frame": i, "m": m, "redo": redo}})
+
+    # -- stage: sweep (auto-tune the morph knobs on 3 in-betweens per combo; writes the winner)
+    def sweep(self):
+        """Grid over denoise x init x ipa between two plates (the real whelp/drake plates when they
+        exist, else the probe plates from the old sprites). Score = how EVEN the four steps
+        A->f25->f50->f75->B are (low spread) with a penalty for identity drift (hue vs A/B).
+        The winner is written to work/settings.json so run.py picks it up."""
+        from vet import masked_hsv, thumb
+        if all(os.path.exists(self.p("plates", f"{key_tag(m)}.png")) for m in (1/3, 2/3)):
+            pa_path, pb_path = self.p("plates", "whelp.png"), self.p("plates", "drake.png")
+            log("== sweep on the REAL whelp/drake plates")
+        else:
+            a = Image.open(os.path.join(ART, "ember-whelp2.webp")).convert("RGBA")
+            b = Image.open(os.path.join(ART, "ember-drake.webp")).convert("RGBA")
+            pa_path = save_png(place_on_canvas(a, height_for(1/3))[0], self.p("sweep", "plate_a.png"))
+            pb_path = save_png(place_on_canvas(b, height_for(2/3))[0], self.p("sweep", "plate_b.png"))
+            log("== sweep on the OLD sprites (no keyframes yet)")
+        na, nb = ("plate_a.png", "plate_b.png") if self.a.dry_run else (stage(pa_path), stage(pb_path))
+        pra, prb = stage_prompt(self.d, 1/3), stage_prompt(self.d, 2/3)
+        grid = [(dn, init, ipa) for dn in (0.45, 0.55) for init in ("latent", "pixel") for ipa in (0.35, 0.5)]
+        results = []
+        ta, tb = (thumb(Image.open(p).convert("RGBA")) for p in (pa_path, pb_path))
+        ha, hb = masked_hsv(Image.open(pa_path).convert("RGBA"))[0], masked_hsv(Image.open(pb_path).convert("RGBA"))[0]
+        for dn, init, ipa in grid:
+            tag = f"d{int(dn*100)}_{init}_i{int(ipa*100)}"
+            frames = []
+            for f in (0.25, 0.5, 0.75):
+                wf = build_morph(tier(), pra, prb, f, self.neg, na, nb, dn, self.seed, f"dm_sweep_{tag}_{int(f*100)}",
+                                 ipa_w=ipa, init=init)
+                out = run(wf, f"sweep {tag} f={f}", self.a.dry_run, self.dry_dir)
+                dest = copy_out(out, self.p("sweep", f"{tag}_{int(f*100)}.png"))
+                if dest:
+                    frames.append(save_png(rembg_rgba(dest), self.p("sweep", f"{tag}_{int(f*100)}_rgba.png")))
+            if len(frames) < 3:
+                continue
+            th = [ta] + [thumb(Image.open(p).convert("RGBA")) for p in frames] + [tb]
+            steps = [float(np.abs(x - y).mean()) for x, y in zip(th, th[1:])]
+            spread = max(steps) / max(1e-6, min(steps))
+            hues = [masked_hsv(Image.open(p).convert("RGBA"))[0] for p in frames]
+            drift = max(min(abs(h - ha), abs(h - hb)) for h in hues)
+            score = spread + drift / 10.0
+            results.append({"denoise": dn, "init": init, "ipa": ipa, "steps": [round(s, 1) for s in steps],
+                            "spread": round(spread, 2), "hue_drift": round(drift, 1), "score": round(score, 2)})
+            self.contact([pa_path] + frames + [pb_path], self.p("sweep", f"{tag}.png"), cols=5, cell=240)
+            log(f"  {tag}: steps {[round(s,1) for s in steps]} spread {spread:.2f} drift {drift:.0f} -> score {score:.2f}")
+        if not results:
+            return
+        results.sort(key=lambda r: r["score"])
+        save_json(self.p("sweep", "sweep.json"), results)
+        best = results[0]
+        settings_path = os.path.join(HERE, "work", "settings.json")
+        s = load_json(settings_path, {})
+        s.update({"denoise": best["denoise"], "init": best["init"], "ipa": best["ipa"]})
+        save_json(settings_path, s)
+        log(f"  WINNER denoise {best['denoise']} init {best['init']} ipa {best['ipa']} (score {best['score']}) -> work/settings.json")
 
     # -- stage: vet / export live in their own modules
     def vet(self):
@@ -698,7 +793,7 @@ def main():
     ap.add_argument("--dragon", default="ember", choices=list(DRAGONS))
     ap.add_argument("--show-prompts", action="store_true", help="print every stage prompt for the dragon and exit")
     ap.add_argument("--stage", default="probe",
-                    choices=["probe", "keys", "plates", "eggs", "morph", "chomp", "vet", "export", "all"])
+                    choices=["probe", "sweep", "keys", "plates", "eggs", "morph", "chomp", "promote", "vet", "export", "all"])
     ap.add_argument("--tier", default="photoreal", choices=["photoreal", "daily"])
     ap.add_argument("--dry-run", action="store_true", help="write workflow JSON only; never talks to ComfyUI")
     ap.add_argument("--validate", action="store_true", help="after a dry run, check every node class exists")

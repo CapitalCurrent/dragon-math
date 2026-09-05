@@ -28,9 +28,13 @@ cd "F:\Software Builds\math-facts\tools\dragon-morph"
 set PY="F:\Software Builds\ComfyUI_Windows_portable\python_standalone\python.exe"
 %PY% morph.py --stage probe                 REM once, ~2 min: proves the morph pass on the OLD whelp/drake
                                             REM   sprites; tune --denoise / --init / --ipa from probe\contact.png
-%PY% run.py --dragons all                   REM unattended: starts ComfyUI if needed, runs every stage per
-                                            REM   dragon, rerolls what vet flags (3 rounds), restarts the studio
-                                            REM   after a crash, writes work\<dragon>\review\packet.md
+%PY% run.py --sweep --dragons all           REM unattended: --sweep first auto-tunes denoise/init/ipa on an
+                                            REM   8-combo grid (~6 min, scored by step evenness + hue drift,
+                                            REM   winner persisted); then per dragon every stage, vet, and
+                                            REM   the fix ladder: a segment with 2+ flags gets a clean middle
+                                            REM   frame PROMOTED to a keyframe (halving the gap) before any
+                                            REM   seed reroll; restarts the studio after a crash; writes
+                                            REM   work\<dragon>\review\packet.md
 REM  -> Claude reads each packet (contact sheets + report), decides approve / reroll / redo keys
 %PY% run.py --approve ember                 REM ONLY then: export into src\assets\art\morph\ember
 ```
@@ -60,6 +64,14 @@ Verdicts: approve → `run.py --approve <dragon>` · a few bad frames → `morph
 - `--init latent|pixel`: LatentBlend of the two plates vs. a pixel crossfade encoded once. Try both in `probe`.
 - `--ipa` identity weight split across the two keyframes (0.45).
 - Canvas constants in `morph.py`: `W,H`, `FLOOR`, `H_HATCH..H_ADULT` (subject height 38 % → 95 %), `KEY_M`.
+
+## The fix ladder (cheapest first; nothing ever restarts all six)
+| Problem | Fix | Cost |
+|---|---|---|
+| one or two odd frames | `morph.py --stage morph --only i,j --seed-bump n` (+ chomp, vet) - run.py does this | 15 s/frame |
+| a whole segment rough | `morph.py --stage promote --only <clean middle frame>` then `morph --resume`, `chomp --resume` - run.py does this automatically when a segment has 2+ flags | ~2 min |
+| one keyframe is the odd one | delete `work/<d>/keys/<tag>*` and re-run `keys` (the de-age chain rebuilds from the adult), `plates`, `morph --resume` after clearing its two segments | ~3 min |
+| the adult identity is wrong | delete `work/<d>` and re-run the dragon | ~15 min |
 
 ## Vet flags → what to do
 `edge` reroll keyframe · `floor`/`centre` the morph pass moved the body: raise `--ipa`, lower `--denoise` ·

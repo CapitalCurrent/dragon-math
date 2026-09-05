@@ -17,9 +17,10 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   gate), app side `DragonSprite.js` MorphSprite + placeholder manifests under `src/assets/art/morph/*`.
   All dry-run + node-validated; JS parses. **Not yet exercised against a live ComfyUI.**
 - Knobs: defaults (photoreal tier, denoise 0.5, latent init, ipa 0.45) — untuned until the probe runs.
-- Next: (1) hub says done → `morph.py --stage probe` → look at `work/ember/probe/contact.png`, pick
-  knobs, run `run.py --denoise X --init Y --ipa Z --dragons ember` (settings persist) → review packet →
-  approve → then `--dragons all`. (2) Light app check of the MorphSprite once a manifest exists
+- Next: (1) hub says done → `run.py --sweep --dragons ember` (the sweep auto-tunes the knobs on an
+  8-combo grid and persists the winner; then ember end-to-end with auto reroll + keyframe promotion)
+  → Claude reads `work/ember/review/packet.md` sheets → `run.py --approve ember` → `run.py --dragons all`.
+  The manual probe (`morph.py --stage probe`) remains for eyeballing a single combo. (2) Light app check of the MorphSprite once a manifest exists
   (dev server on a port ≥ 3200 only). (3) Version bump + deploy is a later, separate step.
 - Brief (Ryan, 9/3): realistic, serious dragons; softness only in the hatchling; the eggs stay as they
   are; every frame a new generation; Claude vets before Ryan sees pictures.
@@ -42,3 +43,6 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
 - 2026-09-04 night — design + full build under the hub's hold (no GPU/CPU-heavy work). Checkpoint 1 committed.
 - 2026-09-05 — the gradual law folded in (chained cracks, jump/detour vet, slow crossfade + hatch pop). Checkpoint 2.
 - 2026-09-05 — crack persistence by construction (masked inpaint growth) + vet metric, proven offline. Checkpoint 3.
+- 2026-09-05 — the fix ladder automated: `sweep` stage (auto-tune, writes settings), `promote` stage +
+  runner's segment rule (2+ flags in a keyframe gap → promote the clean middle frame, re-morph the halves
+  before any seed reroll). Promote/candidate logic proven offline on fake frames. Checkpoint 4.

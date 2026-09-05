@@ -16,6 +16,8 @@ the outputs stop. Everything is logged to work/<dragon>/run.log.
 import argparse, datetime, json, os, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import morph as M   # constants only (KEY_M, GROWTH_P, maturity); never runs anything
 STUDIO = r"F:\Software Builds\ComfyUI_Windows_portable"
 SERVER = "http://127.0.0.1:8188"
 PY = sys.executable
@@ -141,6 +143,32 @@ class Runner:
         with open(p) as f:
             return json.load(f)
 
+    def keys(self):
+        p = os.path.join(self.work, "keys", "keys.json")
+        extra = json.load(open(p)) if os.path.exists(p) else []
+        return sorted(set(M.KEY_M) | set(extra))
+
+    def promote_candidates(self, flagged):
+        """A segment between two keyframes with 2+ flagged frames is too wide a gap to morph: pick its
+        cleanest frame nearest the midpoint to promote to a keyframe (never a flagged one, never a
+        segment already narrower than MIN_SEG)."""
+        MIN_SEG = 0.12
+        keys, out = self.keys(), []
+        for lo, hi in zip(keys, keys[1:]):
+            seg = [i for i, p in enumerate(M.GROWTH_P) if lo < M.maturity(p) < hi]
+            bad = [i for i in seg if i in flagged]
+            clean = [i for i in seg if i not in flagged]
+            if len(bad) >= 2 and (hi - lo) > MIN_SEG and clean:
+                mid = (lo + hi) / 2
+                out.append(min(clean, key=lambda i: abs(M.maturity(M.GROWTH_P[i]) - mid)))
+        return out
+
+    def reload_settings(self):
+        if os.path.exists(SETTINGS):
+            with open(SETTINGS) as f:
+                for k, v in json.load(f).items():
+                    setattr(self.args, k, v)
+
     def prior_status(self):
         p = os.path.join(self.work, "review", "status.json")
         if os.path.exists(p):
@@ -156,7 +184,12 @@ class Runner:
         self.log(f"===== {self.dragon}: tier {self.args.tier} denoise {self.args.denoise} init {self.args.init} ipa {self.args.ipa}"
                  + (f"  (resuming: prior run reached {prior.get('failed_stage') or 'vet'})" if prior else ""))
         status = {"dragon": self.dragon, "clean": False, "rounds": 0, "failed_stage": None, "flagged": None,
-                  "started": datetime.datetime.now().isoformat(timespec="seconds")}
+                  "promoted": [], "started": datetime.datetime.now().isoformat(timespec="seconds")}
+        if self.args.sweep and not os.path.exists(os.path.join(WORK, "sweep.done")):
+            if self.attempt("sweep"):
+                open(os.path.join(WORK, "sweep.done"), "w").write(self.dragon)
+                self.reload_settings()
+                self.log(f"sweep picked denoise {self.args.denoise} init {self.args.init} ipa {self.args.ipa}")
         for s in PIPELINE:
             if not self.attempt(s):
                 status["failed_stage"] = s
@@ -171,7 +204,18 @@ class Runner:
             if not rr["growth"] and not rr["eggs"]:
                 status["clean"] = True
                 break
-            self.log(f"round {r}: vet flagged growth {rr['growth']} eggs {rr['eggs']} -> reroll with seed bump {r}")
+            self.log(f"round {r}: vet flagged growth {rr['growth']} eggs {rr['eggs']}")
+            # a rough SEGMENT is a keyframe gap too wide to morph: halve it by promoting a clean frame
+            promos = self.promote_candidates(set(rr["growth"])) if rr["growth"] else []
+            if promos:
+                self.log(f"round {r}: promoting frames {promos} to keyframes (segment too wide), re-morphing their halves")
+                for i in promos:
+                    self.attempt("promote", ["--only", str(i)])
+                status["promoted"] += promos
+                self.attempt("morph")           # --resume rebuilds only the cleared frames
+                self.attempt("chomp")
+                continue                        # next round measures the halves before any seed reroll
+            self.log(f"round {r}: reroll with seed bump {r}")
             if rr["growth"]:
                 csv = ",".join(str(i) for i in rr["growth"])
                 self.attempt("morph", ["--only", csv, "--seed-bump", str(r)])
@@ -214,7 +258,8 @@ class Runner:
         ]
         lines = [f"# Review packet - {self.dragon}", "",
                  f"status: **{'CLEAN' if status['clean'] else 'NOT CLEAN'}** after {status['rounds']} vet round(s)"
-                 + (f" - FAILED at stage `{status['failed_stage']}`" if status["failed_stage"] else ""),
+                 + (f" - FAILED at stage `{status['failed_stage']}`" if status["failed_stage"] else "")
+                 + (f" - promoted frames {status['promoted']} to keyframes" if status.get("promoted") else ""),
                  f"flagged now: `{json.dumps(status.get('flagged'))}`", "",
                  "Claude reviews every image below BEFORE `run.py --approve` exports anything to the app.", ""]
         for title, path, ask in items:
@@ -255,6 +300,8 @@ def main():
     ap.add_argument("--ipa", type=float, default=0.45)
     ap.add_argument("--no-caption", action="store_true", help="skip Florence captions in vet (faster)")
     ap.add_argument("--force", action="store_true", help="re-run dragons already marked clean")
+    ap.add_argument("--sweep", action="store_true",
+                    help="before the first dragon: auto-tune denoise/init/ipa on a 3-frame grid and persist the winner")
     ap.add_argument("--status", action="store_true", help="print the last checkpoint + per-dragon status and exit")
     args = load_settings(ap.parse_args(), sys.argv[1:])
 

@@ -160,7 +160,7 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   6. ✅ "moving on top of a still image" / "looks like it is dancing" → idle ping-pong slowed
      190 ms → 300 ms.
   7. 💬 "the painted dragon is so cute" - painted style is a hit.
-  Pending: rebuild running (`work/eggredo.out`, PID logged) → install to 3 sets → export → deploy.
+  ✅ SHIPPED v2.8.6 (gh-pages 3e54207, main 20790c4). Two LTX takes FAILED first: unguided clips invented a CLAW reaching in (eggredo.py); the chain from her darkened egg re-styled it into a smooth grey shell (eggredo2.py). What shipped = eggreveal LINEAR (EGG_LINEAR=1, 12/rumble) over s0/s2_4243_dark + s3_emb_11 (embryo inpaint), remnants rempol_55. Watch: does S0 read black enough for Iona; does the embryo frame land.
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

@@ -57,12 +57,18 @@ def geodesic_order(mask, origin):
     return order
 
 
-def build(dragon):
+def build(dragon, src=None, darken=True, gaps="bright"):
     W = E.work(dragon); F = os.path.join(W, "frames"); os.makedirs(F, exist_ok=True)
-    egg = Image.open(os.path.join(M.ART, f"egg-{dragon}.webp")).convert("RGBA")
+    egg = Image.open(src or os.path.join(M.ART, f"egg-{dragon}.webp")).convert("RGBA")
     placed = M.place_on_canvas(egg, M.EGG_GEN_H)[1].convert("RGBA")
     a = np.asarray(placed).astype(float); alpha = a[:, :, 3] > 64
-    base, seam = dark_crust(a, alpha)
+    if darken:
+        base, seam = dark_crust(a, alpha)
+    else:
+        # a rendered egg that already IS the look (Iona's spiral egg, 9/6): untouched; the crack runs
+        # along the thin DARK gaps between its scales
+        base = a.copy(); lum = a[:, :, :3].mean(axis=2)
+        seam = ((ndi.grey_closing(lum, size=(9, 9)) - lum) > 14) & alpha if gaps == "dark" else seams_by_thinness(a[:, :, :3].max(axis=2), alpha)
     # the crack runs along the seams (crust splits between scales), from a point on the upper front
     x0, y0, x1, y1 = M.alpha_bbox(placed); w, h = x1 - x0, y1 - y0
     seam_net = ndi.binary_dilation(seam, iterations=1) & alpha
@@ -129,7 +135,9 @@ def build(dragon):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--dragon", default="ember"); ap.add_argument("--install", default="")
-    a = ap.parse_args(); build(a.dragon)
+    ap.add_argument("--src", default="", help="a rendered egg rgba to use as-is instead of the app's egg art")
+    ap.add_argument("--no-darken", action="store_true"); ap.add_argument("--gaps", default="bright", choices=["bright", "dark"])
+    a = ap.parse_args(); build(a.dragon, src=a.src or None, darken=not a.no_darken, gaps=a.gaps)
     for v in [x for x in a.install.split(",") if x]:
         dst = os.path.join(M.HERE, "work", f"{a.dragon}-{v}", "eggs")
         if os.path.exists(dst): shutil.rmtree(dst)

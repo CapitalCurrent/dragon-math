@@ -249,6 +249,30 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
           }} />
       )}
       {/* The broken shell stays on the floor behind the dragon after the hatch (the nest) */}
+      {/* THE FLOOR (Ryan 9/6: "they float over the background"): a contact shadow on the feet line the
+          exporter recorded, sized to what stands there - the hatchling casts a small one, the adult a wide one */}
+      {set.floor != null && (
+        <div aria-hidden="true" style={{
+          position: 'absolute', left: '50%', top: `${set.floor * 100}%`,
+          width: `${isEgg ? 46 : 34 + progress * 46}%`, height: `${isEgg ? 5 : 4.5 + progress * 2}%`,
+          transform: 'translate(-50%, -55%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.35) 45%, transparent 72%)',
+          filter: 'blur(3px)',
+        }} />
+      )}
+      {set.floor != null && (
+        <div aria-hidden="true" style={{
+          position: 'absolute', left: '50%', top: `${set.floor * 100}%`,
+          width: `${isEgg ? 70 : 60 + progress * 36}%`, height: '3%',
+          transform: 'translate(-50%, -40%)', borderRadius: '50%', zIndex: 0, pointerEvents: 'none',
+          background: `radial-gradient(ellipse at center, ${glow}33 0%, transparent 70%)`,
+        }} />
+      )}
+      {/* the stand under the egg never moves; it stays with the shell pile after the hatch */}
+      {set.stand && (isEgg || progress < 0.5) && (
+        <img src={set.stand} alt="" aria-hidden="true"
+          style={{ ...FILL, zIndex: 0, opacity: isEgg ? 1 : Math.max(0, 0.9 - progress * 1.6) }} />
+      )}
       {!isEgg && set.remnants && progress < 0.5 && (
         <img
           src={set.remnants}
@@ -277,7 +301,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
           animate={isEgg
             ? (rumbling
               ? { rotate: [0, -6, 5, -4, 3, -2, 0], x: [0, -4, 4, -3, 3, -1, 0], y: [0, -3, 0, -2, 0, -1, 0] }
-              : { rotate: eggIndex > 0 ? [-2.5, 2.5, -2.5] : [-1, 1, -1] })
+              : { scaleY: [1, 1.012, 1], scaleX: [1, 1.006, 1] })
             : chomping
               ? { rotate: [0, 6, -1.5, 4, 0], scaleY: [1, 0.96, 1.02, 0.97, 1], x: [0, 5, -1, 3, 0] }
               // breathing = a chest swell from the feet up; NO vertical drift (a bob made a planted
@@ -286,7 +310,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
           transition={isEgg
             ? (rumbling
               ? { duration: 0.55, repeat: 2, ease: 'easeInOut' }
-              : { duration: eggIndex > 0 ? 0.45 : 3, repeat: Infinity, ease: 'easeInOut' })
+              : { duration: 2.6, repeat: Infinity, ease: 'easeInOut' })
             : chomping
               ? { duration: 0.55, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
               : {

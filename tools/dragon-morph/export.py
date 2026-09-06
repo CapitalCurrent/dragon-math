@@ -116,6 +116,15 @@ def export_dragon(pl):
         im.save(os.path.join(out_dir, "egg.webp"), "WEBP", quality=QUALITY, method=6)
         imports.append("import eggPortrait from './egg.webp';")
 
+    # the egg's stand: a static layer under the egg (only the egg shakes), same crop box
+    stand_src = pl.p("eggs", "stand_rgba.png")
+    has_stand = os.path.exists(stand_src)
+    if has_stand:
+        write(stand_src, "stand.webp")
+        imports.append("import stand from './stand.webp';")
+    # the floor line every frame stands on, as a fraction of the crop height (the app draws the contact
+    # shadow there)
+    floor_frac = (M.FLOOR * M.H - by0) / max(1, by1 - by0)
     # the shell remnants pile (stays on the cave floor after the hatch), same crop box as the frames
     rem_src = pl.p("eggs", "remnants_rgba.png")
     has_rem = os.path.exists(rem_src)
@@ -155,7 +164,8 @@ def export_dragon(pl):
           + "const POWERS = {\n" + "\n".join(power_entries) + "\n};\n\n"
           f"export default {{ aspect: {size[0] / size[1]:.4f}, width: {size[0]}, height: {size[1]}, "
           f"mirrored: {'true' if mirror else 'false'}, eggPortrait: {'eggPortrait' if has_portrait else 'null'}, "
-          f"remnants: {'remnants' if has_rem else 'null'}, frames: FRAMES, powers: POWERS }};\n")
+          f"remnants: {'remnants' if has_rem else 'null'}, stand: {'stand' if has_stand else 'null'}, "
+          f"floor: {floor_frac:.4f}, frames: FRAMES, powers: POWERS }};\n")
     with open(os.path.join(out_dir, "index.js"), "w", encoding="utf-8") as f:
         f.write(js)
     M.log(f"  {len(frames)} frames -> {os.path.relpath(out_dir, M.REPO)} ({total/1024:.0f} KB, crop {size[0]}x{size[1]})")

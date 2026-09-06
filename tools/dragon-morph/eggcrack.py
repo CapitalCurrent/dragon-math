@@ -7,7 +7,7 @@ answers, and the whole shell is glowing-hot when it hatches. Deterministic - no 
 import os, sys, argparse, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy import ndimage as ndi
 import morph as M, eggchain as E
 
@@ -134,11 +134,32 @@ def build(dragon, src=None, darken=True, gaps="bright"):
         # the whole shell warms as it nears the hatch
         f[:, :, :3] = np.clip(f[:, :, :3] * (1 + 0.10 * t), 0, 255)
         frames.append(f)
+    # the egg proper is an ellipse from the silhouette's top and its widest row; whatever the render put
+    # UNDER it (Iona's claw stand) becomes a separate static layer, placed with the very same transform:
+    # a mask image carrying the FULL alpha is placed exactly like the frames, its RGB says egg/stand
+    widths = alpha.sum(axis=1); rows = np.where(widths > 0)[0]; top = rows.min()
+    lim = int(top + 0.6 * (rows.max() - top)); wrow = int(np.argmax(widths[:lim])); wmax = int(widths[wrow])
+    xs_ = np.where(alpha[wrow])[0]; cx_ = (xs_.min() + xs_.max()) / 2
+    bottom = min(int(top + 1.30 * wmax), int(rows.max()))
+    has_stand = rows.max() - bottom > 0.04 * (rows.max() - top)
+    ell = Image.new("L", (M.W, M.H), 0)
+    ImageDraw.Draw(ell).ellipse((cx_ - wmax / 2 - 4, top - 4, cx_ + wmax / 2 + 4, bottom + 4), fill=255)
+    mimg = Image.merge("RGBA", (ell, ell, ell, Image.fromarray((alpha * 255).astype(np.uint8), "L")))
+    ell_p = np.asarray(M.place_on_canvas(mimg, M.H_EGG)[1])[:, :, 0] > 128
     for i, fr in enumerate(frames):
         im = Image.fromarray(np.clip(fr, 0, 255).astype(np.uint8), "RGBA")
         M.save_png(im, os.path.join(F, f"egg_{i}_gen_rgba.png"))
         bg = Image.new("RGB", im.size, (255, 255, 255)); bg.paste(im, (0, 0), im.split()[3]); M.save_png(bg, os.path.join(F, f"egg_{i}.png"))
-        M.save_png(M.place_on_canvas(im, M.H_EGG)[1], os.path.join(F, f"egg_{i}_rgba.png"))
+        placed_full = np.asarray(M.place_on_canvas(im, M.H_EGG)[1]).copy()
+        if has_stand:
+            if i == 0:
+                stand = placed_full.copy(); stand[:, :, 3] = np.where(ell_p, 0, stand[:, :, 3])
+                M.save_png(Image.fromarray(stand, "RGBA"), os.path.join(F, "stand_rgba.png"))
+            placed_full[:, :, 3] = np.where(ell_p, placed_full[:, :, 3], 0)
+        M.save_png(Image.fromarray(placed_full, "RGBA"), os.path.join(F, f"egg_{i}_rgba.png"))
+    if not has_stand and os.path.exists(os.path.join(F, "stand_rgba.png")):
+        os.remove(os.path.join(F, "stand_rgba.png"))
+    print(f"  stand layer: {'yes' if has_stand else 'none'} (egg rows {top}-{bottom}, silhouette to {rows.max()})")
     # strip for the vet
     ks = [0, 6, 12, 18, 24, 30, 36]; cell = 230; sheet = Image.new("RGB", (cell * len(ks), cell), (70, 70, 80))
     for j, k in enumerate(ks):

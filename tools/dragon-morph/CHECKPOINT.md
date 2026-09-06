@@ -255,3 +255,8 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   gn 85/136 · painterly 65/136 idle frames dropped - the calm early frames stay, drifting late ones go.
   Reviewed: painterly f00 real jaw + teeth; gn f14 roar; gn f00's twin reads as a tongue out (odd but no
   ghost) - watch Iona on it. Shipped v2.8.9.
+- 9/6 RULING (Ryan): give up on model-painted open mouths for the chomp - "the mouth is way too long compared
+  to the face and snout". v2.8.10: the bite is MOTION (a head-dip about the feet toward the number) + a bite
+  flash and crumbs at the mouth anchor. Open twins stay in the manifests for the POWERS only (big frames).
+  chomp/blink/jawfix/ghostgate stay in the pipeline for the powers' open frame; no chomp twin is needed for
+  the other five dragons.

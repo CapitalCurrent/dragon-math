@@ -279,7 +279,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               ? { rotate: [0, -6, 5, -4, 3, -2, 0], x: [0, -4, 4, -3, 3, -1, 0], y: [0, -3, 0, -2, 0, -1, 0] }
               : { rotate: eggIndex > 0 ? [-2.5, 2.5, -2.5] : [-1, 1, -1] })
             : chomping
-              ? { scale: [1, 1.06, 0.97, 1.04, 1], y: [0, -6, 3, -2, 0] }
+              ? { rotate: [0, 6, -1.5, 4, 0], scaleY: [1, 0.96, 1.02, 0.97, 1], x: [0, 5, -1, 3, 0] }
               // breathing = a chest swell from the feet up; NO vertical drift (a bob made a planted
               // dragon look like it was hovering - Iona 9/5)
               : { scaleY: [1, 1.025, 1], scaleX: [1, 1.008, 1], rotate: [0, -0.4, 0, 0.35, 0] }}
@@ -288,7 +288,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               ? { duration: 0.55, repeat: 2, ease: 'easeInOut' }
               : { duration: eggIndex > 0 ? 0.45 : 3, repeat: Infinity, ease: 'easeInOut' })
             : chomping
-              ? { duration: 0.7, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
+              ? { duration: 0.55, repeat: Infinity, repeatType: 'loop', ease: 'easeOut' }
               : {
                   scaleY: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
                   scaleX: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
@@ -302,7 +302,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               src={frame.closed}
               alt={dragon.name}
               initial={{ opacity: 0 }}
-              animate={{ opacity: chomping && frame.open ? 0 : 1 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: fade }}
               style={{ ...FILL, filter: isEgg ? `drop-shadow(0 8px ${glowPx}px ${glow}${eggIndex > 1 ? '88' : '55'})` : 'none' }}
@@ -321,7 +321,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
               src={frame.open}
               alt=""
               aria-hidden="true"
-              style={{ ...FILL, opacity: chomping ? 1 : 0, transition: 'opacity 0.1s', zIndex: 2 }}
+              style={{ ...FILL, opacity: 0, zIndex: 2 }}
             />
           )}
           {frame.blink && (
@@ -348,6 +348,35 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
                   filter: power.big ? 'brightness(1.25) saturate(1.1)' : 'none' }} />
             );
           })()}
+          {/* The bite: a flash and a few crumbs at the mouth anchor while the number is eaten */}
+          {chomping && (
+            <motion.div
+              aria-hidden="true"
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 1, 0.6, 1, 0], scale: [0.4, 1.1, 0.8, 1.2, 0.5] }}
+              transition={{ duration: 0.55, repeat: Infinity, ease: 'easeOut' }}
+              style={{
+                position: 'absolute', left: `${frame.mouth.x * 100}%`, top: `${frame.mouth.y * 100}%`,
+                width: '14%', paddingBottom: '14%', transform: 'translate(-40%, -50%)',
+                borderRadius: '50%', pointerEvents: 'none', zIndex: 4,
+                background: `radial-gradient(circle, #fff8e0 0%, ${glow} 35%, transparent 70%)`,
+                filter: 'blur(1px)',
+              }}
+            />
+          )}
+          {chomping && [0, 1, 2, 3].map(k => (
+            <motion.div
+              key={`crumb-${k}`}
+              aria-hidden="true"
+              initial={{ opacity: 0, x: 0, y: 0 }}
+              animate={{ opacity: [0, 1, 0], x: [0, (k - 1.5) * 18], y: [0, 14 + k * 5] }}
+              transition={{ duration: 0.55, repeat: Infinity, delay: k * 0.06, ease: 'easeOut' }}
+              style={{
+                position: 'absolute', left: `${frame.mouth.x * 100}%`, top: `${frame.mouth.y * 100}%`,
+                width: 6, height: 6, borderRadius: 2, background: '#ffd27a', pointerEvents: 'none', zIndex: 4,
+              }}
+            />
+          ))}
           {/* Invisible mouth marker for FlyingAnswer targeting — per frame, since the mouth moves as it grows */}
           <div ref={mouthRef} style={{
             position: 'absolute', left: `${frame.mouth.x * 100}%`, top: `${frame.mouth.y * 100}%`,

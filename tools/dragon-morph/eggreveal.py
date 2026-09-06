@@ -130,6 +130,8 @@ def build(dragon, states, remnants):
     imgs = [Image.open(os.path.join(W, f"{s}_rgba.png")).convert("RGBA") for s in states]
     # transitions: S0 -> S2 spans TWO rumbles (the chunk letting go is the long event), S2 -> S3 one
     plan = [(0, 1, 2 * FRAMES_PER_RUMBLE), (1, 2, FRAMES_PER_RUMBLE)]
+    if len(imgs) == 4:   # S0->S1->S2->S3: one state per answer (take 3, 9/5)
+        plan = [(0, 1, FRAMES_PER_RUMBLE), (1, 2, FRAMES_PER_RUMBLE), (2, 3, FRAMES_PER_RUMBLE)]
     frames = [imgs[0]]
     for a, b, n in plan:
         region = changed_region(imgs[a], imgs[b])
@@ -137,7 +139,7 @@ def build(dragon, states, remnants):
         if len(xs) == 0:
             frames += [imgs[b]] * n
             continue
-        if a == 0:
+        if a == 0 or (len(imgs) == 4 and a == 1):
             origin = (int(ys.min()), int(xs[ys.argmin()]))            # the fracture starts at the top of the damage
         else:
             cy, cx = int(ys.mean()), int(xs.mean())                  # the burst grows out from the opening's centre

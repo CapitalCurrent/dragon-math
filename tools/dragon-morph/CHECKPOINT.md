@@ -211,3 +211,18 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
 - 2026-09-05 — the fix ladder automated: `sweep` stage (auto-tune, writes settings), `promote` stage +
   runner's segment rule (2+ flags in a keyframe gap → promote the clean middle frame, re-morph the halves
   before any seed reroll). Promote/candidate logic proven offline on fake frames. Checkpoint 4.
+
+## 9/5 late - the egg redo, take 3 (Ryan: "this egg is already opened... darkening cannot fix a wrong start")
+- The crust egg (s0_4242/4243) is DEAD as a start: its middle reads as missing shell. S0 is now HER ORIGINAL egg
+  (`egg-ember.webp`), untouched.
+- States = contained inpaints composited ONLY inside nested masks over the previous state (`eggredo3.py`):
+  her_s0 -> her_s1 (fracture at the top) -> her_s2 (chunk out, glowing red sac in the lava) -> her_s3f_12 (opening wider).
+  Reveal = `eggreveal.py` 4-state plan, LINEAR, 12 frames per answer (EGG_PER_RUMBLE=12 EGG_LINEAR=1).
+- TRAPS hit (do not repeat): `place_on_canvas()[0]` is the WHITE plate - `[1]` is the rgba layer (take 3's first
+  masks were cut against an opaque alpha, so every "small" mask was ~half the egg) · a mask derived from
+  "changed vs S0" is the whole inpaint box, not the hole (inpaints re-texture their entire box) · the hole by
+  brightness excludes the dark red sac · the daily-tier inpaint keeps underlying structure even at strength 1.0
+  and, asked for an embryo in a small hole, paints HUMAN babies (seeds 12/18/20).
+- OPEN: Iona's "living dragon embryo in molten lava" is NOT delivered - the burst shows the glowing red sac only.
+  Best embryo seen: `her_s3o_12` (contact_her4) but it re-styled the crust. Next idea: cut that embryo and paste it
+  into her_s2's opening deterministically, or a Juggernaut inpaint (photoreal tier) with VAEEncodeForInpaint.

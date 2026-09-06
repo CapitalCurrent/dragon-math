@@ -147,6 +147,20 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   app-drawn aura (LTX put a fireball behind the head twice - dropped). Export+deploy chain running
   (`work/export.out`) → v2.8.5 with powers live for Comic. Realistic/painterly powers: run
   `powers.py --variant <v> --style <v>` (needs the set exported first), then approve/export.**
+- **IONA'S LIVE FEEDBACK (9/5 evening, v2.8.5) - the working list:**
+  1. ✅ first egg had too little black crust ("already exposed from the get-go") → S0 is now HER egg
+     (`egg-ember.webp`) with `crust_darken` (36 % → 65 % dark), not the generated crust egg.
+  2. ✅ 2nd answer already showed a hole → app frames are now picked by DAMAGE (diff vs S0), not by
+     time, so the three answers progress evenly (`eggredo.py`).
+  3. ✅ 3rd answer showed no change → clip2 starts from clip1's LAST frame and continues.
+  4. ✅ "looks like they are killing the egg" → clip2 prompt reveals a LIVING embryo curled in the
+     molten lava (scales, closed eye, breathing).
+  5. ✅ "the dragon is still floating, egg shell is cluttered where the dragon is" → the remnants pile
+     is now small (34 % width), bottom-left, behind the dragon, and fades out by progress 0.5.
+  6. ✅ "moving on top of a still image" / "looks like it is dancing" → idle ping-pong slowed
+     190 ms → 300 ms.
+  7. 💬 "the painted dragon is so cute" - painted style is a hit.
+  Pending: rebuild running (`work/eggredo.out`, PID logged) → install to 3 sets → export → deploy.
 - 09:45 status (superseded): realistic Ember growth frames VET-CLEAN and reviewed by Claude (0-16 one creature;
   weakest step 11→12 = pose turn 3/4→profile from the anchors' poses). Eggs good. Mouth twins being
   REGENERATED: Florence "dragon head" grounding returned the WHOLE BODY on every frame → the inpaint

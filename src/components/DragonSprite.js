@@ -198,7 +198,7 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
       k += dir;
       if (k >= idleFrames.length - 1 || k <= 0) dir = -dir;
       setIdleK(k);
-    }, 190);
+    }, 300);
     return () => clearInterval(t);
   }, [idleFrames, chomping]);
 
@@ -249,12 +249,16 @@ function MorphSprite({ dragon, set, progress, size, maxWidth, chomping, mouthRef
           }} />
       )}
       {/* The broken shell stays on the floor behind the dragon after the hatch (the nest) */}
-      {!isEgg && set.remnants && (
+      {!isEgg && set.remnants && progress < 0.5 && (
         <img
           src={set.remnants}
           alt=""
           aria-hidden="true"
-          style={{ ...FILL, opacity: 0.95, zIndex: 0 }}
+          style={{
+            position: 'absolute', left: '4%', bottom: '1%', width: '34%',
+            objectFit: 'contain', objectPosition: 'left bottom',
+            opacity: Math.max(0, 0.9 - progress * 1.6), zIndex: 0, pointerEvents: 'none',
+          }}
         />
       )}
       {/* Aura glow in the dragon's element color, pulsing with the breath */}

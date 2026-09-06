@@ -16,7 +16,7 @@ from scipy import ndimage as ndi
 import morph as M
 import eggchain as E
 
-FRAMES_PER_RUMBLE = 4          # frames revealed per answer (the app flips through them on the shake)
+FRAMES_PER_RUMBLE = int(os.environ.get("EGG_PER_RUMBLE", 4))          # frames revealed per answer (the app flips through them on the shake)
 FEATHER = 0.12                 # width of the advancing front, as a fraction of the propagation range
 DIFF_THR = 26
 
@@ -145,7 +145,8 @@ def build(dragon, states, remnants):
         order = propagation_order(region, origin)
         for k in range(1, n + 1):
             t = k / n
-            te = 1 - (1 - t) ** 1.6     # eased: fast start, slowing at the end of each stage
+            # Iona 9/5: LINEAR pacing, so answer 1 shows only the fracture and answer 2 the chunk
+            te = t if os.environ.get("EGG_LINEAR") else 1 - (1 - t) ** 1.6
             fr = reveal(imgs[a], imgs[b], order, region, te) if k < n else imgs[b]
             frames.append(fr)
     for i, fr in enumerate(frames):

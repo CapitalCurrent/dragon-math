@@ -273,3 +273,14 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   scales, on a claw stand" with the daily tier, let Iona pick a seed from a contact sheet, then the same recipe.
 - Review page (artifact): https://claude.ai/code/artifact/16a3aced-a5d1-4d5c-a093-3e5fc327caad
 - 9/6: 'only the black parts crack' -> the orange spirals are masked out of the crack, its widening and its glow; the spirals CONDUCT the crack (it passes through unseen and re-emerges on the black beyond). v2.8.12.
+
+## 9/6 - ON THE GROUND (v2.8.13) - LAST DEPLOY OF THE WEEK (Ryan: allowance goes to the business app)
+- Iona: "the egg and stand float and both shake; only the egg should shake" / Ryan: "the dragons float over the
+  background". Causes were all in the app: no contact shadow, the sprite hangs above the pad in portrait, the
+  egg rocked constantly with the stand attached.
+- Fix: eggcrack splits the stand off the egg's ellipse (mask image placed with the same transform as the
+  frames) -> `stand_rgba.png`; export ships `stand` + `floor` (feet line as a fraction of the crop); the sprite
+  draws a contact shadow + ledge glow on `floor`, the stand is a static layer (stays with the pile after the
+  hatch), the egg breathes at rest and only shakes on an answer.
+- NEXT SESSION: Iona's read of v2.8.13; then the other five dragons (anchors, eggs by the spiral recipe, caves,
+  powers). Pending business-app priority.

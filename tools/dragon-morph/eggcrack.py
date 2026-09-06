@@ -69,12 +69,23 @@ def build(dragon, src=None, darken=True, gaps="bright"):
         # along the thin DARK gaps between its scales
         base = a.copy(); lum = a[:, :, :3].mean(axis=2)
         seam = ((ndi.grey_closing(lum, size=(9, 9)) - lum) > 14) & alpha if gaps == "dark" else seams_by_thinness(a[:, :, :3].max(axis=2), alpha)
+        # ONLY THE BLACK PARTS CRACK (Ryan 9/6): the orange magma seams are not shell - the crack, its
+        # widening and its glow all stay off them
+        r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+        orange = (r > 110) & (r > g * 1.35) & (r > b * 1.8) & alpha
+        orange = ndi.binary_dilation(orange, iterations=4)
+        black = alpha & ~orange
+        seam &= black
+    if darken:
+        orange = np.zeros_like(alpha); black = alpha
     # the crack runs along the seams (crust splits between scales), from a point on the upper front
     x0, y0, x1, y1 = M.alpha_bbox(placed); w, h = x1 - x0, y1 - y0
     seam_net = ndi.binary_dilation(seam, iterations=1) & alpha
     # the crack TRAVELS on a well-connected version of the network (seams as drawn are fragmented) but
     # only the thin seams light up
-    travel = ndi.binary_dilation(seam, iterations=4) & alpha
+    # the magma seams CONDUCT the crack (it passes through them unseen and re-emerges on the black beyond),
+    # but only the black ever lights up
+    travel = ndi.binary_dilation(seam | (orange if not darken else np.zeros_like(seam)), iterations=4) & alpha
     order = geodesic_order(travel, (int(y0 + h * 0.22), int(x0 + w * 0.46)))
     ends = [(0.55, 0.20), (0.62, 0.78), (0.86, 0.40), (0.80, 0.66), (0.40, 0.30), (0.95, 0.56)]
     path = np.zeros_like(alpha)
@@ -110,11 +121,15 @@ def build(dragon, src=None, darken=True, gaps="bright"):
         for i in range(1, 3):
             wide |= ndi.binary_dilation(hot & (age > i / 2.5), iterations=i)
         wide &= alpha
+        if not darken:
+            wide &= black
         soft = ndi.gaussian_filter(wide.astype(float), 0.8)
         f = base.copy()
         hotcol = np.array([255, 235, 150]) if t < 0.67 else np.array([255, 245, 190])
         f[:, :, :3] = f[:, :, :3] * (1 - soft[:, :, None]) + hotcol * soft[:, :, None]
         bloom = ndi.gaussian_filter(wide.astype(float), 5 + 4 * t) * (0.9 + 0.7 * t)
+        if not darken:
+            bloom *= black
         f[:, :, :3] = np.clip(f[:, :, :3] + bloom[:, :, None] * np.array([255, 120, 30]), 0, 255)
         # the whole shell warms as it nears the hatch
         f[:, :, :3] = np.clip(f[:, :, :3] * (1 + 0.10 * t), 0, 255)

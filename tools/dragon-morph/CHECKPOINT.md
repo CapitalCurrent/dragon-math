@@ -260,3 +260,16 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   flash and crumbs at the mouth anchor. Open twins stay in the manifests for the POWERS only (big frames).
   chomp/blink/jawfix/ghostgate stay in the pipeline for the powers' open frame; no chomp twin is needed for
   the other five dragons.
+
+## 9/6 late - THE EMBER EGG IS IONA'S SPIRAL EGG (v2.8.11)
+- Ryan: "the darkened original does not work - re-render from the start: an egg made of dark scales with magma
+  inside creating a glow". Rounds: (1) "magma inside" -> the model draws a WINDOW or a jagged opening, often on
+  a stand (every seed, both models); (2) matte dark-scale egg + OUR glow in the gaps -> "looks distorted" (Ryan);
+  (3) "warm light from between the scales" -> P1 seed 62 glows from within but sits on a rock nest.
+- IONA PICKED `scaleegg2_daily_42` (spiral magma seams, claw stand) and LIKES the stand. It is the egg as-is.
+- Recipe: `eggcrack.py --src <rgba> --no-darken --gaps dark --install ...` - the crack lights the thin DARK gaps
+  between scales (geodesic, 6 branches, a third per answer); spirals untouched; the stand is part of the sprite.
+- For the other five: render "shell of overlapping dark <element> scales, <element> glow seeping between the
+  scales, on a claw stand" with the daily tier, let Iona pick a seed from a contact sheet, then the same recipe.
+- Review page (artifact): https://claude.ai/code/artifact/16a3aced-a5d1-4d5c-a093-3e5fc327caad
+- 9/6: 'only the black parts crack' -> the orange spirals are masked out of the crack, its widening and its glow; the spirals CONDUCT the crack (it passes through unseen and re-emerges on the black beyond). v2.8.12.

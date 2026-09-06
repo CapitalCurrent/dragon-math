@@ -226,3 +226,14 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
 - OPEN: Iona's "living dragon embryo in molten lava" is NOT delivered - the burst shows the glowing red sac only.
   Best embryo seen: `her_s3o_12` (contact_her4) but it re-styled the crust. Next idea: cut that embryo and paste it
   into her_s2's opening deterministically, or a Juggernaut inpaint (photoreal tier) with VAEEncodeForInpaint.
+
+## 9/6 - THE EGG THAT ONLY CRACKS (Ryan's rulings, binding for all six eggs)
+- "We are trying to do too much with the breaking of the egg" - showing the inside made a boiled-egg cross-section
+  (the model's prior). RULINGS: dark crust like dragon scales · the warmth is the GLOWING PLATE EDGES · do NOT lose
+  plates · the first egg just starts to crack and cracks more until it finally hatches.
+- Build = `eggcrack.py` (deterministic, no model): her egg -> seams by THINNESS (grey-opening top-hat, a glowing plate
+  centre is bright but wide so it stays a plate) -> plates darkened to 0.28 with an edge-lit rim + gloss + speckle
+  flattened -> the crack = shortest paths along the seam network from a point on the upper front to 6 endpoints
+  (one crack, a few branches), lit in geodesic order, each answer lighting an equal third by pixels, widening to +2 px
+  with a warm bloom that grows toward the hatch. 37 frames, 12 per answer; remnants pile unchanged.
+- Recipe for the other five eggs: same script, `--dragon <id>`; only the origin/endpoints may need a nudge per egg.

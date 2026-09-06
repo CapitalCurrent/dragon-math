@@ -1,6 +1,6 @@
 {
   "name": "math-facts",
-  "version": "2.8.7",
+  "version": "2.8.8",
   "homepage": ".",
   "private": true,
   "dependencies": {

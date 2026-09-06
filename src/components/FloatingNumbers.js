@@ -16,7 +16,7 @@ const SKILL_EFFECTS = {
 
 // Phases: question → joining → skill → eat
 export default function FloatingNumbers() {
-  const { currentQuestion, showMerge, dragon, unlockedSkills, dispatch } = useGame();
+  const { currentQuestion, showMerge, dragon, unlockedSkills, dispatch, answerDraft } = useGame();
   const [particles, setParticles] = useState([]);
   const [phase, setPhase] = useState('question');
   const [skillEffect, setSkillEffect] = useState(null);
@@ -111,7 +111,7 @@ export default function FloatingNumbers() {
               animate={{ scale: [1, 1.06, 1], borderColor: [`${colors.accent}60`, `${colors.accent}90`, `${colors.accent}60`] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              ?
+              {answerDraft || '?'}
             </motion.div>
           </motion.div>
         )}

@@ -237,3 +237,21 @@ repo, never the inventory repo). The pipeline's own checkpoints are `work/checkp
   (one crack, a few branches), lit in geodesic order, each answer lighting an equal third by pixels, widening to +2 px
   with a warm bloom that grows toward the hatch. 37 frames, 12 per answer; remnants pile unchanged.
 - Recipe for the other five eggs: same script, `--dragon <id>`; only the origin/endpoints may need a nudge per egg.
+
+## 9/6 - portrait UI + realistic mouths (Ryan's go)
+- UI (v2.8.9): the equation's "?" bubble IS the answer (answerDraft in GameContext, SET_ANSWER_DRAFT); the text
+  field and the second answer box are gone; the app's pad is the only pad on every device (the phone keyboard
+  never opens); pad 228 px wide, 44 px keys; Enter/digits/Backspace still work from a physical keyboard; the
+  "Rotate your device" prompt is gone - portrait is first-class (dragon height = h - 470, min 180; width 96%).
+- MOUTHS: measured every open twin vs its closed frame (`ghostgate.py`): change OUTSIDE the jaw box > 3% of the
+  dragon = a second head -> the closed frame stands in (a closed mouth beats a glitch). `jawfix.py` regenerates
+  the open twin on a 1024 hi-res crop of the head (a hatchling's jaw is ~70x30 px on the canvas - the model
+  cannot draw a mouth that small), jaw box anchored on the located EYE, denoise 0.95, wide-open prompt, only the
+  box kept, gated. TRAP: the silhouette's front-most point is the WING TIP in a wings-forward pose (a mouth got
+  painted on a wing) - never locate the mouth from the silhouette alone.
+- RESULTS 9/6: ghost gate flagged 12 open twins (realistic 1 · gn 7 · painterly 4) -> jawfix regenerated them
+  on hi-res crops: realistic 1/1 · gn 5/7 (f01, f02 stay closed) · painterly 5/5 passed. IDLE gate (head
+  silhouette IoU, > 8% drift dropped; a raw pixel diff is useless on LTX re-encodes): realistic 37/136 ·
+  gn 85/136 · painterly 65/136 idle frames dropped - the calm early frames stay, drifting late ones go.
+  Reviewed: painterly f00 real jaw + teeth; gn f14 roar; gn f00's twin reads as a tongue out (odd but no
+  ghost) - watch Iona on it. Shipped v2.8.9.

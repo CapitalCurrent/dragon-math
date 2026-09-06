@@ -47,6 +47,7 @@ const initialState = {
   currentQuestionMissed: false, // true if any wrong attempt on the current question
   missQueue: [], // [{ question, delay }] — questions to re-ask after N more correct answers
   worldMarks: [], // persistent marks left on the cave by skill activations
+  answerDraft: '', // digits typed so far - shown inside the equation's answer bubble
 };
 
 const REQUEUE_DELAY = 2; // re-ask a missed problem 2 correct answers later
@@ -164,6 +165,8 @@ function reducer(state, action) {
       };
     }
 
+    case 'SET_ANSWER_DRAFT':
+      return { ...state, answerDraft: action.value };
     case 'WRONG_ANSWER':
       return {
         ...state,

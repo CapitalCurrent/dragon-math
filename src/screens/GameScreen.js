@@ -392,34 +392,17 @@ export default function GameScreen() {
   const isLandscape = w > h && h < 500;
   const isMobilePortrait = w < h && w < 768;
   const isWide = w >= 1024;
-  const dragonSize = isLandscape ? Math.min(280, h - 80) : isWide ? 520 : 380;
+  const isPortrait = w < h;
+  const dragonSize = isLandscape ? Math.min(280, h - 80) : isWide ? 520 : isPortrait ? Math.max(180, Math.min(380, h - 470)) : 380;
   // Morph frames sit on a wide canvas (spread wings): give the dragon column a
   // real width budget so the box scales down instead of being clipped.
-  const dragonMaxWidth = isLandscape ? 340 : Math.min(isWide ? 760 : 600, Math.floor(w * 0.52));
+  const dragonMaxWidth = isLandscape ? 340 : isPortrait ? Math.floor(w * 0.96) : Math.min(isWide ? 760 : 600, Math.floor(w * 0.52));
 
   if (!dragon) return null;
   const stageIndex = Math.min(4, Math.floor(progress * 5));
 
-  // Show rotate prompt on mobile portrait
-  if (isMobilePortrait) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center relative overflow-hidden"
-        style={{ background: '#050510' }}>
-        <CaveBackground dragon={dragon} />
-        <div className="relative z-10 text-center px-8">
-          <div className="text-6xl mb-6" style={{ animation: 'spin 2s ease-in-out infinite' }}>📱</div>
-          <p className="text-2xl font-bold mb-2" style={{ color: dragon.colors.accent }}>
-            Rotate Your Device
-          </p>
-          <p className="text-gray-400">
-            Dragon Math plays best in landscape mode!
-          </p>
-        </div>
-        <style>{`@keyframes spin { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }`}</style>
-      </div>
-    );
-  }
-
+  // Portrait is how the game is played (Ryan 9/6): no rotate prompt; the dragon yields height to
+  // the question and the pad so both stay on screen together.
   return (
     <div className="h-screen flex flex-col relative overflow-hidden"
       style={{ background: '#050510' }}
@@ -440,8 +423,8 @@ export default function GameScreen() {
 
       {/* Main game area — dragon on left in cave, numbers at cave mouth on right */}
       <div className={`flex items-center justify-center w-full flex-1 relative z-10 px-4 ${
-        isLandscape || isWide ? 'flex-row gap-0' : 'flex-col gap-4'
-      }`} style={{ paddingBottom: isLandscape ? 8 : isWide ? 120 : 40 }}>
+        isLandscape || isWide ? 'flex-row gap-0' : 'flex-col gap-2'
+      }`} style={{ paddingBottom: isLandscape ? 8 : isWide ? 120 : 12 }}>
 
         {/* Dragon area — sits on cave floor, left ~45% */}
         <div className={`flex flex-col items-center ${isLandscape || isWide ? 'flex-1' : ''}`} style={{ maxWidth: dragonMaxWidth }}>
